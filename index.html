@@ -3,8 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vouch.sh - Prove you're here.</title>
+    <title>vouch.sh - Hardware-Backed Authentication</title>
+    <meta name="description" content="Hardware-backed authentication with short-lived credentials. No credential issuance without human presence proof. Prove you're here with FIDO2 and YubiKey.">
+    <meta name="keywords" content="authentication, FIDO2, YubiKey, SSH, security, hardware key, short-lived credentials, phishing-resistant">
+    <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#0f1b2d">
+    <link rel="canonical" href="https://vouch.sh/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://vouch.sh/">
+    <meta property="og:title" content="vouch.sh - Hardware-Backed Authentication">
+    <meta property="og:description" content="Hardware-backed authentication with short-lived credentials. No credential issuance without human presence proof.">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="vouch.sh - Hardware-Backed Authentication">
+    <meta name="twitter:description" content="Hardware-backed authentication with short-lived credentials. No credential issuance without human presence proof.">
+
     <!-- Inline SVG favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23539fe5' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z'/%3E%3C/svg%3E">
     <style>
@@ -160,21 +176,36 @@
             }
         }
     </style>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "vouch.sh",
+        "url": "https://vouch.sh/",
+        "description": "Hardware-backed authentication with short-lived credentials. No credential issuance without human presence proof.",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Smoke Turner, LLC"
+        }
+    }
+    </script>
 </head>
 <body>
     <main>
         <div class="logo">
-            <svg fill="none" stroke="#539fe5" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg fill="none" stroke="#539fe5" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vouch logo">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
             </svg>
             <h1>vouch.sh</h1>
         </div>
         <p class="tagline">Prove you're here.</p>
-        <div class="regions">
+        <nav class="regions" aria-label="Select a region">
             <!-- United States (active) -->
             <a href="https://us.vouch.sh" class="region-card">
                 <div class="region-flag">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100" role="img" aria-label="United States flag">
                         <!-- Stripes -->
                         <rect width="190" height="100" fill="#B22234"/>
                         <rect y="7.69" width="190" height="7.69" fill="#fff"/>
@@ -237,7 +268,7 @@
             <div class="region-card disabled" aria-disabled="true">
                 <div class="ribbon">Coming Soon</div>
                 <div class="region-flag">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100" role="img" aria-label="European Union flag">
                         <rect width="190" height="100" fill="#003399" rx="2"/>
                         <defs>
                             <polygon id="eu-star" points="0,-6 1.7,-2 5.7,-1.9 2.6,0.9 3.5,4.9 0,2.5 -3.5,4.9 -2.6,0.9 -5.7,-1.9 -1.7,-2" fill="#FFCC00"/>
@@ -264,7 +295,7 @@
             <div class="region-card disabled" aria-disabled="true">
                 <div class="ribbon">Coming Soon</div>
                 <div class="region-flag">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 100" role="img" aria-label="Asia Pacific map">
                         <!-- Ocean background -->
                         <rect width="190" height="100" fill="#2a6ec4" rx="2"/>
                         <!-- Latitude lines -->
@@ -293,7 +324,7 @@
                 </div>
                 <span class="region-label">Asia Pacific</span>
             </div>
-        </div>
+        </nav>
     </main>
     <footer>
         &copy; 2026 Smoke Turner, LLC
