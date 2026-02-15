@@ -1,0 +1,41 @@
+baseURL = "https://vouch.sh/"
+languageCode = "en-us"
+title = "Vouch — Hardware-Backed Developer Credentials"
+
+[params]
+  description = "Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access."
+  ogImage = "/img/og-image.png"
+  githubRepo = "https://github.com/vouch-sh/vouch"
+  usInstance = "https://us.vouch.sh"
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[markup.highlight]
+  style = "monokai"
+  lineNos = false
+  guessSyntax = true
+
+[outputs]
+  home = ["HTML", "RSS"]
+
+[sitemap]
+  changeFreq = "weekly"
+  priority = 0.5
+
+[[menus.main]]
+  name = "Docs"
+  url = "/docs/"
+  weight = 1
+
+[[menus.main]]
+  name = "Blog"
+  url = "/blog/"
+  weight = 2
+
+[[menus.main]]
+  name = "GitHub"
+  url = "https://github.com/vouch-sh/vouch"
+  weight = 3
+  [menus.main.params]
+    external = true

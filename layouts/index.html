@@ -1,0 +1,200 @@
+{{ define "main" }}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <h1>Touch your key.<br>Get credentials for everything.</h1>
+    <p class="subtitle">Vouch is an open-source credential broker that issues short-lived SSH keys, AWS sessions, GitHub tokens, and Kubernetes configs after a single FIDO2 hardware verification.</p>
+
+    <div class="hero-ctas">
+      <a href="/docs/getting-started/" class="btn btn-primary">Get Started &rarr;</a>
+      <a href="{{ .Site.Params.githubRepo }}" target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="prompt">$</span> vouch login</div>
+        <div class="output">🔑 Touch your YubiKey...</div>
+        <div class="output">Enter PIN: ****</div>
+        <div class="success">✓ Authenticated as you@company.com</div>
+        <div class="success">✓ Session valid for 8 hours</div>
+        <div>&nbsp;</div>
+        <div><span class="prompt">$</span> ssh prod.example.com <span class="comment"># just works</span></div>
+        <div><span class="prompt">$</span> aws s3 ls <span class="comment"># just works</span></div>
+        <div><span class="prompt">$</span> git push origin main <span class="comment"># just works</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- The Problem -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2>Modern developer credentials are broken</h2>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <span class="card-icon">🔓</span>
+        <h3>Credential sprawl</h3>
+        <p>SSH keys from 2019. AWS access keys in plaintext. GitHub PATs that never expire. Every tool has its own long-lived secret.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">👻</span>
+        <h3>No presence verification</h3>
+        <p>Existing MFA verifies devices, not humans. A compromised laptop with cached credentials is indistinguishable from its owner.</p>
+      </div>
+      <div class="card">
+        <span class="card-icon">🤖</span>
+        <h3>AI agents with full access</h3>
+        <p>AI coding assistants get your credentials with no scoping, no audit trail, and no way to distinguish human from agent actions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>How it works</h2>
+      <p>One tap, every credential, all day.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Touch your YubiKey</h3>
+        <p>FIDO2 verification with PIN ensures a human is present. Phishing-resistant by design.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Vouch issues credentials</h3>
+        <p>Short-lived, scoped, and hardware-attested. SSH certificates, AWS sessions, GitHub tokens.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Your tools just work</h3>
+        <p>Native integration with SSH, AWS CLI, git, kubectl, docker, and cargo. No wrappers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Integrations -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2>Integrations</h2>
+      <p>Native support for the tools your team already uses.</p>
+    </div>
+    <div class="integration-grid">
+      <a href="/docs/aws/" class="integration-card">
+        <div class="icon">☁️</div>
+        <div>
+          <h4>AWS</h4>
+          <p><code>credential_process</code> for seamless STS federation</p>
+        </div>
+      </a>
+      <a href="/docs/ssh/" class="integration-card">
+        <div class="icon">🔐</div>
+        <div>
+          <h4>SSH</h4>
+          <p>Signed certificates, no more authorized_keys</p>
+        </div>
+      </a>
+      <a href="/docs/github/" class="integration-card">
+        <div class="icon">🐙</div>
+        <div>
+          <h4>GitHub</h4>
+          <p>Short-lived tokens via git credential helper</p>
+        </div>
+      </a>
+      <a href="/docs/eks/" class="integration-card">
+        <div class="icon">⎈</div>
+        <div>
+          <h4>Kubernetes</h4>
+          <p><code>exec</code> plugin for kubectl and EKS</p>
+        </div>
+      </a>
+      <a href="/docs/docker/" class="integration-card">
+        <div class="icon">🐳</div>
+        <div>
+          <h4>Docker</h4>
+          <p>Native credential helper for ECR and GHCR</p>
+        </div>
+      </a>
+      <a href="/docs/cargo/" class="integration-card">
+        <div class="icon">📦</div>
+        <div>
+          <h4>Cargo</h4>
+          <p>Private registry authentication</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Agent Delegation -->
+<section class="section section-highlight">
+  <div class="container">
+    <div class="section-header">
+      <h2>Give AI agents credentials, not your keys</h2>
+      <p>Grant scoped, time-limited credentials to AI coding assistants. Full audit trails cryptographically distinguish human actions from agent actions. Revoke instantly.</p>
+    </div>
+    <div style="text-align: center;">
+      <a href="/docs/getting-started/" class="btn btn-primary">Learn more &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- Open Source -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Open source and auditable</h2>
+      <p>Vouch's CLI and agent are open source under Apache-2.0/MIT. The server source is available under BSL 1.1 (converts to Apache-2.0 after 2 years). Security tools should be auditable.</p>
+    </div>
+    <div class="oss-badges">
+      <a href="{{ .Site.Params.githubRepo }}" target="_blank" rel="noopener" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Get Started -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2>Choose your region</h2>
+    </div>
+    <div class="region-grid">
+      <a href="/docs/getting-started/" class="region-card">
+        <span class="region-flag">🇺🇸</span>
+        <h4>United States</h4>
+        <span class="badge badge-active">Active</span>
+      </a>
+      <div class="region-card disabled">
+        <span class="region-flag">🇪🇺</span>
+        <h4>Europe</h4>
+        <span class="badge badge-soon">Coming soon</span>
+      </div>
+      <div class="region-card disabled">
+        <span class="region-flag">🌏</span>
+        <h4>Asia Pacific</h4>
+        <span class="badge badge-soon">Coming soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{ end }}
