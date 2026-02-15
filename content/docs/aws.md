@@ -206,7 +206,7 @@ Vouch sets the following session tags when assuming a role, which you can use in
 | Tag Key | Value | Example |
 |---------|-------|---------|
 | `email` | The user's verified email | `alice@example.com` |
-| `name` | The user's display name | `Alice Smith` |
+| `domain` | The user's organization domain (from the OIDC `hd` claim) | `example.com` |
 
 You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
 
@@ -214,7 +214,7 @@ You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
 {
   "Condition": {
     "StringEquals": {
-      "aws:PrincipalTag/email": "alice@example.com"
+      "aws:PrincipalTag/domain": "example.com"
     }
   }
 }
