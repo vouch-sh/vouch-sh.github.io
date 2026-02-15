@@ -1,7 +1,7 @@
 ---
 title: "SCIM Provisioning"
 description: "Automate user lifecycle management with your identity provider using SCIM 2.0."
-weight: 9
+weight: 11
 subtitle: "Automate user lifecycle management with your identity provider"
 ---
 

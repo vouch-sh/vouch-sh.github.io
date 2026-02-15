@@ -10,7 +10,7 @@ Vouch lets developers assume AWS IAM roles using short-lived STS credentials bac
 ## How it works
 
 1. The developer runs `vouch login` and authenticates with their YubiKey.
-2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The token contains claims such as `sub` (user ID), `email`, and `groups`.
+2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The token contains claims such as `sub` (user ID) and `email`.
 3. When the developer runs an AWS command (or `vouch credential aws`), the CLI calls **AWS STS AssumeRoleWithWebIdentity**, presenting the ID token.
 4. AWS validates the token signature against the Vouch server's JWKS endpoint, checks the audience and issuer, and returns temporary credentials (access key, secret key, session token) valid for up to 1 hour.
 5. The developer's AWS CLI, SDK, or Terraform session uses these credentials transparently.
@@ -227,7 +227,7 @@ You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
 Each developer needs to tell the CLI which IAM role to assume and in which AWS profile to store the credentials. Run:
 
 ```bash
-vouch credential aws setup
+vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 ```
 
 This interactive command will prompt for:
@@ -240,7 +240,7 @@ The command writes a `credential_process` entry into `~/.aws/config` so that the
 
 ```ini
 [profile vouch]
-credential_process = vouch credential aws --role-arn arn:aws:iam::123456789012:role/VouchDeveloper --format aws-credential-process
+credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/VouchDeveloper --format aws-credential-process
 region = us-east-1
 ```
 
@@ -297,7 +297,7 @@ aws s3 ls --profile vouch
 
 ### Credentials not appearing in the expected profile
 
-- Run `vouch credential aws setup` again and verify the profile name.
+- Run `vouch setup aws` again and verify the profile name.
 - Check `~/.aws/config` for conflicting profile definitions.
 
 ### Permission errors after assuming the role

@@ -24,6 +24,12 @@ Install with Homebrew:
 brew install vouch-sh/tap/vouch
 ```
 
+After installing, start the Vouch background service:
+
+```
+brew services start vouch
+```
+
 ### Debian / Ubuntu
 
 ```bash
@@ -81,11 +87,12 @@ vouch enroll --server {{< instance-url >}}
 
 This command will:
 
-1. Open your default browser to the Vouch server.
-2. Ask you to verify your identity (typically through your organization's SSO provider).
-3. Prompt you to register your YubiKey as a FIDO2 credential.
-4. Set a PIN on the YubiKey if one has not been configured already.
-5. Save the server configuration locally so future commands know where to authenticate.
+1. Display a URL and a one-time code in your terminal (using the [RFC 8628 Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628) flow).
+2. Open the URL in your browser (or you can navigate to it manually) and enter the one-time code.
+3. Ask you to verify your identity through your organization's SSO provider.
+4. Prompt you to register your YubiKey as a FIDO2 credential.
+5. Set a PIN on the YubiKey if one has not been configured already.
+6. Save the server configuration locally so future commands know where to authenticate.
 
 Once enrollment completes, the CLI prints a confirmation and you are ready to log in.
 
@@ -128,13 +135,35 @@ When you run `vouch login`, the following takes place behind the scenes:
 
 1. **FIDO2 assertion** -- The CLI asks your YubiKey to sign a challenge from the Vouch server. This proves possession of the enrolled key and requires both your PIN and a physical touch.
 2. **Identity verification** -- The server validates the signed assertion against the public key stored during enrollment.
-3. **Credential issuance** -- On success, the server issues a set of short-lived credentials:
-   - An **OIDC ID token** used to obtain AWS STS credentials.
-   - An **SSH certificate** signed by the organization's CA, valid for 8 hours.
-   - A **Git authentication token** scoped to your identity.
-4. **Local caching** -- The CLI stores these credentials in memory (via the Vouch agent) so subsequent commands can use them without additional YubiKey interaction.
+3. **Credential issuance** -- On success, the server issues a session token and an **SSH certificate** signed by the organization's CA, valid for 8 hours.
+4. **On-demand credentials** -- AWS, Git, Docker, Cargo, and other credentials are obtained on-demand by their respective credential helpers when you use those tools. Each helper exchanges your active session for a short-lived, service-specific credential.
+5. **Local caching** -- The CLI stores the session and SSH certificate in memory (via the Vouch agent) so subsequent commands can use them without additional YubiKey interaction.
 
 Because every credential is short-lived and bound to a hardware key, there are no long-lived secrets on disk that can be stolen or leaked.
+
+---
+
+## Binary download verification
+
+If you downloaded the Vouch CLI binary directly from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page, you can verify its integrity using the SHA256 checksums and SLSA provenance attestation published alongside each release.
+
+### SHA256 checksum
+
+Each release includes a `checksums.txt` file. Verify the downloaded binary:
+
+```bash
+sha256sum --check checksums.txt
+```
+
+### SLSA provenance
+
+Vouch release binaries are built with SLSA Level 3 provenance. You can verify the provenance attestation using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool:
+
+```bash
+slsa-verifier verify-artifact vouch-linux-amd64 \
+  --provenance-path vouch-linux-amd64.intoto.jsonl \
+  --source-uri github.com/vouch-sh/vouch
+```
 
 ---
 
@@ -145,3 +174,8 @@ Now that you can log in, configure the services you use:
 - **[AWS Integration](/docs/aws/)** -- Federate into AWS with OIDC and assume IAM roles using short-lived STS credentials.
 - **[SSH Certificates](/docs/ssh/)** -- Connect to servers using Vouch-signed SSH certificates instead of static keys.
 - **[Amazon EKS](/docs/eks/)** -- Authenticate to Kubernetes clusters running on EKS.
+- **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
+- **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
+- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories.
+- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
+- **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.

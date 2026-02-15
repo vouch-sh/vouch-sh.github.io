@@ -1,6 +1,6 @@
 ---
 title: "SSH Certificates"
-description: "Configure SSH servers to trust Vouch certificates for passwordless authentication with short-lived certificates."
+description: "Replace SSH keys with short-lived certificates signed by your organization's CA. No authorized_keys, no key rotation, 8-hour expiry."
 weight: 3
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
 ---
@@ -24,14 +24,14 @@ Because certificates expire after 8 hours, a compromised certificate is useless 
 After completing the [Getting Started](/docs/getting-started/) guide, enable the SSH agent integration:
 
 ```bash
-vouch ssh setup
+vouch setup ssh
 ```
 
 This command configures your local SSH client to use the Vouch agent for certificate authentication. It adds the following to your `~/.ssh/config`:
 
 ```
 Host *
-  IdentityAgent ~/.vouch/agent.sock
+  IdentityAgent ~/.vouch/ssh-agent.sock
 ```
 
 After setup, every `ssh` connection will automatically use your Vouch certificate when available, falling back to regular keys if needed.
@@ -257,8 +257,8 @@ Here is the full flow in detail:
 
 ### Agent not found
 
-- Run `vouch login` to start the agent, or restart it with `vouch ssh setup`.
-- Verify the socket path exists: `ls -la ~/.vouch/agent.sock`.
+- Run `vouch login` to start the agent, or restart it with `vouch setup ssh`.
+- Verify the socket path exists: `ls -la ~/.vouch/ssh-agent.sock`.
 
 ### Server rejects the certificate even though it was signed by the right CA
 

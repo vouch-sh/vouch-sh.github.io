@@ -29,7 +29,7 @@ Key characteristics:
 Before configuring the GitHub integration, make sure you have:
 
 - The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- A **Google Workspace** account linked to your Vouch identity
+- A **verified identity** linked to your Vouch account (via your organization's SSO provider)
 - Your **organization administrator** has connected at least one GitHub organization to the Vouch server
 
 ---
