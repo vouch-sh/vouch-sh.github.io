@@ -1,0 +1,54 @@
+{{ define "main" }}
+<div class="docs-layout">
+  <aside class="docs-sidebar" id="docs-sidebar">
+    <div class="docs-sidebar-title">Documentation</div>
+    <nav>
+      <ul>
+        {{ range (where .Site.Pages "Section" "docs").ByWeight }}
+          {{ if not .IsSection }}
+          <li>
+            <a href="{{ .Permalink }}">{{ .Title }}</a>
+          </li>
+          {{ end }}
+        {{ end }}
+      </ul>
+    </nav>
+  </aside>
+
+  <article class="docs-content">
+    <h1>{{ .Title }}</h1>
+    {{ .Content }}
+
+    <div class="card-grid" style="margin-top: 2rem;">
+      {{ range (where .Site.Pages "Section" "docs").ByWeight }}
+        {{ if not .IsSection }}
+        <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
+          <h3>{{ .Title }}</h3>
+          {{ with .Description }}<p>{{ . }}</p>{{ end }}
+        </a>
+        {{ end }}
+      {{ end }}
+    </div>
+  </article>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('docs-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('docs-sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
+{{ end }}

@@ -1,0 +1,11 @@
+{{ define "main" }}
+<article class="blog-single">
+  <h1>{{ .Title }}</h1>
+  <div class="meta">
+    {{ with .Params.author }}By {{ . }} &middot; {{ end }}
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+    &middot; {{ math.Round (div (countwords .Content) 200.0) }} min read
+  </div>
+  {{ .Content }}
+</article>
+{{ end }}

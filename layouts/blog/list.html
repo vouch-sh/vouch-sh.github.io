@@ -1,0 +1,23 @@
+{{ define "main" }}
+<div class="blog-list">
+  <h1>Blog</h1>
+
+  {{ if .Pages }}
+    {{ range .Pages.ByDate.Reverse }}
+    <div class="blog-post-card">
+      <h2><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+      <div class="meta">
+        {{ with .Params.author }}{{ . }} &middot; {{ end }}
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+      </div>
+      {{ with .Description }}<p class="summary">{{ . }}</p>{{ end }}
+    </div>
+    {{ end }}
+  {{ else }}
+    <div class="empty-state">
+      <h2>No posts yet</h2>
+      <p>Check back soon for updates on Vouch development, security best practices, and engineering insights.</p>
+    </div>
+  {{ end }}
+</div>
+{{ end }}
