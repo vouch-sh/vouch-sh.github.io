@@ -1,7 +1,7 @@
 ---
 title: "Cargo Integration"
-description: "Authenticate to private Cargo registries using Vouch's credential provider protocol."
-weight: 7
+description: "Authenticate to private Cargo registries with hardware-backed credentials. No tokens on disk, no cargo login required."
+weight: 9
 subtitle: "Authenticate to private Cargo registries using Vouch"
 ---
 

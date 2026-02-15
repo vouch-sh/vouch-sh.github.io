@@ -1,7 +1,7 @@
 ---
 title: "Applications (OIDC)"
 description: "Add 'Sign in with Vouch' to your web application using OpenID Connect."
-weight: 8
+weight: 10
 subtitle: "Add hardware-backed authentication to your web application"
 ---
 
@@ -12,7 +12,7 @@ Vouch is a fully compliant OpenID Connect (OIDC) provider. You can add "Sign in 
 By following this guide, you will integrate Vouch as an OIDC identity provider into your application. Users will authenticate with their YubiKey through Vouch, and your application will receive verified identity information including:
 
 - A unique, stable user identifier (`sub` claim)
-- The user's email address and name
+- The user's email address
 - Hardware attestation claims proving the authentication was performed with a verified security key
 - Organization membership information
 
@@ -35,18 +35,17 @@ To register an application, ask your Vouch organization administrator to create 
 
 ## Access Scopes
 
-Vouch supports three access scopes that control what identity information is included in tokens:
+Vouch supports two access scopes that control what identity information is included in tokens:
 
 | Scope | Description | Claims Included |
 |---|---|---|
 | `openid` | **Required.** Identifies this as an OIDC authentication request. | `sub`, `iss`, `aud`, `exp`, `iat` |
-| `profile` | User profile information. | `name`, `preferred_username` |
 | `email` | User email address. | `email`, `email_verified` |
 
 Request scopes in the authorization request by including them in the `scope` parameter, space-separated:
 
 ```
-scope=openid profile email
+scope=openid email
 ```
 
 ---
@@ -64,7 +63,7 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **UserInfo Endpoint** | `{{< instance-url >}}/oauth/userinfo` |
 | **JWKS URI** | `{{< instance-url >}}/.well-known/jwks.json` |
 | **Signing Algorithm** | `ES256` |
-| **Supported Scopes** | `openid`, `profile`, `email` |
+| **Supported Scopes** | `openid`, `email` |
 | **Device Authorization Endpoint** | `{{< instance-url >}}/oauth/device/code` |
 | **Device Verification URL** | `{{< instance-url >}}/oauth/device` |
 
@@ -90,7 +89,7 @@ Configure the provider in `config/initializers/omniauth.rb`:
 Rails.application.config.middleware.use OmniAuth::Builder do
   provider :openid_connect, {
     name: :vouch,
-    scope: [:openid, :profile, :email],
+    scope: [:openid, :email],
     response_type: :code,
     issuer: "{{< instance-url >}}",
     discovery: true,
@@ -213,7 +212,7 @@ passport.use(
       clientID: process.env.VOUCH_CLIENT_ID,
       clientSecret: process.env.VOUCH_CLIENT_SECRET,
       callbackURL: "https://your-app.example.com/auth/vouch/callback",
-      scope: "openid profile email",
+      scope: "openid email",
     },
     (issuer, profile, done) => {
       // Find or create user based on profile
@@ -260,7 +259,7 @@ const handler = NextAuth({
       issuer: "{{< instance-url >}}",
       clientId: process.env.VOUCH_CLIENT_ID,
       clientSecret: process.env.VOUCH_CLIENT_SECRET,
-      authorization: { params: { scope: "openid profile email" } },
+      authorization: { params: { scope: "openid email" } },
       profile(profile) {
         return {
           id: profile.sub,
@@ -335,7 +334,7 @@ use Laravel\Socialite\Facades\Socialite;
 Route::get('/auth/vouch', function () {
     return Socialite::driver('openid-connect')
         ->setConfig(config('services.vouch'))
-        ->scopes(['openid', 'profile', 'email'])
+        ->scopes(['openid', 'email'])
         ->redirect();
 });
 
@@ -380,7 +379,7 @@ vouch = oauth.register(
     client_id=os.environ["VOUCH_CLIENT_ID"],
     client_secret=os.environ["VOUCH_CLIENT_SECRET"],
     server_metadata_url="{{< instance-url >}}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email"},
+    client_kwargs={"scope": "openid email"},
 )
 
 
@@ -436,7 +435,7 @@ oauth.register(
     client_id=os.environ["VOUCH_CLIENT_ID"],
     client_secret=os.environ["VOUCH_CLIENT_SECRET"],
     server_metadata_url="{{< instance-url >}}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email"},
+    client_kwargs={"scope": "openid email"},
 )
 
 
@@ -488,7 +487,7 @@ spring:
           vouch:
             client-id: ${VOUCH_CLIENT_ID}
             client-secret: ${VOUCH_CLIENT_SECRET}
-            scope: openid, profile, email
+            scope: openid, email
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/vouch"
         provider:
@@ -598,7 +597,6 @@ async fn login(State(state): State<Arc<AppState>>) -> impl IntoResponse {
             CsrfToken::new_random,
             Nonce::new_random,
         )
-        .add_scope(Scope::new("profile".to_string()))
         .add_scope(Scope::new("email".to_string()))
         .url();
 
@@ -694,7 +692,7 @@ const oidcConfig = {
   authority: "{{< instance-url >}}",
   client_id: "your-client-id",
   redirect_uri: "https://your-app.example.com/callback",
-  scope: "openid profile email",
+  scope: "openid email",
   response_type: "code",
 };
 
@@ -765,7 +763,7 @@ const userManager = new UserManager({
   authority: "{{< instance-url >}}",
   client_id: "your-client-id",
   redirect_uri: "https://your-app.example.com/callback",
-  scope: "openid profile email",
+  scope: "openid email",
   response_type: "code",
   userStore: new WebStorageStateStore({ store: window.localStorage }),
 });
@@ -895,7 +893,7 @@ For applications without a framework, use `oidc-client-ts` directly:
       authority: "{{< instance-url >}}",
       client_id: "your-client-id",
       redirect_uri: window.location.origin + "/callback",
-      scope: "openid profile email",
+      scope: "openid email",
       response_type: "code",
     };
 
@@ -971,7 +969,7 @@ device_response = requests.post(
     f"{VOUCH_URL}/oauth/device/code",
     data={
         "client_id": CLIENT_ID,
-        "scope": "openid profile email",
+        "scope": "openid email",
     },
 )
 device_data = device_response.json()
@@ -1096,7 +1094,7 @@ async function main() {
   // Step 1: Request device code
   const deviceResponse = await post("/oauth/device/code", {
     client_id: CLIENT_ID,
-    scope: "openid profile email",
+    scope: "openid email",
   });
 
   const { device_code, user_code, verification_uri, interval = 5, expires_in = 600 } =
@@ -1217,7 +1215,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .post(format!("{vouch_url}/oauth/device/code"))
         .form(&[
             ("client_id", client_id.as_str()),
-            ("scope", "openid profile email"),
+            ("scope", "openid email"),
         ])
         .send()
         .await?
@@ -1348,7 +1346,6 @@ Example ID token payload with Vouch-specific claims:
   "iat": 1699996400,
   "email": "alice@example.com",
   "email_verified": true,
-  "name": "Alice Smith",
   "hardware_verified": true,
   "hardware_aaguid": "2fc0579f-8113-47ea-b116-bb5a8db9202a",
   "cnf": {

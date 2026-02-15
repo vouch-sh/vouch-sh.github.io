@@ -1,9 +1,9 @@
 ---
 title: "Documentation"
-description: "Learn how to set up and use Vouch for hardware-backed developer credentials."
+description: "Set up and use Vouch for hardware-backed SSH, AWS, GitHub, Docker, Kubernetes, and Cargo credentials with your YubiKey."
 ---
 
-Welcome to the Vouch documentation. These guides walk you through installing the CLI, enrolling your YubiKey, and integrating Vouch with the services your team relies on every day -- AWS, SSH, GitHub, and Kubernetes.
+Welcome to the Vouch documentation. These guides walk you through installing the CLI, enrolling your YubiKey, and integrating Vouch with the services your team relies on every day -- AWS, SSH, GitHub, Docker, Kubernetes, and more.
 
 Vouch replaces long-lived secrets with short-lived, hardware-backed credentials. After a single `vouch login` authenticated by your YubiKey, you get up to 8 hours of seamless access to cloud infrastructure, remote servers, and Git forges without passwords, static keys, or shared secrets.
 
@@ -13,3 +13,11 @@ Vouch replaces long-lived secrets with short-lived, hardware-backed credentials.
 - **[AWS Integration](/docs/aws/)** -- Configure AWS IAM to trust Vouch as an OIDC identity provider for short-lived STS credentials.
 - **[SSH Certificates](/docs/ssh/)** -- Configure SSH servers to trust Vouch certificates for passwordless authentication.
 - **[Amazon EKS](/docs/eks/)** -- Authenticate to EKS clusters using AWS IAM and EKS Access Entries.
+- **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
+- **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
+- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories for Cargo, pip, and npm.
+- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
+- **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries using Vouch's credential provider.
+- **[Applications (OIDC)](/docs/applications/)** -- Add "Sign in with Vouch" to your web application.
+- **[SCIM Provisioning](/docs/scim/)** -- Automate user lifecycle management with your identity provider.
+- **[CLI Reference](/docs/cli-reference/)** -- Complete command reference for the Vouch CLI.
