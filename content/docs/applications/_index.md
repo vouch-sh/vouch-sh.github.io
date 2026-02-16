@@ -29,12 +29,12 @@ This works with any framework or library that supports OpenID Connect or OAuth 2
 
 Before integrating Vouch into your application, you need:
 
-- A **registered OAuth application** in the Vouch admin panel at https://{{< instance-url >}}/admin
+- A **registered OAuth application** at https://{{< instance-url >}}/applications
 - Your application's **client ID** (`client_id`)
 - Your application's **client secret** (`client_secret`)
 - A configured **redirect URI** (e.g., `https://your-app.example.com/auth/callback`)
 
-To register an application, ask your Vouch organization administrator to create one in the admin panel, or use the API if you have admin access.
+To register an application, ask your Vouch organization administrator to create one at https://{{< instance-url >}}/applications, or use the API if you have admin access.
 
 ---
 
@@ -190,7 +190,7 @@ Error: unable to fetch OpenID configuration from https://{{< instance-url >}}/.w
 error: invalid_client
 ```
 
-- Verify the `client_id` and `client_secret` match what was registered in the Vouch admin panel.
+- Verify the `client_id` and `client_secret` match what was registered on the Vouch [applications page](https://{{< instance-url >}}/applications).
 - Check that the client credentials are not expired or revoked.
 - Ensure the credentials are being sent correctly (as form parameters for the token endpoint, not as JSON).
 
@@ -223,7 +223,7 @@ Error: ID token signature verification failed
 Access to fetch at 'https://{{< instance-url >}}/oauth/token' has been blocked by CORS policy
 ```
 
-For single-page applications, ensure your application's origin is registered as an allowed origin in the Vouch admin panel. The Vouch server must include your origin in its CORS `Access-Control-Allow-Origin` response header.
+For single-page applications, ensure your application's origin is registered as an allowed origin on the Vouch [applications page](https://{{< instance-url >}}/applications). The Vouch server must include your origin in its CORS `Access-Control-Allow-Origin` response header.
 
 ### Device code expired
 

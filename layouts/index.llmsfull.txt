@@ -1,0 +1,35 @@
+# Vouch — Complete Documentation
+
+> Vouch is an open-source credential broker that replaces long-lived secrets (AWS keys, SSH keys, GitHub PATs, registry tokens) with short-lived credentials after FIDO2 hardware verification.
+
+Source: https://github.com/vouch-sh/vouch
+Website: https://vouch.sh
+
+Note: Throughout this documentation, references to `{{ site.Params.usInstance }}` refer to the Vouch US instance URL used for OIDC discovery, credential endpoints, and API calls.
+{{ $docsSection := .Site.GetPage "/docs" }}
+{{ range $docsSection.Pages.ByWeight }}
+{{ if .IsSection }}
+---
+
+# {{ .Title }}
+
+Source: {{ .Permalink }}
+
+{{ .RawContent }}
+{{ range .Pages.ByWeight }}
+---
+
+## {{ .Title }}
+
+Source: {{ .Permalink }}
+
+{{ .RawContent }}
+{{ end }}{{ else }}
+---
+
+# {{ .Title }}
+
+Source: {{ .Permalink }}
+
+{{ .RawContent }}
+{{ end }}{{ end }}

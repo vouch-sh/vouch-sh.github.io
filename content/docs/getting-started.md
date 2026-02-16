@@ -17,6 +17,8 @@ Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](http
 - A **YubiKey 5 series** (or any compatible FIDO2 security key)
 - A **Vouch server instance**, such as https://{{< instance-url >}}
 
+> **Organization ownership:** The first person to log into Vouch from a Google Workspace domain automatically becomes the organization owner. The owner can configure integrations, manage team members, and connect services like GitHub and AWS for the rest of the team.
+
 ---
 
 ## Step 1 -- Install the CLI
