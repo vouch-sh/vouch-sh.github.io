@@ -45,7 +45,7 @@ Because the ID token is scoped to the authenticated user and is short-lived, cre
 
 ---
 
-## Step 1 -- Create the OIDC Provider in AWS
+## Step 1 -- Create the OIDC Provider in AWS (admin)
 
 Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider in the target AWS account.
 
@@ -87,7 +87,7 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 ---
 
-## Step 2 -- Create an IAM Role
+## Step 2 -- Create an IAM Role (admin)
 
 Create an IAM role that developers will assume. The trust policy must allow [`AssumeRoleWithWebIdentity`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) from the Vouch OIDC provider.
 

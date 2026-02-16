@@ -29,17 +29,24 @@ Key characteristics:
 
 ---
 
-## Prerequisites
+## Step 1 -- Install the Vouch GitHub App (admin)
 
-Before configuring the GitHub integration, make sure you have:
+An organization administrator must connect at least one GitHub organization to the Vouch server before any team member can use the integration.
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- A **verified identity** linked to your Vouch account (via your organization's SSO provider)
-- Your **organization administrator** has connected at least one GitHub organization to the Vouch server
+1. Navigate to https://{{< instance-url >}}/github/connect and follow the prompts to install the GitHub App in your GitHub organization. You can choose to grant access to all repositories or select specific ones.
+
+2. After installing the app, confirm the organization connection on the GitHub connect page. The server will verify it can issue tokens for the connected organization.
+
+3. Optionally, adjust which repositories the GitHub App has access to at any time through your GitHub organization settings under **Settings > GitHub Apps > Vouch**.
 
 ---
 
-## Step 1 -- Configure Git Credential Helper
+## Step 2 -- Configure Git Credential Helper
+
+Before configuring the credential helper, make sure you have:
+
+- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
+- A **verified identity** linked to your Vouch account (via your organization's SSO provider)
 
 Run the setup command to install the Vouch credential helper for GitHub:
 
@@ -64,7 +71,7 @@ This tells Git to use the Vouch credential helper whenever it needs credentials 
 
 ---
 
-## Step 2 -- Authenticate
+## Step 3 -- Authenticate
 
 If you have not already logged in today, authenticate with your YubiKey:
 
@@ -76,7 +83,7 @@ Your session lasts for 8 hours. All Git operations during that window use the se
 
 ---
 
-## Step 3 -- Use Git normally
+## Step 4 -- Use Git normally
 
 With the credential helper configured and an active session, Git commands work without any extra flags or tokens:
 
@@ -95,20 +102,6 @@ git push
 ```
 
 Vouch handles authentication transparently. You do not need to enter a username, password, or token.
-
----
-
-## Admin Setup
-
-Organization administrators must complete the following steps before team members can use the GitHub integration:
-
-1. **Install the Vouch GitHub App** -- Navigate to https://{{< instance-url >}}/github/connect and follow the prompts to install the GitHub App in your GitHub organization. You can choose to grant access to all repositories or select specific ones.
-
-2. **Authorize the GitHub organization** -- After installing the app, confirm the organization connection on the GitHub connect page. The server will verify it can issue tokens for the connected organization.
-
-3. **Manage repository access** -- You can adjust which repositories the GitHub App has access to at any time through your GitHub organization settings under **Settings > GitHub Apps > Vouch**.
-
-4. **Communicate to your team** -- Let team members know they can run `vouch setup github --configure` and begin using the integration immediately.
 
 ---
 
