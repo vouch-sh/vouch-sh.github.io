@@ -884,6 +884,119 @@ tr:hover td {
   }
 }
 
+/* ===== Sidebar Groups ===== */
+.sidebar-group {
+  margin-bottom: 2px;
+}
+
+.sidebar-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.sidebar-group-header a {
+  flex: 1;
+}
+
+.sidebar-chevron {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-chevron:hover {
+  color: var(--text);
+}
+
+.sidebar-chevron svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s;
+  transform: rotate(-90deg);
+}
+
+.sidebar-group.open .sidebar-chevron svg {
+  transform: rotate(0deg);
+}
+
+.sidebar-children {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-group.open .sidebar-children {
+  display: block;
+}
+
+.sidebar-children li a {
+  font-size: 0.82rem;
+  padding-left: 1.5rem;
+}
+
+/* ===== Framework Card Grid ===== */
+.framework-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.framework-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s, transform 0.15s;
+  display: block;
+}
+
+.framework-card:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.framework-card h3 {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.framework-card p {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.framework-card-language {
+  display: inline-block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 768px) {
+  .framework-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Blog Layout ===== */
 .blog-list {
   max-width: var(--content-width);

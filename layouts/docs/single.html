@@ -3,25 +3,13 @@
   <aside class="docs-sidebar" id="docs-sidebar">
     <div class="docs-sidebar-title">Documentation</div>
     <nav>
-      <ul>
-        {{ $currentPage := . }}
-        {{ range (where .Site.Pages "Section" "docs").ByWeight }}
-          {{ if not .IsSection }}
-          <li>
-            <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
-              {{ .Title }}
-            </a>
-          </li>
-          {{ end }}
-        {{ end }}
-      </ul>
+      {{ partial "docs-sidebar-nav.html" . }}
     </nav>
   </aside>
 
   <article class="docs-content">
     <div class="docs-breadcrumb">
-      <a href="/docs/">Docs</a>
-      <span class="separator">/</span>
+      {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}Docs{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator">/</span>{{ end }}{{ end }}
       {{ .Title }}
     </div>
     <h1>{{ .Title }}</h1>
