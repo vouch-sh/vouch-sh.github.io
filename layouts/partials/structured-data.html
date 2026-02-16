@@ -1,0 +1,74 @@
+{{/* WebSite — every page */}}
+{{ $website := dict
+  "@context" "https://schema.org"
+  "@type" "WebSite"
+  "name" "Vouch"
+  "url" .Site.BaseURL
+  "description" .Site.Params.description
+}}
+<script type="application/ld+json">{{ $website | jsonify | safeJS }}</script>
+
+{{/* Organization — every page */}}
+{{ $org := dict
+  "@context" "https://schema.org"
+  "@type" "Organization"
+  "name" "Smoke Turner, LLC"
+  "url" "https://smoketurner.com"
+  "logo" (.Site.Params.ogImage | absURL)
+  "sameAs" (slice .Site.Params.githubRepo)
+}}
+<script type="application/ld+json">{{ $org | jsonify | safeJS }}</script>
+
+{{/* Homepage — SoftwareApplication */}}
+{{ if .IsHome }}
+{{ $app := dict
+  "@context" "https://schema.org"
+  "@type" "SoftwareApplication"
+  "name" "Vouch"
+  "applicationCategory" "SecurityApplication"
+  "operatingSystem" "macOS, Linux"
+  "description" .Site.Params.description
+  "url" .Site.BaseURL
+  "offers" (dict "@type" "Offer" "price" "0" "priceCurrency" "USD")
+  "installUrl" .Site.Params.githubRepo
+}}
+<script type="application/ld+json">{{ $app | jsonify | safeJS }}</script>
+{{ end }}
+
+{{/* Blog posts — BlogPosting */}}
+{{ if and (eq .Section "blog") .IsPage }}
+{{ $author := dict "@type" "Organization" "name" "Smoke Turner, LLC" }}
+{{ with .Params.author }}
+  {{ $author = dict "@type" "Person" "name" . }}
+{{ end }}
+{{ $desc := .Site.Params.description }}
+{{ with .Description }}{{ $desc = . }}{{ end }}
+{{ $post := dict
+  "@context" "https://schema.org"
+  "@type" "BlogPosting"
+  "headline" .Title
+  "description" $desc
+  "datePublished" (.Date.Format "2006-01-02")
+  "dateModified" (.Lastmod.Format "2006-01-02")
+  "author" $author
+  "publisher" (dict "@type" "Organization" "name" "Smoke Turner, LLC" "logo" (dict "@type" "ImageObject" "url" (.Site.Params.ogImage | absURL)))
+  "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink)
+}}
+<script type="application/ld+json">{{ $post | jsonify | safeJS }}</script>
+{{ end }}
+
+{{/* Docs pages — TechArticle */}}
+{{ if and (eq .Section "docs") .IsPage }}
+{{ $desc := .Site.Params.description }}
+{{ with .Description }}{{ $desc = . }}{{ end }}
+{{ $article := dict
+  "@context" "https://schema.org"
+  "@type" "TechArticle"
+  "headline" .Title
+  "description" $desc
+  "author" (dict "@type" "Organization" "name" "Smoke Turner, LLC")
+  "publisher" (dict "@type" "Organization" "name" "Smoke Turner, LLC" "logo" (dict "@type" "ImageObject" "url" (.Site.Params.ogImage | absURL)))
+  "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink)
+}}
+<script type="application/ld+json">{{ $article | jsonify | safeJS }}</script>
+{{ end }}

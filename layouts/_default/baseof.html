@@ -31,6 +31,8 @@
 
   <link rel="author" href="/humans.txt">
 
+  {{ partial "structured-data.html" . }}
+
   {{ $css := resources.Get "css/main.css" | minify | fingerprint }}
   <link rel="stylesheet" href="{{ $css.Permalink }}">
 </head>
