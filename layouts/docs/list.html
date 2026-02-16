@@ -3,15 +3,7 @@
   <aside class="docs-sidebar" id="docs-sidebar">
     <div class="docs-sidebar-title">Documentation</div>
     <nav>
-      <ul>
-        {{ range (where .Site.Pages "Section" "docs").ByWeight }}
-          {{ if not .IsSection }}
-          <li>
-            <a href="{{ .Permalink }}">{{ .Title }}</a>
-          </li>
-          {{ end }}
-        {{ end }}
-      </ul>
+      {{ partial "docs-sidebar-nav.html" . }}
     </nav>
   </aside>
 
@@ -19,14 +11,13 @@
     <h1>{{ .Title }}</h1>
     {{ .Content }}
 
+    {{ $docsSection := .Site.GetPage "/docs" }}
     <div class="card-grid" style="margin-top: 2rem;">
-      {{ range (where .Site.Pages "Section" "docs").ByWeight }}
-        {{ if not .IsSection }}
+      {{ range $docsSection.Pages.ByWeight }}
         <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
           <h3>{{ .Title }}</h3>
           {{ with .Description }}<p>{{ . }}</p>{{ end }}
         </a>
-        {{ end }}
       {{ end }}
     </div>
   </article>

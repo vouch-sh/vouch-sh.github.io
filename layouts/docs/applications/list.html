@@ -1,0 +1,77 @@
+{{ define "main" }}
+<div class="docs-layout">
+  <aside class="docs-sidebar" id="docs-sidebar">
+    <div class="docs-sidebar-title">Documentation</div>
+    <nav>
+      {{ partial "docs-sidebar-nav.html" . }}
+    </nav>
+  </aside>
+
+  <article class="docs-content">
+    <div class="docs-breadcrumb">
+      <a href="/docs/">Docs</a>
+      <span class="separator">/</span>
+      {{ .Title }}
+    </div>
+    <h1>{{ .Title }}</h1>
+    {{ with .Params.subtitle }}<p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">{{ . }}</p>{{ end }}
+    {{ .Content }}
+
+    <h2>Server-Side Frameworks</h2>
+    <p>Integrate Vouch with popular server-side web frameworks using the authorization code flow.</p>
+    <div class="framework-grid">
+      {{ range where .Pages.ByWeight ".Params.category" "server" }}
+      <a href="{{ .Permalink }}" class="framework-card">
+        <span class="framework-card-language">{{ .Params.language }}</span>
+        <h3>{{ .Title }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+
+    <h2>Single Page Applications</h2>
+    <p>Client-side applications using the authorization code flow with PKCE.</p>
+    <div class="framework-grid">
+      {{ range where .Pages.ByWeight ".Params.category" "spa" }}
+      <a href="{{ .Permalink }}" class="framework-card">
+        <span class="framework-card-language">{{ .Params.language }}</span>
+        <h3>{{ .Title }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+
+    <h2>Native &amp; CLI Applications</h2>
+    <p>Desktop applications and CLI tools using the Device Authorization Grant.</p>
+    <div class="framework-grid">
+      {{ range where .Pages.ByWeight ".Params.category" "native" }}
+      <a href="{{ .Permalink }}" class="framework-card">
+        <span class="framework-card-language">{{ .Params.language }}</span>
+        <h3>{{ .Title }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+  </article>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('docs-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('docs-sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
+{{ end }}
