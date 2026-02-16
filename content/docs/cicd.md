@@ -1,13 +1,16 @@
 ---
-title: "CI/CD Integration"
-description: "Add human authorization gates to deployment pipelines using Vouch OIDC tokens."
+title: "Add Human Approval Gates to CI/CD Pipelines"
+linkTitle: "CI/CD"
+description: "Require a YubiKey tap before production deployments — hardware-verified identity embedded in every CI/CD credential."
 weight: 15
 subtitle: "Add human authorization gates to deployment pipelines"
+params:
+  docsGroup: manage
 ---
 
-Vouch's OIDC provider can be used as an identity source for CI/CD pipelines. Unlike GitHub Actions' built-in OIDC (which attests *code location* -- "this workflow runs in repo X"), Vouch's OIDC attests *human presence* -- "a verified human authorized this action with their YubiKey."
+Most CI/CD pipelines use service account credentials or workflow-generated OIDC tokens to deploy. Neither proves that a specific person authorized the deployment. If a workflow runs automatically on merge, any merged PR can reach production with no human checkpoint.
 
-This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
+Vouch's OIDC attests *human presence* -- "a verified human authorized this action with their YubiKey." This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
 
 ## How it works
 

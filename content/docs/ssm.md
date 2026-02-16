@@ -1,13 +1,16 @@
 ---
-title: "SSM Session Manager"
-description: "Connect to EC2 instances through AWS Systems Manager without opening port 22 or managing SSH keys."
+title: "Connect to EC2 Instances without SSH Port 22"
+linkTitle: "SSM Session Manager"
+description: "Use AWS Systems Manager Session Manager with Vouch credentials to reach EC2 instances without opening SSH ports."
 weight: 12
 subtitle: "Connect to EC2 instances through AWS Systems Manager"
+params:
+  docsGroup: infra
 ---
 
-Vouch integrates with AWS Systems Manager (SSM) Session Manager to provide secure shell access to EC2 instances without opening inbound ports or managing SSH keys. After `vouch login`, you can start sessions to any SSM-managed instance using your hardware-backed AWS credentials.
+Managing SSH access to EC2 instances typically means opening port 22, distributing keys, and maintaining security groups. Every open port is an attack surface, and every key is a secret to manage.
 
-Managing SSH access to EC2 instances typically means opening port 22, distributing keys, and maintaining security groups. SSM Session Manager eliminates all of this: connections go through the Systems Manager service, every session is logged in CloudTrail, and no inbound ports are required. With Vouch, the underlying AWS credentials are hardware-verified and short-lived.
+SSM Session Manager eliminates all of this: connections go through the Systems Manager service, every session is logged in CloudTrail, and no inbound ports are required. With Vouch, the underlying AWS credentials are hardware-verified and short-lived -- after `vouch login`, you can start sessions to any SSM-managed instance.
 
 ## How it works
 

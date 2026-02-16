@@ -1,13 +1,16 @@
 ---
-title: "AWS CodeArtifact"
-description: "Authenticate to AWS CodeArtifact repositories using Vouch for Cargo, pip, and npm without storing tokens on disk."
+title: "Authenticate to AWS CodeArtifact without Stored Tokens"
+linkTitle: "CodeArtifact"
+description: "Pull and publish packages from CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
 weight: 7
 subtitle: "Authenticate to AWS CodeArtifact repositories using Vouch"
+params:
+  docsGroup: code
 ---
 
-Vouch integrates with AWS CodeArtifact to provide seamless authentication for private package repositories. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your CodeArtifact repositories without manual token management.
+Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. Keeping them all current across a growing team is a constant chore.
 
-Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic.
+With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your CodeArtifact repositories without manual token management.
 
 ## How it works
 

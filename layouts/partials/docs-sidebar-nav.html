@@ -9,7 +9,7 @@
       <li class="sidebar-group{{ if or $isAncestor $isActive }} open{{ end }}">
         <div class="sidebar-group-header">
           <a href="{{ .Permalink }}" {{ if $isActive }}class="active"{{ end }}>
-            {{ .Title }}
+            {{ .LinkTitle }}
           </a>
           <button class="sidebar-chevron" onclick="this.closest('.sidebar-group').classList.toggle('open')" aria-label="Toggle section">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -21,7 +21,7 @@
           {{ range .Pages.ByWeight }}
           <li>
             <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
-              {{ .Title }}
+              {{ .LinkTitle }}
             </a>
           </li>
           {{ end }}
@@ -31,7 +31,7 @@
       {{/* Regular flat page */}}
       <li>
         <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
-          {{ .Title }}
+          {{ .LinkTitle }}
         </a>
       </li>
     {{ end }}

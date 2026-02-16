@@ -1,13 +1,37 @@
 ---
-title: "AWS Integration"
-description: "Configure AWS IAM to trust Vouch as an OIDC identity provider for short-lived STS credentials."
+title: "Replace AWS Access Keys with Short-Lived Credentials"
+linkTitle: "AWS"
+description: "Stop distributing long-lived AWS access keys. Use OIDC federation to get temporary STS credentials backed by a YubiKey."
 weight: 2
 subtitle: "Configure AWS IAM to trust Vouch as an OIDC identity provider"
+params:
+  docsGroup: infra
 ---
 
-Vouch lets developers assume AWS IAM roles using short-lived STS credentials backed by their YubiKey. Instead of distributing long-lived access keys, you configure AWS to trust Vouch as an OpenID Connect (OIDC) identity provider. After `vouch login`, the CLI exchanges an OIDC ID token for temporary AWS credentials -- no secrets ever touch disk.
+If your team distributes AWS access keys through `~/.aws/credentials`, you have credentials that never expire, are trivially exfiltrated by malware, and leave no trace of who used them. Rotating keys is a manual chore that rarely happens on schedule, and a single compromised laptop exposes keys that work indefinitely.
 
-Distributing long-lived AWS access keys through `~/.aws/credentials` is the most common source of credential leaks at startups. A single compromised laptop exposes keys that work indefinitely and are difficult to audit. Vouch eliminates this by federating into AWS through OIDC -- credentials last at most 1 hour, are tied to a verified human identity, and leave a CloudTrail record linking every API call back to the person who made it.
+Vouch eliminates static access keys entirely. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail. There are no keys to rotate, no credentials on disk, and no shared secrets.
+
+## How Vouch compares to `aws login` and `aws sso login`
+
+AWS provides two built-in CLI authentication commands. Here is how they compare to Vouch:
+
+- **[`aws login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-local-development)** -- New in AWS CLI v2.32+. Opens a browser to authenticate with your AWS Console credentials (IAM user, root, or federated identity) and issues temporary credentials for up to 12 hours. It requires the `SignInLocalDevelopmentAccess` managed policy and only covers AWS -- it does not provide credentials for SSH, GitHub, Docker registries, or other services.
+
+- **[`aws sso login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-sso)** -- Authenticates through AWS IAM Identity Center (formerly AWS SSO). It requires an Identity Center instance and an SSO-configured profile (`aws configure sso`). Like `aws login`, it only covers AWS services.
+
+- **`vouch login`** -- Authenticates with a FIDO2 hardware key (YubiKey) and provides credentials for AWS, SSH, GitHub, Docker registries, Cargo registries, CodeCommit, CodeArtifact, databases, and any OIDC-compatible application -- all from a single session. Every credential is tied to a hardware-verified human identity, and authentication is phishing-resistant by design.
+
+| | `aws login` | `aws sso login` | `vouch login` |
+|---|---|---|---|
+| **Authentication** | Browser + console credentials | Browser + Identity Center | YubiKey tap (FIDO2) |
+| **Phishing-resistant** | Depends on IdP | Depends on IdP | Yes (hardware-bound) |
+| **AWS credentials** | Yes (up to 12h) | Yes | Yes (up to 1h) |
+| **SSH, GitHub, Docker, etc.** | No | No | Yes |
+| **Identity in CloudTrail** | IAM user or role | SSO user | Hardware-verified user |
+| **Requires AWS-managed service** | No | IAM Identity Center | No |
+
+If you already use IAM Identity Center, `aws sso login` may cover your AWS needs. Vouch is a better fit when you want a single authentication event to cover AWS and everything else your team uses, with the guarantee that every credential traces back to a physical hardware key.
 
 ## How it works
 
@@ -30,19 +54,12 @@ Before any user can assume a role, an administrator must register the Vouch serv
 > For background on OIDC identity providers in AWS, see [Creating OpenID Connect (OIDC) identity providers](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html) in the AWS documentation.
 
 ```bash
-# Fetch the TLS thumbprint for the Vouch server
-THUMBPRINT=$(openssl s_client -connect us.vouch.sh:443 -servername us.vouch.sh \
-  < /dev/null 2>/dev/null \
-  | openssl x509 -fingerprint -noout -sha1 \
-  | sed 's/://g' | cut -d= -f2 | tr 'A-F' 'a-f')
-
 aws iam create-open-id-connect-provider \
   --url "https://{{< instance-url >}}" \
-  --client-id-list "{{< instance-url >}}" \
-  --thumbprint-list "$THUMBPRINT"
+  --client-id-list "{{< instance-url >}}"
 ```
 
-> **Note:** AWS also fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` at runtime to verify token signatures. The thumbprint is used to validate the TLS certificate of the OIDC provider endpoint.
+> **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
 
 ### CloudFormation
 
@@ -57,21 +74,14 @@ Resources:
       Url: "https://{{< instance-url >}}"
       ClientIdList:
         - "{{< instance-url >}}"
-      ThumbprintList:
-        - "<thumbprint>"  # Replace with the SHA-1 thumbprint from the command above
 ```
 
 ### Terraform
 
 ```hcl
-data "tls_certificate" "vouch" {
-  url = "https://{{< instance-url >}}"
-}
-
 resource "aws_iam_openid_connect_provider" "vouch" {
-  url             = "https://{{< instance-url >}}"
-  client_id_list  = ["{{< instance-url >}}"]
-  thumbprint_list = [data.tls_certificate.vouch.certificates[0].sha1_fingerprint]
+  url            = "https://{{< instance-url >}}"
+  client_id_list = ["{{< instance-url >}}"]
 }
 ```
 
@@ -288,7 +298,6 @@ aws s3 ls --profile vouch
 
 - Verify the OIDC provider URL in the IAM trust policy matches `https://{{< instance-url >}}` exactly (no trailing slash).
 - Confirm the `aud` condition matches the client ID registered with the OIDC provider.
-- Check that the OIDC provider's thumbprint is correct and up to date.
 
 ### "Token is expired"
 

@@ -1,13 +1,16 @@
 ---
-title: "Database Authentication"
-description: "Connect to RDS, Aurora, and Redshift using IAM database authentication with hardware-verified credentials."
+title: "Connect to RDS and Aurora without Database Passwords"
+linkTitle: "Databases"
+description: "Replace static database passwords with 15-minute IAM auth tokens generated from hardware-backed credentials."
 weight: 13
 subtitle: "Connect to RDS, Aurora, and Redshift using IAM database authentication"
+params:
+  docsGroup: infra
 ---
 
-Vouch integrates with AWS IAM database authentication to replace static database passwords with short-lived, hardware-backed tokens. After `vouch login`, you can connect to RDS, Aurora, and Redshift databases using temporary authentication tokens generated from your Vouch AWS credentials.
+Static database passwords are shared across developers, stored in configuration files, and rarely rotated. When someone leaves the team, do you rotate every database password they had access to? Most teams don't.
 
-Static database passwords are shared across developers, stored in configuration files, and rarely rotated. [IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces them with 15-minute tokens generated from IAM credentials. With Vouch, those IAM credentials are themselves hardware-backed and short-lived -- every database connection traces back to a verified human identity.
+[IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static passwords with 15-minute tokens generated from IAM credentials. With Vouch, those IAM credentials are themselves hardware-backed and short-lived -- every database connection traces back to a verified human identity.
 
 ## How it works
 

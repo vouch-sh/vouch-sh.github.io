@@ -1,13 +1,16 @@
 ---
-title: "GitHub Integration"
-description: "Access private GitHub repositories using short-lived tokens via Vouch authentication."
+title: "Access GitHub Repos without Personal Access Tokens"
+linkTitle: "GitHub"
+description: "Replace GitHub PATs with short-lived tokens generated from your hardware-backed Vouch session."
 weight: 5
 subtitle: "Access private GitHub repositories using Vouch authentication"
+params:
+  docsGroup: code
 ---
 
-Vouch replaces static GitHub personal access tokens and deploy keys with short-lived, hardware-backed credentials. After running `vouch login`, you can clone, pull, and push to private repositories without managing any GitHub tokens yourself.
+GitHub personal access tokens are long-lived, broadly scoped, and stored in plaintext in shell configs and CI environments. Deploy keys are limited to a single repository per key and require manual management on every machine. A single leaked PAT can expose every private repo it has access to.
 
-GitHub personal access tokens are long-lived, broadly scoped, and stored in plaintext in shell configs and CI environments. Deploy keys are limited to a single repository per key and require manual management on every machine. Vouch replaces both with 15-minute tokens issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization -- automatically scoped to the right repositories and tied to a hardware-verified identity.
+Vouch replaces both with 15-minute tokens issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization -- automatically scoped to the right repositories and tied to a hardware-verified identity. After running `vouch login`, you can clone, pull, and push to private repositories without managing any GitHub tokens yourself.
 
 ## How it works
 

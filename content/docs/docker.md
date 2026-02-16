@@ -1,13 +1,16 @@
 ---
-title: "Docker Registries"
-description: "Authenticate to container registries using Vouch for ECR and GitHub Container Registry."
+title: "Authenticate to Container Registries without Stored Passwords"
+linkTitle: "Docker Registries"
+description: "Stop running docker login and storing plaintext credentials. Vouch generates registry tokens on demand for ECR and GHCR."
 weight: 6
 subtitle: "Authenticate to container registries using Vouch"
+params:
+  docsGroup: code
 ---
 
-Vouch provides a Docker credential helper that replaces static registry passwords and long-lived access tokens with short-lived, hardware-backed credentials. After a single `vouch login`, you can pull and push container images to supported registries without running `docker login` or managing any secrets.
+Container registry credentials are a frequent source of leaks. Docker stores them in plaintext in `~/.docker/config.json`, and ECR's `get-login-password` tokens require a cron job or wrapper script to refresh every 12 hours. If you've ever committed a `.docker/config.json` to a dotfiles repo, those credentials are permanently exposed.
 
-Container registry credentials are a frequent source of leaks. Docker stores them in plaintext in `~/.docker/config.json`, and ECR's `get-login-password` tokens require a cron job or wrapper script to refresh every 12 hours. Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline/login/#credential-helpers) generates tokens on demand -- no stored passwords, no refresh scripts, and full auditability through [ECR authentication](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html) logs.
+Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline/login/#credential-helpers) generates tokens on demand -- no stored passwords, no refresh scripts, and full auditability through [ECR authentication](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html) logs. After a single `vouch login`, you can pull and push container images to supported registries without running `docker login` or managing any secrets.
 
 ## How it works
 

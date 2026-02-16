@@ -1,13 +1,16 @@
 ---
-title: "Amazon EKS"
-description: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries with Vouch."
+title: "Authenticate to Amazon EKS without Static Credentials"
+linkTitle: "Amazon EKS"
+description: "Access EKS clusters using OIDC-federated IAM credentials instead of long-lived kubeconfig tokens."
 weight: 4
 subtitle: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries"
+params:
+  docsGroup: infra
 ---
 
-Vouch integrates with Amazon EKS through the standard AWS IAM OIDC flow. After running `vouch login`, the CLI provides short-lived AWS credentials that `kubectl` and other Kubernetes tools use to authenticate with your EKS clusters. Combined with EKS Access Entries, this gives you fine-grained, per-user access control backed by hardware security keys.
+Managing Kubernetes access with ConfigMap-based `aws-auth` entries is error-prone and hard to audit. Who has access? When was it granted? Long-lived kubeconfig tokens get shared across machines, and revoking access means editing a ConfigMap by hand.
 
-Managing Kubernetes access with ConfigMap-based `aws-auth` entries is error-prone and hard to audit. Who has access? When was it granted? EKS Access Entries provide a cleaner model: IAM principals map directly to Kubernetes permissions, and every authentication event is recorded in CloudTrail. Combined with Vouch, every `kubectl` command traces back to a hardware-verified human identity.
+EKS Access Entries provide a cleaner model: IAM principals map directly to Kubernetes permissions, and every authentication event is recorded in CloudTrail. Combined with Vouch, every `kubectl` command traces back to a hardware-verified human identity -- no static tokens, no shared kubeconfigs.
 
 ## How it works
 

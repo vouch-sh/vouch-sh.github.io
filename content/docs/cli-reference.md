@@ -1,8 +1,11 @@
 ---
-title: "CLI Reference"
-description: "Complete command reference for the Vouch CLI, covering authentication, setup, credential helpers, key management, and diagnostics."
-weight: 12
+title: "Vouch CLI Reference"
+linkTitle: "CLI Reference"
+description: "Complete command reference for the Vouch CLI — login, credentials, setup, and configuration."
+weight: 17
 subtitle: "Complete command reference for the Vouch CLI"
+params:
+  docsGroup: manage
 ---
 
 This page documents all available Vouch CLI commands. For installation instructions, see [Getting Started](/docs/getting-started/).

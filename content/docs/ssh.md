@@ -1,13 +1,16 @@
 ---
-title: "SSH Certificates"
-description: "Replace SSH keys with short-lived certificates signed by your organization's CA. No authorized_keys, no key rotation, 8-hour expiry."
+title: "Replace SSH Keys with Short-Lived Certificates"
+linkTitle: "SSH Certificates"
+description: "Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist."
 weight: 3
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
+params:
+  docsGroup: infra
 ---
 
-Vouch issues short-lived SSH certificates signed by your organization's certificate authority (CA). Instead of distributing and managing individual public keys across servers, administrators trust a single CA key. Developers authenticate with `vouch login` and then `ssh` into any trusted server without passwords, key copying, or `authorized_keys` management.
+Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. Keys never expire, and there is no way to know who used them.
 
-Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. SSH certificates eliminate this entirely: servers trust a single CA key, and developers receive short-lived certificates that expire on their own. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist.
+Vouch eliminates this entirely. Administrators trust a single certificate authority (CA) key, and developers receive short-lived SSH certificates that expire after 8 hours. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist. Developers authenticate with `vouch login` and then `ssh` into any trusted server without passwords or key copying.
 
 ## How it works
 

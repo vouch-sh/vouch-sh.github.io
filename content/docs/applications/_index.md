@@ -1,11 +1,16 @@
 ---
-title: "Applications (OIDC)"
-description: "Add 'Sign in with Vouch' to your web application using OpenID Connect."
+title: "Add Hardware-Backed Sign-In to Your Application"
+linkTitle: "Applications (OIDC)"
+description: "Integrate Vouch as an OIDC provider in your web, SPA, or native app for hardware-verified authentication."
 weight: 10
 subtitle: "Add hardware-backed authentication to your web application"
+params:
+  docsGroup: manage
 ---
 
-Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) provider. You can add "Sign in with Vouch" to any web application, single-page app, or native CLI tool using standard OIDC libraries. Every login is backed by a hardware security key, giving your application phishing-resistant authentication without building it yourself.
+Building phishing-resistant authentication from scratch means implementing WebAuthn flows, managing attestation, and handling device lifecycle -- a significant engineering investment for a startup. If you already have an OIDC-compatible application, you can get hardware-backed sign-in without any of that.
+
+Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) provider. You add "Sign in with Vouch" to any web application, single-page app, or native CLI tool using standard OIDC libraries. Every login is backed by a hardware security key, giving your application phishing-resistant authentication without building it yourself.
 
 ## What you'll build
 

@@ -944,6 +944,33 @@ tr:hover td {
   padding-left: 1.5rem;
 }
 
+/* ===== Docs Group Sections ===== */
+.docs-group {
+  margin-top: 3rem;
+}
+
+.docs-group-title {
+  font-size: 1.35rem;
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.docs-group-description {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.card-featured {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(62, 207, 142, 0.08), var(--bg-raised));
+}
+
+.card-featured:hover {
+  border-color: var(--accent-hover);
+}
+
 /* ===== Framework Card Grid ===== */
 .framework-grid {
   display: grid;

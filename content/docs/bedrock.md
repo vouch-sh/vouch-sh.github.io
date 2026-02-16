@@ -1,9 +1,14 @@
 ---
-title: "AI Model Access (Bedrock)"
-description: "Hardware-verified access to Amazon Bedrock with full audit trails for AI model invocations."
+title: "Access Amazon Bedrock with Hardware-Verified Credentials"
+linkTitle: "AI & Bedrock"
+description: "Connect to Amazon Bedrock foundation models using short-lived credentials with full audit trails."
 weight: 16
 subtitle: "Hardware-verified access to Amazon Bedrock"
+params:
+  docsGroup: infra
 ---
+
+AI model access creates unique audit and cost challenges. Shared API keys make it impossible to attribute usage to individual developers, and a leaked key means unlimited access to expensive model invocations with no way to trace who's responsible.
 
 [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) uses standard AWS SigV4 authentication. Vouch's `credential_process` provides STS credentials backed by FIDO2 verification, which means every Bedrock API call is tied to a hardware-verified human identity.
 
@@ -12,8 +17,6 @@ YubiKey tap → FIDO2 → Vouch JWT → STS → Bedrock InvokeModel → CloudTra
 ```
 
 ## Why this matters
-
-AI model access creates unique audit and cost attribution challenges:
 
 - **Every API call has a verified identity** -- no shared API keys or service accounts for human users.
 - **CloudTrail captures the full chain** -- from YubiKey tap to model invocation.

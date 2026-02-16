@@ -12,14 +12,87 @@
     {{ .Content }}
 
     {{ $docsSection := .Site.GetPage "/docs" }}
-    <div class="card-grid" style="margin-top: 2rem;">
-      {{ range $docsSection.Pages.ByWeight }}
-        <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
-          <h3>{{ .Title }}</h3>
-          {{ with .Description }}<p>{{ . }}</p>{{ end }}
-        </a>
-      {{ end }}
+
+    {{/* Featured: Getting Started */}}
+    {{ range where $docsSection.Pages.ByWeight ".Params.docsGroup" "featured" }}
+    <div style="margin-top: 2rem;">
+      <a href="{{ .Permalink }}" class="card card-featured" style="text-decoration: none; color: var(--text); display: block;">
+        <h3>{{ .LinkTitle }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
     </div>
+    {{ end }}
+
+    {{/* Infrastructure group */}}
+    {{ $infraPages := where $docsSection.Pages.ByWeight ".Params.docsGroup" "infra" }}
+    {{ with $infraPages }}
+    <div class="docs-group">
+      <h2 class="docs-group-title">Stop rotating access keys and managing credentials</h2>
+      <p class="docs-group-description">Access AWS, servers, databases, and AI services with short-lived, hardware-backed tokens.</p>
+      <div class="card-grid" style="margin-top: 1.25rem;">
+        {{ range . }}
+          <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
+            <h3>{{ .LinkTitle }}</h3>
+            {{ with .Description }}<p>{{ . }}</p>{{ end }}
+          </a>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    {{/* Code group */}}
+    {{ $codePages := where $docsSection.Pages.ByWeight ".Params.docsGroup" "code" }}
+    {{ with $codePages }}
+    <div class="docs-group">
+      <h2 class="docs-group-title">Ship code without token juggling</h2>
+      <p class="docs-group-description">Authenticate to GitHub, container registries, and package managers with a single YubiKey tap.</p>
+      <div class="card-grid" style="margin-top: 1.25rem;">
+        {{ range . }}
+          <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
+            <h3>{{ .LinkTitle }}</h3>
+            {{ with .Description }}<p>{{ . }}</p>{{ end }}
+          </a>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    {{/* Manage group */}}
+    {{ $managePages := where $docsSection.Pages.ByWeight ".Params.docsGroup" "manage" }}
+    {{ with $managePages }}
+    <div class="docs-group">
+      <h2 class="docs-group-title">Integrate Vouch into your workflow</h2>
+      <p class="docs-group-description">Add hardware-verified identity to CI/CD pipelines, IaC tools, your own apps, and user provisioning.</p>
+      <div class="card-grid" style="margin-top: 1.25rem;">
+        {{ range . }}
+          <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
+            <h3>{{ .LinkTitle }}</h3>
+            {{ with .Description }}<p>{{ . }}</p>{{ end }}
+          </a>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    {{/* Catch-all for ungrouped pages */}}
+    {{ $grouped := slice "featured" "infra" "code" "manage" }}
+    {{ $ungrouped := where $docsSection.Pages.ByWeight ".Params.docsGroup" "not in" $grouped }}
+    {{/* Also include pages with no docsGroup set */}}
+    {{ $noGroup := where $docsSection.Pages.ByWeight ".Params.docsGroup" "eq" nil }}
+    {{ $allUngrouped := $ungrouped | append $noGroup }}
+    {{ with $allUngrouped }}
+    <div class="docs-group">
+      <h2 class="docs-group-title">More</h2>
+      <div class="card-grid" style="margin-top: 1.25rem;">
+        {{ range . }}
+          <a href="{{ .Permalink }}" class="card" style="text-decoration: none; color: var(--text);">
+            <h3>{{ .LinkTitle }}</h3>
+            {{ with .Description }}<p>{{ . }}</p>{{ end }}
+          </a>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
   </article>
 </div>
 

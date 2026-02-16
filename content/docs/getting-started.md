@@ -1,13 +1,16 @@
 ---
-title: "Getting Started"
-description: "Install the Vouch CLI, enroll your YubiKey, and start using hardware-backed credentials in under 5 minutes."
+title: "Getting Started with Vouch"
+linkTitle: "Getting Started"
+description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials in minutes."
 weight: 1
 subtitle: "Start using Vouch in under 5 minutes"
+params:
+  docsGroup: featured
 ---
 
-This guide walks you through installing the Vouch CLI, enrolling your YubiKey with your organization's Vouch server, and performing your first login. By the end you will have hardware-backed credentials ready for SSH, AWS, and Git.
+Most developer credential systems rely on static secrets: SSH private keys sitting in `~/.ssh`, AWS access keys in `~/.aws/credentials`, GitHub PATs pasted into environment variables. These secrets never expire, are trivially exfiltrated by malware, and have no proof of who used them.
 
-Most developer credential systems rely on static secrets: SSH private keys sitting in `~/.ssh`, AWS access keys in `~/.aws/credentials`, GitHub PATs pasted into environment variables. These secrets never expire, are trivially exfiltrated by malware, and have no proof of who used them. Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) hardware key assertion -- every credential is short-lived, bound to a verified human identity, and logged.
+Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) hardware key assertion -- every credential is short-lived, bound to a verified human identity, and logged. This guide walks you through installing the CLI, enrolling your YubiKey, and performing your first login. By the end you will have hardware-backed credentials ready for SSH, AWS, and Git.
 
 ## Prerequisites
 
@@ -154,7 +157,7 @@ When you run `vouch login`, the following takes place behind the scenes:
 
 1. **FIDO2 assertion** -- The CLI asks your YubiKey to sign a challenge from the Vouch server. This proves possession of the enrolled key and requires both your PIN and a physical touch.
 2. **Identity verification** -- The server validates the signed assertion against the public key stored during enrollment.
-3. **Credential issuance** -- On success, the server issues a session token and an **SSH certificate** signed by the organization's CA, valid for 8 hours.
+3. **Credential issuance** -- On success, the server issues a session token and an **SSH certificate** signed by the Vouch CA, valid for 8 hours.
 4. **On-demand credentials** -- AWS, Git, Docker, Cargo, and other credentials are obtained on-demand by their respective credential helpers when you use those tools. Each helper exchanges your active session for a short-lived, service-specific credential.
 5. **Local caching** -- The CLI stores the session and SSH certificate in memory (via the Vouch agent) so subsequent commands can use them without additional YubiKey interaction.
 

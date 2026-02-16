@@ -1,13 +1,16 @@
 ---
-title: "SCIM Provisioning"
-description: "Automate user lifecycle management with your identity provider using SCIM 2.0."
+title: "Automate User Provisioning with SCIM"
+linkTitle: "SCIM Provisioning"
+description: "Sync users and groups from your identity provider to Vouch automatically using SCIM 2.0."
 weight: 11
 subtitle: "Automate user lifecycle management with your identity provider"
+params:
+  docsGroup: manage
 ---
 
-SCIM (System for Cross-domain Identity Management) is a standard protocol that lets your identity provider -- Google Workspace, Okta, Azure AD, or OneLogin -- automatically create and remove user accounts in other services. Instead of manually adding and removing people from Vouch when they join or leave your organization, SCIM handles it in real time.
+Manually adding and removing users from Vouch when people join or leave your organization is error-prone and easy to forget. A missed offboarding means someone retains access to hardware-backed credentials they should no longer have.
 
-Vouch supports the **SCIM 2.0** protocol ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) for automated user provisioning and de-provisioning. When SCIM is configured, your identity provider (IdP) can automatically:
+SCIM (System for Cross-domain Identity Management) lets your identity provider -- Google Workspace, Okta, Azure AD, or OneLogin -- handle this automatically in real time. Vouch supports the **SCIM 2.0** protocol ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) for automated user provisioning and de-provisioning. When SCIM is configured, your identity provider (IdP) can automatically:
 
 - **Create** new Vouch user accounts when people join your organization.
 - **Update** user attributes (name, email, role) when they change in your directory.

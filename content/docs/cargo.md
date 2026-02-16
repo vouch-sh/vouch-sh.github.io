@@ -1,13 +1,16 @@
 ---
-title: "Cargo Integration"
-description: "Authenticate to private Cargo registries with hardware-backed credentials. No tokens on disk, no cargo login required."
+title: "Authenticate to Private Cargo Registries"
+linkTitle: "Cargo"
+description: "Use Vouch as a Cargo credential provider for private registries — no tokens in .cargo/config.toml."
 weight: 9
 subtitle: "Authenticate to private Cargo registries using Vouch"
+params:
+  docsGroup: code
 ---
 
-Vouch integrates with Cargo's credential provider protocol to authenticate to private registries without storing tokens on disk. After a single `vouch login`, commands like `cargo build`, `cargo publish`, and `cargo add` work seamlessly against private registries.
+Cargo's default credential mechanism stores a plaintext token in `~/.cargo/credentials.toml` with no expiration. If that file is committed to a dotfiles repo, included in a backup, or read by malware, the token works forever.
 
-Cargo's default credential mechanism stores a plaintext token in `~/.cargo/credentials.toml` with no expiration. If that file is committed to a dotfiles repo, included in a backup, or read by malware, the token works forever. Vouch's credential provider replaces this with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked the moment your session ends.
+Vouch's credential provider replaces this with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked the moment your session ends. After a single `vouch login`, commands like `cargo build`, `cargo publish`, and `cargo add` work seamlessly against private registries.
 
 ## How it works
 
