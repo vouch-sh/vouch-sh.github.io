@@ -3,7 +3,7 @@ title: "Privacy Policy"
 description: "Privacy policy for the Vouch authentication service."
 ---
 
-**Last updated: January 2026**
+**Last updated: February 2026**
 
 ## Introduction
 
@@ -103,4 +103,30 @@ To exercise any of these rights, contact your organization's IT administrator or
 
 For questions about this Privacy Policy or about how your data is handled within Vouch, contact your **organization's IT administrator or security team**. They manage your organization's Vouch deployment and can address questions about data collection, retention, and deletion.
 
-For questions about the Vouch software itself, contact Smoke Turner, LLC.
+For questions about the Vouch software itself, contact Smoke Turner, LLC at [privacy@vouch.sh](mailto:privacy@vouch.sh).
+
+---
+
+## Cookies and Tracking
+
+Vouch uses only essential session cookies required for authentication. These cookies are necessary for the Service to function and cannot be disabled. We do not use analytics cookies, advertising trackers, or any third-party tracking technologies. No user behavior is tracked across websites.
+
+---
+
+## International Data Transfers
+
+The Vouch service is hosted in the United States. If you access the Service from outside the United States, your information will be transferred to, stored, and processed in the United States. By using the Service, you consent to the transfer of your information to the United States.
+
+---
+
+## Children's Privacy
+
+Vouch is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided personal information, we will take steps to delete that information. If you believe a child under 13 has provided personal information to us, please contact us at [privacy@vouch.sh](mailto:privacy@vouch.sh).
+
+---
+
+## Data Controller and Processor
+
+Under applicable data protection laws, your organization (the entity that operates the Vouch deployment) is the **data controller** responsible for determining the purposes and means of processing your personal information. Smoke Turner, LLC acts as a **data processor**, processing personal information on behalf of your organization according to their instructions and the terms of the applicable service agreement.
+
+For questions about how your personal data is processed, contact your organization's data protection officer or IT administrator. For questions about Smoke Turner, LLC's data processing practices, contact [privacy@vouch.sh](mailto:privacy@vouch.sh).

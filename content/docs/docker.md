@@ -7,6 +7,8 @@ subtitle: "Authenticate to container registries using Vouch"
 
 Vouch provides a Docker credential helper that replaces static registry passwords and long-lived access tokens with short-lived, hardware-backed credentials. After a single `vouch login`, you can pull and push container images to supported registries without running `docker login` or managing any secrets.
 
+Container registry credentials are a frequent source of leaks. Docker stores them in plaintext in `~/.docker/config.json`, and ECR's `get-login-password` tokens require a cron job or wrapper script to refresh every 12 hours. Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline/login/#credential-helpers) generates tokens on demand -- no stored passwords, no refresh scripts, and full auditability through [ECR authentication](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html) logs.
+
 ## How it works
 
 When Docker needs to authenticate to a container registry, it calls the Vouch credential helper instead of looking up stored passwords:
@@ -219,3 +221,32 @@ If Docker appears to ignore the Vouch credential helper and prompts for a userna
    }
    ```
 3. Ensure there are no cached credentials for the registry. Run `docker logout <registry>` to clear any stored credentials, then retry.
+
+---
+
+## Helm & Compatible Tools
+
+### Helm
+
+Helm 3.8+ supports OCI registries for chart storage. Because Helm reads the Docker credential store, charts hosted in ECR or GHCR authenticate through Vouch automatically:
+
+```bash
+# Push a chart to ECR
+helm push my-chart-0.1.0.tgz oci://123456789012.dkr.ecr.us-east-1.amazonaws.com/charts
+
+# Pull a chart from ECR
+helm pull oci://123456789012.dkr.ecr.us-east-1.amazonaws.com/charts/my-chart --version 0.1.0
+
+# Install directly from OCI
+helm install my-release oci://123456789012.dkr.ecr.us-east-1.amazonaws.com/charts/my-chart
+```
+
+### Other compatible tools
+
+Any tool that reads `~/.docker/config.json` credHelpers will use Vouch automatically:
+
+- **crane** -- Image manipulation without a Docker daemon
+- **skopeo** -- Copy images between registries
+- **Podman** -- Daemonless container engine
+- **buildah** -- OCI image builder
+- **ORAS** -- OCI artifacts (Wasm modules, ML models, signatures)

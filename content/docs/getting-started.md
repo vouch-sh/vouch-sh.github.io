@@ -7,6 +7,8 @@ subtitle: "Start using Vouch in under 5 minutes"
 
 This guide walks you through installing the Vouch CLI, enrolling your YubiKey with your organization's Vouch server, and performing your first login. By the end you will have hardware-backed credentials ready for SSH, AWS, and Git.
 
+Most developer credential systems rely on static secrets: SSH private keys sitting in `~/.ssh`, AWS access keys in `~/.aws/credentials`, GitHub PATs pasted into environment variables. These secrets never expire, are trivially exfiltrated by malware, and have no proof of who used them. Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) hardware key assertion -- every credential is short-lived, bound to a verified human identity, and logged.
+
 ## Prerequisites
 
 - A **YubiKey 5 series** (or any compatible FIDO2 security key)
@@ -127,6 +129,23 @@ aws s3 ls --profile vouch
 
 Vouch provides credentials on demand to each tool through lightweight integrations described in the guides linked below.
 
+### What just started working?
+
+One YubiKey tap gives you credentials that cascade across your entire toolchain:
+
+| Command | Service |
+|---|---|
+| `ssh` | Servers (certificate auth) |
+| `git push` | GitHub |
+| `aws s3 ls` | AWS CLI |
+| `cdk deploy` | Infrastructure as Code |
+| `terraform apply` | Infrastructure as Code |
+| `docker push` | ECR / GHCR |
+| `helm push` | OCI Charts |
+| `kubectl` | EKS |
+
+These tools read your AWS config or Docker config -- no additional setup beyond the integrations below.
+
 ---
 
 ## What happens when you login
@@ -179,3 +198,8 @@ Now that you can log in, configure the services you use:
 - **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories.
 - **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
 - **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.
+- **[SSM Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
+- **[Database Authentication](/docs/databases/)** -- Connect to RDS, Aurora, and Redshift with IAM authentication.
+- **[Infrastructure as Code](/docs/iac/)** -- Use CDK, Terraform, SAM, and other IaC tools.
+- **[CI/CD Integration](/docs/cicd/)** -- Add human authorization gates to deployments.
+- **[AI Model Access](/docs/bedrock/)** -- Hardware-verified access to Amazon Bedrock.

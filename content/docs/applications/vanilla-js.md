@@ -11,6 +11,8 @@ params:
 
 For client-side applications running in the browser, use the authorization code flow with PKCE. These examples do not use a client secret since the code runs in the user's browser.
 
+> **PKCE is required** for browser-based clients. `oidc-client-ts` enables PKCE by default -- no additional configuration is needed. To handle token expiry, enable `automaticSilentRenew` in the UserManager configuration (shown below) so tokens are refreshed transparently before they expire.
+
 For applications without a framework, use [`oidc-client-ts`](https://github.com/authts/oidc-client-ts) directly:
 
 ```html
@@ -43,6 +45,7 @@ For applications without a framework, use [`oidc-client-ts`](https://github.com/
       redirect_uri: window.location.origin + "/callback",
       scope: "openid email",
       response_type: "code",
+      automaticSilentRenew: true,
     };
 
     const userManager = new UserManager(config);

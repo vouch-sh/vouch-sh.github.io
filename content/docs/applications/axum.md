@@ -42,6 +42,10 @@ use openidconnect::{
 };
 use serde::Deserialize;
 use std::sync::Arc;
+use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
+
+const CSRF_TOKEN_KEY: &str = "csrf_token";
+const NONCE_KEY: &str = "nonce";
 
 struct AppState {
     oidc_client: CoreClient,
@@ -53,8 +57,11 @@ struct CallbackParams {
     state: String,
 }
 
-async fn login(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let (auth_url, _csrf_token, _nonce) = state
+async fn login(
+    State(state): State<Arc<AppState>>,
+    session: Session,
+) -> impl IntoResponse {
+    let (auth_url, csrf_token, nonce) = state
         .oidc_client
         .authorize_url(
             AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
@@ -64,13 +71,45 @@ async fn login(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         .add_scope(Scope::new("email".to_string()))
         .url();
 
+    // Store the CSRF token and nonce in the session so we can verify them
+    // when the provider redirects back to the callback endpoint.
+    session
+        .insert(CSRF_TOKEN_KEY, csrf_token.secret().clone())
+        .await
+        .expect("Failed to store CSRF token");
+    session
+        .insert(NONCE_KEY, nonce.secret().clone())
+        .await
+        .expect("Failed to store nonce");
+
     Redirect::to(auth_url.as_str())
 }
 
 async fn callback(
     State(state): State<Arc<AppState>>,
+    session: Session,
     Query(params): Query<CallbackParams>,
 ) -> impl IntoResponse {
+    // Retrieve and remove the CSRF token from the session.
+    let stored_csrf: String = session
+        .remove(CSRF_TOKEN_KEY)
+        .await
+        .expect("Session error")
+        .expect("Missing CSRF token in session -- login flow was not initiated");
+
+    // Verify the state parameter matches the CSRF token we stored.
+    if params.state != stored_csrf {
+        panic!("CSRF token mismatch -- possible CSRF attack");
+    }
+
+    // Retrieve and remove the nonce from the session.
+    let stored_nonce: String = session
+        .remove(NONCE_KEY)
+        .await
+        .expect("Session error")
+        .expect("Missing nonce in session");
+    let nonce = Nonce::new(stored_nonce);
+
     let token_response = state
         .oidc_client
         .exchange_code(AuthorizationCode::new(params.code))
@@ -82,8 +121,9 @@ async fn callback(
         .id_token()
         .expect("Server did not return an ID token");
 
+    // Verify the ID token using the nonce from the original authorization request.
     let claims = id_token
-        .claims(&state.oidc_client.id_token_verifier(), &Nonce::new_random())
+        .claims(&state.oidc_client.id_token_verifier(), &nonce)
         .expect("Failed to verify ID token");
 
     format!(
@@ -119,9 +159,15 @@ async fn main() {
         oidc_client: client,
     });
 
+    // Use an in-memory session store. In production, replace with a
+    // persistent store (e.g., Redis) for multi-instance deployments.
+    let session_store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(session_store);
+
     let app = Router::new()
         .route("/login", get(login))
         .route("/auth/callback", get(callback))
+        .layer(session_layer)
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")

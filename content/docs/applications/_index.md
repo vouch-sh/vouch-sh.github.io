@@ -102,6 +102,32 @@ Example ID token payload with Vouch-specific claims:
 
 Your application can use the `hardware_verified` claim to enforce that only hardware-backed authentications are accepted, and the `hardware_aaguid` claim to restrict access to specific security key models.
 
+### Accessing Vouch claims in your application
+
+Regardless of your framework, the Vouch-specific claims are available in the ID token's payload after standard OIDC verification. Here is a generic example:
+
+```javascript
+// After verifying the ID token through your OIDC library:
+const hardwareVerified = idToken.hardware_verified; // boolean
+const keyModel = idToken.hardware_aaguid;           // string (AAGUID)
+const keyBinding = idToken.cnf?.kid;                // string (credential ID)
+
+// Enforce hardware-only authentication
+if (!hardwareVerified) {
+  throw new Error("Hardware key verification required");
+}
+```
+
+---
+
+## Token Lifetime and Refresh
+
+Vouch access tokens are short-lived. Your application should handle token expiry gracefully:
+
+- **Server-side applications** -- Check token expiry before using it. If expired, redirect the user through the authorization flow again. Vouch does not issue refresh tokens.
+- **Single-page applications** -- Use `automaticSilentRenew` (available in `oidc-client-ts`) to transparently renew tokens before they expire. See the [React]({{< ref "/docs/applications/react" >}}), [Vue]({{< ref "/docs/applications/vue" >}}), and [Vanilla JS]({{< ref "/docs/applications/vanilla-js" >}}) guides for configuration details.
+- **Native CLI applications** -- Use the device authorization flow (RFC 8628) and prompt the user to re-authenticate when the token expires.
+
 ---
 
 ## Service-to-Service (M2M) Authentication

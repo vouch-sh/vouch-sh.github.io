@@ -5,6 +5,8 @@ weight: 11
 subtitle: "Automate user lifecycle management with your identity provider"
 ---
 
+SCIM (System for Cross-domain Identity Management) is a standard protocol that lets your identity provider -- Google Workspace, Okta, Azure AD, or OneLogin -- automatically create and remove user accounts in other services. Instead of manually adding and removing people from Vouch when they join or leave your organization, SCIM handles it in real time.
+
 Vouch supports the **SCIM 2.0** protocol ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) for automated user provisioning and de-provisioning. When SCIM is configured, your identity provider (IdP) can automatically:
 
 - **Create** new Vouch user accounts when people join your organization.
@@ -201,12 +203,11 @@ One of the most important benefits of SCIM integration is **immediate de-provisi
 1. Your identity provider sends a `PATCH` or `DELETE` request to the Vouch SCIM endpoint to deactivate the user.
 2. Vouch immediately marks the user account as inactive.
 3. All **active sessions** for that user are revoked instantly.
-4. All **previously issued credentials** (SSH certificates, OIDC tokens, AWS STS credentials) are invalidated.
-5. The user can no longer authenticate or obtain new credentials.
+4. The user can no longer obtain new credentials. Previously issued short-lived credentials (SSH certificates, AWS STS credentials) will continue to function until their natural expiration (up to 8 hours). No new credentials can be issued after de-provisioning.
 
-This happens in real time -- there is no waiting for credentials to expire naturally. The moment the IdP deactivates the user, all access through Vouch is terminated.
+Because all Vouch credentials are short-lived (maximum 8 hours), the exposure window after de-provisioning is limited. Sessions are revoked immediately, and outstanding credentials expire on their own shortly after.
 
-This is a significant security improvement over traditional provisioning workflows where revoking access requires manual steps across multiple systems. With Vouch and SCIM, de-provisioning is automated, immediate, and complete.
+This is a significant security improvement over traditional provisioning workflows where revoking access requires manual steps across multiple systems. With Vouch and SCIM, de-provisioning is automated and the blast radius is minimized by the short credential lifetime.
 
 ---
 

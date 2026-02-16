@@ -11,6 +11,8 @@ params:
 
 For client-side applications running in the browser, use the authorization code flow with PKCE. These examples do not use a client secret since the code runs in the user's browser.
 
+> **PKCE is required** for browser-based clients. `oidc-client-ts` enables PKCE by default -- no additional configuration is needed. To handle token expiry, enable `automaticSilentRenew` in the OIDC configuration (shown below) so tokens are refreshed transparently before they expire.
+
 [react-oidc-context](https://github.com/authts/react-oidc-context) wraps [`oidc-client-ts`](https://github.com/authts/oidc-client-ts) in a React context provider.
 
 Install the library:
@@ -32,6 +34,7 @@ const oidcConfig = {
   redirect_uri: "https://your-app.example.com/callback",
   scope: "openid email",
   response_type: "code",
+  automaticSilentRenew: true,
 };
 
 function App() {

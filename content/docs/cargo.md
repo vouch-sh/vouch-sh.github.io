@@ -7,6 +7,8 @@ subtitle: "Authenticate to private Cargo registries using Vouch"
 
 Vouch integrates with Cargo's credential provider protocol to authenticate to private registries without storing tokens on disk. After a single `vouch login`, commands like `cargo build`, `cargo publish`, and `cargo add` work seamlessly against private registries.
 
+Cargo's default credential mechanism stores a plaintext token in `~/.cargo/credentials.toml` with no expiration. If that file is committed to a dotfiles repo, included in a backup, or read by malware, the token works forever. Vouch's credential provider replaces this with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked the moment your session ends.
+
 ## How it works
 
 Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html) (RFC 2730 / RFC 3139). When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:

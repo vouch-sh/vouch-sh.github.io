@@ -3,7 +3,7 @@ title: "Terms of Service"
 description: "Terms of service for the Vouch authentication service."
 ---
 
-**Last updated: January 2026**
+**Last updated: February 2026**
 
 ## Acceptance of Terms
 
@@ -53,7 +53,7 @@ To use Vouch, you must obtain and maintain a **FIDO2-compatible hardware securit
 
 ## Service Availability
 
-Your organization strives to maintain high availability of the Vouch service. However, availability is not guaranteed. The Service may be unavailable:
+Smoke Turner, LLC strives to maintain high availability of the Vouch service. However, availability is not guaranteed. The Service may be unavailable:
 
 - During scheduled maintenance windows, which your organization will communicate in advance when possible.
 - During unscheduled outages caused by infrastructure failures, network issues, or other unforeseen events.
@@ -92,7 +92,7 @@ Your access to the Vouch service may be terminated:
 Upon termination, regardless of the reason:
 
 - All active sessions will be revoked.
-- All previously issued credentials (SSH certificates, OIDC tokens, AWS STS credentials) will be invalidated.
+- You will no longer be able to obtain new credentials. Previously issued short-lived credentials (SSH certificates, AWS STS credentials) will continue to function until their natural expiration (up to 8 hours).
 - Your FIDO2 credential registrations will be removed.
 - You will no longer be able to authenticate or obtain new credentials.
 - Your account data will be retained or deleted according to the organization's data retention policies and the [Privacy Policy](/privacy/).
@@ -112,3 +112,27 @@ Your continued use of the Vouch service after changes are published constitutes 
 For questions about these Terms of Service, your use of Vouch, or any related concerns, contact your **organization's IT administrator or security team**. They manage your organization's Vouch deployment and can address questions about account management, security policies, and access control.
 
 For questions about the Vouch software itself, contact Smoke Turner, LLC.
+
+---
+
+## Governing Law
+
+These Terms of Service shall be governed by and construed in accordance with the laws of the State of Connecticut, United States, without regard to its conflict of law principles. Any legal action or proceeding arising under these Terms shall be brought exclusively in the federal or state courts located in Connecticut.
+
+---
+
+## Dispute Resolution
+
+Any dispute arising out of or relating to these Terms or the Service shall first be attempted to be resolved through good-faith negotiation between the parties. If the dispute cannot be resolved through negotiation within thirty (30) days, either party may pursue resolution through binding arbitration administered by the American Arbitration Association (AAA) under its Commercial Arbitration Rules. The arbitration shall take place in Connecticut. The arbitrator's decision shall be final and binding and may be entered as a judgment in any court of competent jurisdiction.
+
+Nothing in this section shall prevent either party from seeking injunctive or other equitable relief from any court of competent jurisdiction to prevent irreparable harm.
+
+---
+
+## Intellectual Property
+
+The Vouch service, including its software, documentation, logos, trademarks, and other materials, is the intellectual property of Smoke Turner, LLC. The Vouch CLI and agent are licensed under the Apache-2.0 / MIT dual license. The server source code is available under the Business Source License 1.1 (BSL 1.1), which converts to Apache-2.0 after 2 years.
+
+Your use of the Service does not grant you any ownership interest in the Service or its intellectual property. You may not copy, modify, distribute, sell, or lease any part of the Service except as expressly permitted by the applicable open-source licenses.
+
+All feedback, suggestions, and ideas you provide about the Service may be used by Smoke Turner, LLC without any obligation to you.

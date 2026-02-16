@@ -7,6 +7,8 @@ subtitle: "Authenticate to AWS CodeCommit repositories using Vouch"
 
 Vouch integrates with AWS CodeCommit to provide seamless Git authentication backed by hardware security keys. After a single `vouch login`, you can clone, pull, and push to CodeCommit repositories without managing Git credentials or IAM access keys.
 
+AWS offers three ways to authenticate to [CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html): SSH keys, HTTPS Git credentials (static username/password from IAM), and IAM access keys with a credential helper. All three involve long-lived secrets. Vouch provides a fourth option: short-lived STS credentials that require no static secrets at all.
+
 ## How it works
 
 1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to a CodeCommit repository.
@@ -112,3 +114,34 @@ fatal: Authentication failed for 'https://git-codecommit.us-east-1.amazonaws.com
    ```
 2. Remove or reorder conflicting entries so that `vouch` appears first.
 3. Re-run `vouch setup codecommit` to ensure the configuration is correct.
+
+---
+
+## Recommended: git-remote-codecommit
+
+For the most reliable experience, consider using [`git-remote-codecommit`](https://docs.aws.amazon.com/codecommit/latest/userguide/setting-up-git-remote-codecommit.html) instead of the HTTPS credential helper. It uses the `codecommit://` URL protocol and reads credentials directly from the AWS credential chain, bypassing Git's credential helper system entirely.
+
+This avoids known conflicts with macOS Keychain and Git Credential Manager that can cause "unable to access" errors when other credential helpers are installed.
+
+### Setup
+
+```bash
+# Install git-remote-codecommit
+pip install git-remote-codecommit
+
+# Clone using your Vouch profile
+git clone codecommit://vouch@my-repo
+
+# For a specific region
+git clone codecommit::us-west-2://vouch@my-repo
+```
+
+The profile name before `@` must match your Vouch AWS profile (typically `vouch`). All subsequent Git operations (`push`, `pull`, `fetch`) work normally.
+
+### Authentication method comparison
+
+| Method | Credential Type | Conflicts | Works with Vouch |
+|---|---|---|---|
+| SSH keys | Static key pair | No | Not through Vouch |
+| HTTPS Git credentials | Static username/password | macOS Keychain, GCM | Yes (via credential helper) |
+| `git-remote-codecommit` | STS (from AWS SDK) | None | Yes (recommended) |

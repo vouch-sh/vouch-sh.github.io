@@ -7,6 +7,8 @@ subtitle: "Configure AWS IAM to trust Vouch as an OIDC identity provider"
 
 Vouch lets developers assume AWS IAM roles using short-lived STS credentials backed by their YubiKey. Instead of distributing long-lived access keys, you configure AWS to trust Vouch as an OpenID Connect (OIDC) identity provider. After `vouch login`, the CLI exchanges an OIDC ID token for temporary AWS credentials -- no secrets ever touch disk.
 
+Distributing long-lived AWS access keys through `~/.aws/credentials` is the most common source of credential leaks at startups. A single compromised laptop exposes keys that work indefinitely and are difficult to audit. Vouch eliminates this by federating into AWS through OIDC -- credentials last at most 1 hour, are tied to a verified human identity, and leave a CloudTrail record linking every API call back to the person who made it.
+
 ## How it works
 
 1. The developer runs `vouch login` and authenticates with their YubiKey.
@@ -24,6 +26,8 @@ Because the ID token is scoped to the authenticated user and is short-lived, cre
 Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider in the target AWS account.
 
 ### AWS CLI
+
+> For background on OIDC identity providers in AWS, see [Creating OpenID Connect (OIDC) identity providers](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html) in the AWS documentation.
 
 ```bash
 # Fetch the TLS thumbprint for the Vouch server
@@ -75,7 +79,7 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 ## Step 2 -- Create an IAM Role
 
-Create an IAM role that developers will assume. The trust policy must allow `AssumeRoleWithWebIdentity` from the Vouch OIDC provider.
+Create an IAM role that developers will assume. The trust policy must allow [`AssumeRoleWithWebIdentity`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) from the Vouch OIDC provider.
 
 ### AWS CLI
 
@@ -201,7 +205,7 @@ Allow any user from a specific domain:
 
 ### Session tags
 
-Vouch sets the following session tags when assuming a role, which you can use in IAM policies for attribute-based access control (ABAC):
+Vouch sets the following session tags when assuming a role, which you can use in IAM policies for [attribute-based access control (ABAC)](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html):
 
 | Tag Key | Value | Example |
 |---------|-------|---------|

@@ -6,7 +6,9 @@ layout: "single"
 
 ## What is Vouch
 
-Vouch is a hardware-backed authentication system for developer infrastructure. It replaces long-lived secrets -- SSH keys, AWS access keys, GitHub tokens, Docker credentials -- with short-lived, cryptographically attested credentials. No credential is ever issued without proof of human presence via a FIDO2 security key.
+Vouch is a hardware-backed authentication system for developer infrastructure. It replaces long-lived secrets -- SSH keys, AWS access keys, GitHub tokens, Docker credentials -- with short-lived, cryptographically attested credentials. No credential is ever issued without proof of human presence via a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) security key.
+
+If your team spends time rotating AWS keys, copying SSH public keys to servers, managing GitHub PATs, or running `aws ecr get-login-password` cron jobs, Vouch eliminates all of it with a single YubiKey tap each morning.
 
 ## How it works
 
@@ -35,6 +37,11 @@ Vouch provides native credential helpers for:
 - **[Cargo](/docs/cargo/)** -- Private Cargo registry authentication
 - **[AWS CodeArtifact](/docs/codeartifact/)** -- Package repository authentication
 - **[AWS CodeCommit](/docs/codecommit/)** -- Git repository authentication
+- **[SSM Session Manager](/docs/ssm/)** -- Secure shell access through AWS Systems Manager
+- **[Database Authentication](/docs/databases/)** -- IAM authentication for RDS, Aurora, and Redshift
+- **[Infrastructure as Code](/docs/iac/)** -- CDK, Terraform, SAM, and other IaC tools
+- **[CI/CD Integration](/docs/cicd/)** -- Human authorization gates for deployment pipelines
+- **[AI Model Access](/docs/bedrock/)** -- Hardware-verified access to Amazon Bedrock
 - **[OIDC Applications](/docs/applications/)** -- "Sign in with Vouch" for your own applications
 
 ## Open source

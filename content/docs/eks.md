@@ -7,6 +7,8 @@ subtitle: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries"
 
 Vouch integrates with Amazon EKS through the standard AWS IAM OIDC flow. After running `vouch login`, the CLI provides short-lived AWS credentials that `kubectl` and other Kubernetes tools use to authenticate with your EKS clusters. Combined with EKS Access Entries, this gives you fine-grained, per-user access control backed by hardware security keys.
 
+Managing Kubernetes access with ConfigMap-based `aws-auth` entries is error-prone and hard to audit. Who has access? When was it granted? EKS Access Entries provide a cleaner model: IAM principals map directly to Kubernetes permissions, and every authentication event is recorded in CloudTrail. Combined with Vouch, every `kubectl` command traces back to a hardware-verified human identity.
+
 ## How it works
 
 The authentication flow chains four components:
@@ -33,6 +35,8 @@ Before setting up EKS authentication with Vouch, ensure you have:
 - **AWS CLI v2** installed (`aws --version`).
 - **kubectl** installed (`kubectl version --client`).
 - **An EKS cluster** with the API server authentication mode set to include `API` (either `API` or `API_AND_CONFIG_MAP`). Clusters created with the default `CONFIG_MAP` mode must be updated.
+
+> See [EKS cluster authentication modes](https://docs.aws.amazon.com/eks/latest/userguide/cluster-auth.html) for details on switching to API mode, and [EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) for the Access Entries feature.
 
 ---
 
@@ -149,7 +153,7 @@ resource "aws_eks_access_policy_association" "vouch_developer_edit" {
 
 ## Available Access Policies
 
-EKS provides several built-in access policies that map to standard Kubernetes RBAC roles:
+EKS provides several built-in [access policies](https://docs.aws.amazon.com/eks/latest/userguide/access-policies.html) that map to standard Kubernetes RBAC roles:
 
 | Access Policy ARN | Kubernetes Equivalent | Description |
 |---|---|---|

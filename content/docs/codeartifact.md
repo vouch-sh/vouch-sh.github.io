@@ -7,6 +7,8 @@ subtitle: "Authenticate to AWS CodeArtifact repositories using Vouch"
 
 Vouch integrates with AWS CodeArtifact to provide seamless authentication for private package repositories. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your CodeArtifact repositories without manual token management.
 
+Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic.
+
 ## How it works
 
 1. **Package manager requests a token** -- When a package manager needs to authenticate to a CodeArtifact repository, the Vouch credential helper intercepts the request.
@@ -140,3 +142,60 @@ Use the `--region` flag during setup to configure the appropriate partition.
 
 - Ensure no environment variables (e.g., `CODEARTIFACT_AUTH_TOKEN`) are overriding the credential helper.
 - Verify the package manager configuration points to the correct CodeArtifact endpoint.
+
+---
+
+## Maven
+
+For Maven projects, use `aws codeartifact get-authorization-token` to generate a token and reference it in your `settings.xml`:
+
+```bash
+# Get an auth token for Maven
+export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact \
+  get-authorization-token \
+  --domain my-domain \
+  --domain-owner 123456789012 \
+  --query authorizationToken \
+  --output text \
+  --profile vouch)
+
+# Use the token in your settings.xml or pass via CLI
+mvn deploy -s settings.xml
+```
+
+In your `settings.xml`, reference the environment variable as the password:
+
+```xml
+<server>
+  <id>codeartifact</id>
+  <username>aws</username>
+  <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+</server>
+```
+
+---
+
+## Cross-Account Access
+
+If your CodeArtifact domain is in a different AWS account, configure a separate Vouch profile with a role in that account:
+
+```bash
+# Set up a second profile for the artifacts account
+vouch setup aws \
+  --role arn:aws:iam::ARTIFACTS_ACCOUNT:role/CodeArtifactReader \
+  --profile vouch-artifacts
+
+# Use it when logging in to CodeArtifact
+aws codeartifact login \
+  --tool npm \
+  --domain shared-packages \
+  --domain-owner ARTIFACTS_ACCOUNT \
+  --repository npm-store \
+  --profile vouch-artifacts
+```
+
+---
+
+## Token Lifetime
+
+CodeArtifact authorization tokens are valid for up to **12 hours** by default. When the token expires, re-run `aws codeartifact login` to get a fresh token. You can set a longer duration with `--duration-seconds 43200` (12 hours max). If your Vouch session (8 hours) has also expired, run `vouch login` first.

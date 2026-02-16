@@ -7,6 +7,8 @@ subtitle: "Configure SSH servers to trust Vouch certificates for passwordless au
 
 Vouch issues short-lived SSH certificates signed by your organization's certificate authority (CA). Instead of distributing and managing individual public keys across servers, administrators trust a single CA key. Developers authenticate with `vouch login` and then `ssh` into any trusted server without passwords, key copying, or `authorized_keys` management.
 
+Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. SSH certificates eliminate this entirely: servers trust a single CA key, and developers receive short-lived certificates that expire on their own. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist.
+
 ## How it works
 
 1. During `vouch login`, the Vouch server signs the developer's ephemeral public key with an **Ed25519 CA** key.
@@ -81,9 +83,11 @@ On each server, add the CA public key and configure `sshd`:
 echo "CONTENTS_OF_CA_PUB" | sudo tee /etc/ssh/vouch_ca.pub
 
 # Tell sshd to trust certificates signed by this CA
+# See: https://man.openbsd.org/sshd_config#TrustedUserCAKeys
 echo "TrustedUserCAKeys /etc/ssh/vouch_ca.pub" | sudo tee -a /etc/ssh/sshd_config
 
 # Optionally set AuthorizedPrincipalsFile to control which principals are allowed
+# See: https://man.openbsd.org/sshd_config#AuthorizedPrincipalsFile
 echo "AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u" | sudo tee -a /etc/ssh/sshd_config
 
 # Create a principals file for a specific user
@@ -270,3 +274,15 @@ Here is the full flow in detail:
 
 - The server may not have `TrustedUserCAKeys` configured, or `sshd` may not have been restarted after the configuration change.
 - Run `ssh -v user@server` to see which authentication methods are attempted. Look for `Offering public key: ... ED25519-CERT` in the debug output.
+
+---
+
+## IDE Remote Development
+
+Because Vouch configures `~/.ssh/config` with its agent, tools that build on top of SSH work automatically:
+
+- **VS Code Remote-SSH** -- Open remote folders and terminals on any server trusted by the Vouch CA. No additional extension configuration is needed.
+- **JetBrains Gateway** -- Connect to remote development environments using the same SSH certificate.
+- **scp / rsync / sftp** -- File transfers use the Vouch SSH agent transparently.
+
+As long as the Vouch agent is running and you have an active session, any tool that uses the system SSH client will authenticate with your Vouch certificate.
