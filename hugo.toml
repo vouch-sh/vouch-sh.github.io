@@ -35,6 +35,18 @@ title = "Vouch — Hardware-Backed Developer Credentials"
   changeFreq = "weekly"
   priority = 0.5
 
+[[params.sidebarGroups]]
+  key = "infra"
+  label = "Infrastructure"
+
+[[params.sidebarGroups]]
+  key = "code"
+  label = "Code & Packages"
+
+[[params.sidebarGroups]]
+  key = "manage"
+  label = "Platform"
+
 [[menus.main]]
   name = "Docs"
   url = "/docs/"

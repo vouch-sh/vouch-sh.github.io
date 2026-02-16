@@ -1,6 +1,6 @@
 ---
 title: "Access AWS CodeCommit without Git Credentials"
-linkTitle: "CodeCommit"
+linkTitle: "AWS CodeCommit"
 description: "Clone and push to CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys."
 weight: 8
 subtitle: "Authenticate to AWS CodeCommit repositories using Vouch"

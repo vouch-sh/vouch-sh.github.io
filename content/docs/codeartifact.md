@@ -1,6 +1,6 @@
 ---
 title: "Authenticate to AWS CodeArtifact without Stored Tokens"
-linkTitle: "CodeArtifact"
+linkTitle: "AWS CodeArtifact"
 description: "Pull and publish packages from CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
 weight: 7
 subtitle: "Authenticate to AWS CodeArtifact repositories using Vouch"

@@ -15,7 +15,7 @@ Vouch's OIDC attests *human presence* -- "a verified human authorized this actio
 ## How it works
 
 1. A deployer authenticates with Vouch on their local machine (`vouch login`).
-2. The deployer generates a short-lived JWT (`vouch credential aws --format token`).
+2. The deployer generates a short-lived JWT (`vouch credential aws --role <ROLE_ARN>`).
 3. The JWT is passed to the CI/CD pipeline (as a workflow input, secret, or environment variable).
 4. The pipeline exchanges the JWT for AWS credentials using `AssumeRoleWithWebIdentity`.
 5. The deployment proceeds with credentials tied to the deployer's hardware-verified identity.
@@ -70,7 +70,7 @@ on:
   workflow_dispatch:
     inputs:
       vouch_token:
-        description: 'Vouch JWT (from: vouch credential aws --format token)'
+        description: 'Vouch JWT (from: vouch credential aws --role <ROLE_ARN>)'
         required: true
         type: string
 

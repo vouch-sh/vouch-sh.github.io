@@ -1,6 +1,6 @@
 ---
 title: "Connect to EC2 Instances without SSH Port 22"
-linkTitle: "SSM Session Manager"
+linkTitle: "AWS Systems Manager"
 description: "Use AWS Systems Manager Session Manager with Vouch credentials to reach EC2 instances without opening SSH ports."
 weight: 12
 subtitle: "Connect to EC2 instances through AWS Systems Manager"

@@ -178,13 +178,12 @@ Credential commands obtain service-specific credentials from your active session
 Obtain temporary AWS STS credentials.
 
 ```
-vouch credential aws --role <ROLE_ARN> [--format aws-credential-process]
+vouch credential aws --role <ROLE_ARN>
 ```
 
 | Flag | Description |
 |---|---|
 | `--role` | The IAM role ARN to assume |
-| `--format` | Output format (`aws-credential-process` for use with `credential_process`) |
 
 ### `vouch credential ssh`
 
