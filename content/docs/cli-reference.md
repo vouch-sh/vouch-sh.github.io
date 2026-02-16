@@ -22,19 +22,21 @@ Register your YubiKey with a Vouch server and link it to your identity.
 vouch enroll --server <SERVER_URL>
 ```
 
-| Flag | Description |
-|---|---|
-| `--server` | The Vouch server URL to enroll with (e.g., `https://us.vouch.sh`) |
+The `--server` flag is a global option available on all commands (e.g., `--server https://us.vouch.sh`). The CLI saves the server configuration locally after enrollment, so subsequent commands use it automatically.
 
-You only need to enroll once per YubiKey. The CLI saves the server configuration locally for future commands.
+You only need to enroll once per YubiKey.
 
 ### `vouch login`
 
 Authenticate with your YubiKey and start an 8-hour session.
 
 ```
-vouch login
+vouch login [--timeout <SECONDS>]
 ```
+
+| Flag | Description |
+|---|---|
+| `--timeout` | Timeout in seconds for YubiKey detection (default: `60`, use `0` for no timeout) |
 
 After login, all credential helpers use the session automatically. Run this once at the start of each workday.
 
@@ -51,8 +53,12 @@ vouch logout
 Display the current session status, including remaining session time and active integrations.
 
 ```
-vouch status
+vouch status [--json]
 ```
+
+| Flag | Description |
+|---|---|
+| `--json` | Output as JSON |
 
 ---
 
@@ -65,14 +71,13 @@ Setup commands configure credential helpers for each integration. Run these once
 Configure the AWS credential process for an IAM role.
 
 ```
-vouch setup aws --role <ROLE_ARN>
+vouch setup aws --role <ROLE_ARN> [--profile <PROFILE>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume |
-| `--profile` | AWS profile name to configure (default: `vouch`) |
-| `--region` | Default AWS region for the profile |
+| `--role` | The IAM role ARN to assume (required) |
+| `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
 
 See [AWS Integration](/docs/aws/) for full details.
 
@@ -81,8 +86,12 @@ See [AWS Integration](/docs/aws/) for full details.
 Configure the SSH client to use the Vouch agent for certificate authentication.
 
 ```
-vouch setup ssh
+vouch setup ssh [--hosts <PATTERN>]
 ```
+
+| Flag | Description |
+|---|---|
+| `--hosts` | Host patterns to trust with this CA (e.g., `*.example.com`). If specified, adds an entry to `~/.ssh/known_hosts`. |
 
 See [SSH Certificates](/docs/ssh/) for full details.
 
@@ -91,11 +100,12 @@ See [SSH Certificates](/docs/ssh/) for full details.
 Configure Git to use Vouch as the credential helper for GitHub.
 
 ```
-vouch setup github [--configure]
+vouch setup github [--host <HOST>] [--configure]
 ```
 
 | Flag | Description |
 |---|---|
+| `--host` | GitHub host to configure (default: `github.com`) |
 | `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
 
 See [GitHub Integration](/docs/github/) for full details.
@@ -105,8 +115,13 @@ See [GitHub Integration](/docs/github/) for full details.
 Configure Docker to use Vouch as the credential helper for container registries.
 
 ```
-vouch setup docker
+vouch setup docker [--configure] [REGISTRIES...]
 ```
+
+| Flag | Description |
+|---|---|
+| `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
+| `REGISTRIES` | Container registry URLs to configure (e.g., `ghcr.io`) |
 
 See [Docker Registries](/docs/docker/) for full details.
 
@@ -127,17 +142,19 @@ See [Cargo Integration](/docs/cargo/) for full details.
 
 ### `vouch setup codeartifact`
 
-Configure authentication for an AWS CodeArtifact repository.
+Configure a package manager for an AWS CodeArtifact repository.
 
 ```
-vouch setup codeartifact --domain <DOMAIN> --repository <REPO> [--region <REGION>]
+vouch setup codeartifact --tool <TOOL> --domain <DOMAIN> --domain-owner <ACCOUNT_ID> --repository <REPO> [--region <REGION>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--domain` | The CodeArtifact domain name |
-| `--repository` | The CodeArtifact repository name |
-| `--region` | AWS region for the CodeArtifact domain |
+| `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
+| `--domain` | The CodeArtifact domain name (required) |
+| `--domain-owner` | AWS account ID that owns the domain (required) |
+| `--repository` | The CodeArtifact repository name (required) |
+| `--region` | AWS region (default: `us-east-1`) |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 
@@ -146,8 +163,14 @@ See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 Configure Git to use Vouch as the credential helper for AWS CodeCommit.
 
 ```
-vouch setup codecommit
+vouch setup codecommit [--region <REGION>] [--profile <PROFILE>] [--configure]
 ```
+
+| Flag | Description |
+|---|---|
+| `--region` | AWS region (default: wildcard matching all regions) |
+| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
 
 See [AWS CodeCommit](/docs/codecommit/) for full details.
 
@@ -156,14 +179,15 @@ See [AWS CodeCommit](/docs/codecommit/) for full details.
 Configure kubectl to use Vouch for EKS cluster authentication.
 
 ```
-vouch setup eks --cluster <CLUSTER_NAME> [--role <ROLE_ARN>] [--region <REGION>]
+vouch setup eks --cluster <CLUSTER_NAME> [--region <REGION>] [--profile <PROFILE>] [--kubeconfig <PATH>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--cluster` | The EKS cluster name |
-| `--role` | IAM role ARN to assume for the cluster |
-| `--region` | AWS region where the cluster is located |
+| `--cluster` | The EKS cluster name (required) |
+| `--region` | AWS region (auto-detected from AWS profile or environment if not specified) |
+| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--kubeconfig` | Path to kubeconfig file (defaults to `~/.kube/config`) |
 
 See [Amazon EKS](/docs/eks/) for full details.
 
@@ -178,52 +202,51 @@ Credential commands obtain service-specific credentials from your active session
 Obtain temporary AWS STS credentials.
 
 ```
-vouch credential aws --role <ROLE_ARN>
+vouch credential aws --role <ROLE_ARN> [--session-name <NAME>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume |
+| `--role` | The IAM role ARN to assume (required) |
+| `--session-name` | Session name for the assumed role |
 
 ### `vouch credential ssh`
 
-Display information about the current SSH certificate.
+Obtain an SSH certificate from the Vouch server.
 
 ```
-vouch credential ssh
+vouch credential ssh [--key <PATH>]
 ```
+
+| Flag | Description |
+|---|---|
+| `--key` | Path to SSH private key (default: `~/.ssh/id_ed25519_vouch`) |
 
 ### `vouch credential github`
 
-Obtain a short-lived GitHub access token.
-
-```
-vouch credential github
-```
+Git credential helper for GitHub. This command is invoked automatically by Git when configured via `vouch setup github`. Users should not call it directly.
 
 ### `vouch credential docker`
 
-Obtain credentials for a container registry.
-
-```
-vouch credential docker
-```
+Docker credential helper for container registries. This command is invoked automatically by Docker when configured via `vouch setup docker`. Users should not call it directly.
 
 ### `vouch credential cargo`
 
-Obtain a token for a private Cargo registry.
-
-```
-vouch credential cargo
-```
+Cargo credential provider for private registries. This command is invoked automatically by Cargo when configured via `vouch setup cargo`. Users should not call it directly.
 
 ### `vouch credential codeartifact`
 
 Obtain an AWS CodeArtifact authorization token.
 
 ```
-vouch credential codeartifact
+vouch credential codeartifact --domain <DOMAIN> --domain-owner <ACCOUNT_ID> [--region <REGION>]
 ```
+
+| Flag | Description |
+|---|---|
+| `--domain` | The CodeArtifact domain name (required) |
+| `--domain-owner` | AWS account ID that owns the domain (required) |
+| `--region` | AWS region (default: `us-east-1`) |
 
 ---
 
@@ -234,8 +257,13 @@ vouch credential codeartifact
 Register an additional YubiKey with your account.
 
 ```
-vouch register
+vouch register [--name <NAME>] [--timeout <SECONDS>]
 ```
+
+| Flag | Description |
+|---|---|
+| `--name` | Human-readable name for this YubiKey (default: `YubiKey`) |
+| `--timeout` | Timeout in seconds for YubiKey detection (default: `60`, use `0` for no timeout) |
 
 This allows you to use multiple hardware keys (e.g., a primary and a backup) with the same Vouch identity.
 
@@ -244,23 +272,31 @@ This allows you to use multiple hardware keys (e.g., a primary and a backup) wit
 List all registered security keys for your account.
 
 ```
-vouch keys list
+vouch keys list [--json]
 ```
+
+| Flag | Description |
+|---|---|
+| `--json` | Output as JSON |
 
 ### `vouch keys remove`
 
 Remove a registered security key from your account.
 
 ```
-vouch keys remove <KEY_ID>
+vouch keys remove <KEY_ID> [--force]
 ```
+
+| Flag | Description |
+|---|---|
+| `-f`, `--force` | Skip the confirmation prompt |
 
 ### `vouch keys rename`
 
 Rename a registered security key.
 
 ```
-vouch keys rename <KEY_ID> --name <NEW_NAME>
+vouch keys rename <KEY_ID> <NEW_NAME>
 ```
 
 ---
@@ -272,30 +308,45 @@ vouch keys rename <KEY_ID> --name <NEW_NAME>
 Run a command with Vouch credentials injected as environment variables.
 
 ```
-vouch exec -- <COMMAND> [ARGS...]
+vouch exec --type <TYPE> [--role <ARN>] [--session-name <NAME>] -- <COMMAND> [ARGS...]
 ```
+
+| Flag | Description |
+|---|---|
+| `--type` | Credential type to inject: `aws` or `github` (required) |
+| `--role` | AWS IAM role ARN (required when `--type aws`) |
+| `--session-name` | Session name for the assumed role |
 
 Example:
 
 ```bash
-vouch exec -- terraform plan
+vouch exec --type aws --role arn:aws:iam::123456789012:role/VouchDeveloper -- terraform plan
 ```
 
 ### `vouch env`
 
-Print environment variables for the current session.
+Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS) or `GITHUB_TOKEN` (for GitHub) in your current shell.
 
 ```
-vouch env
+eval "$(vouch env --type <TYPE> [--shell <SHELL>] [--role <ROLE_ARN>] [--session-name <NAME>])"
 ```
+
+| Flag | Description |
+|---|---|
+| `--type` | Credential type: `aws` or `github` (required) |
+| `--shell` | Shell syntax: `bash` or `fish` (default: `bash`) |
+| `--role` | AWS IAM role ARN (required when `--type aws`) |
+| `--session-name` | Session name for the assumed role |
 
 ### `vouch init`
 
-Initialize the Vouch agent and background services.
+Output a shell hook that sets `VOUCH_AUTHENTICATED`, `VOUCH_EMAIL`, and `VOUCH_EXPIRES_IN` on each prompt. Add to your shell profile for ambient session awareness.
 
 ```
-vouch init
+eval "$(vouch init <SHELL>)"
 ```
+
+Supported shells: `bash`, `zsh`, `fish`.
 
 ---
 
@@ -306,8 +357,13 @@ vouch init
 Run diagnostic checks to verify your Vouch installation and configuration.
 
 ```
-vouch doctor
+vouch doctor [--quiet] [--json]
 ```
+
+| Flag | Description |
+|---|---|
+| `-q`, `--quiet` | Suppress all output (exit code only) |
+| `--json` | Output results as JSON |
 
 This checks:
 
@@ -324,7 +380,7 @@ Generate shell completion scripts.
 vouch completions <SHELL>
 ```
 
-Supported shells: `bash`, `zsh`, `fish`, `powershell`.
+Supported shells: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
 
 Example:
 

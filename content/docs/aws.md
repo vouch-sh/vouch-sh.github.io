@@ -244,19 +244,19 @@ Each developer needs to tell the CLI which IAM role to assume and in which AWS p
 vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 ```
 
-This interactive command will prompt for:
+This command accepts the following flags:
 
-- **Role ARN** -- The ARN of the IAM role created in Step 2 (e.g., `arn:aws:iam::123456789012:role/VouchDeveloper`).
-- **AWS profile name** -- The profile name to write credentials to (default: `vouch`).
-- **Region** -- The default AWS region for the profile.
+- `--role` -- The ARN of the IAM role created in Step 2 (required).
+- `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
 
 The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
 
 ```ini
 [profile vouch]
-credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/VouchDeveloper --format aws-credential-process
-region = us-east-1
+credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 ```
+
+> **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
 
 After setup, any tool that reads AWS profiles will transparently use Vouch credentials.
 

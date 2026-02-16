@@ -34,16 +34,16 @@ Before configuring the CodeArtifact integration, make sure you have:
 
 ## Step 1 -- Configure the Vouch CLI
 
-Run the setup command to configure Vouch for your CodeArtifact repository:
+Run the setup command to configure Vouch for your CodeArtifact repository. You must specify the package manager (`--tool`), domain, domain owner (AWS account ID), and repository:
 
 ```bash
-vouch setup codeartifact --domain my-domain --repository my-repo
+vouch setup codeartifact --tool cargo --domain my-domain --domain-owner 123456789012 --repository my-repo
 ```
 
-To specify a region:
+To specify a region (default: `us-east-1`):
 
 ```bash
-vouch setup codeartifact --domain my-domain --repository my-repo --region us-east-1
+vouch setup codeartifact --tool pip --domain my-domain --domain-owner 123456789012 --repository my-repo --region eu-west-1
 ```
 
 This configures the appropriate credential helper for your package manager and writes the necessary configuration files.
@@ -138,7 +138,7 @@ Use the `--region` flag during setup to configure the appropriate partition.
 
 ### Wrong domain or repository
 
-- Run `vouch setup codeartifact` again with the correct `--domain` and `--repository` flags.
+- Run `vouch setup codeartifact` again with the correct `--tool`, `--domain`, `--domain-owner`, and `--repository` flags.
 - Check your package manager's configuration files for conflicting settings.
 
 ### Package manager not using Vouch

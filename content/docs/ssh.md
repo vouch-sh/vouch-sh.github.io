@@ -54,10 +54,10 @@ Look for the SSH agent line in the output. If the agent is not running, `vouch l
 After logging in, inspect the current certificate:
 
 ```bash
-vouch ssh show
+vouch credential ssh
 ```
 
-This displays the certificate's principals, validity period, and signing CA.
+This obtains a certificate from the server and displays the certificate's principals, validity period, and signing CA.
 
 ---
 
