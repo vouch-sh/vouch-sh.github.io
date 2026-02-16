@@ -27,7 +27,7 @@ Create an auth service in `src/auth.js`:
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
 
 const userManager = new UserManager({
-  authority: "{{< instance-url >}}",
+  authority: "https://{{< instance-url >}}",
   client_id: "your-client-id",
   redirect_uri: "https://your-app.example.com/callback",
   scope: "openid email",

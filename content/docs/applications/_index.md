@@ -29,7 +29,7 @@ This works with any framework or library that supports OpenID Connect or OAuth 2
 
 Before integrating Vouch into your application, you need:
 
-- A **registered OAuth application** in the Vouch admin panel at {{< instance-url >}}/admin
+- A **registered OAuth application** in the Vouch admin panel at https://{{< instance-url >}}/admin
 - Your application's **client ID** (`client_id`)
 - Your application's **client secret** (`client_secret`)
 - A configured **redirect URI** (e.g., `https://your-app.example.com/auth/callback`)
@@ -61,16 +61,16 @@ Use the following endpoints and values to configure your OIDC client library. Al
 
 | Parameter | Value |
 |---|---|
-| **Discovery URL** | `{{< instance-url >}}/.well-known/openid-configuration` |
-| **Issuer** | `{{< instance-url >}}` |
-| **Authorization Endpoint** | `{{< instance-url >}}/oauth/authorize` |
-| **Token Endpoint** | `{{< instance-url >}}/oauth/token` |
-| **UserInfo Endpoint** | `{{< instance-url >}}/oauth/userinfo` |
-| **JWKS URI** | `{{< instance-url >}}/.well-known/jwks.json` |
+| **Discovery URL** | `https://{{< instance-url >}}/.well-known/openid-configuration` |
+| **Issuer** | `https://{{< instance-url >}}` |
+| **Authorization Endpoint** | `https://{{< instance-url >}}/oauth/authorize` |
+| **Token Endpoint** | `https://{{< instance-url >}}/oauth/token` |
+| **UserInfo Endpoint** | `https://{{< instance-url >}}/oauth/userinfo` |
+| **JWKS URI** | `https://{{< instance-url >}}/.well-known/jwks.json` |
 | **Signing Algorithm** | `ES256` |
 | **Supported Scopes** | `openid`, `email` |
-| **Device Authorization Endpoint** | `{{< instance-url >}}/oauth/device/code` |
-| **Device Verification URL** | `{{< instance-url >}}/oauth/device` |
+| **Device Authorization Endpoint** | `https://{{< instance-url >}}/oauth/device/code` |
+| **Device Verification URL** | `https://{{< instance-url >}}/oauth/device` |
 
 Most OIDC libraries can auto-configure themselves from the Discovery URL alone.
 
@@ -90,7 +90,7 @@ Example ID token payload with Vouch-specific claims:
 
 ```json
 {
-  "iss": "{{< instance-url >}}",
+  "iss": "https://{{< instance-url >}}",
   "sub": "user_abc123",
   "aud": "your-client-id",
   "exp": 1700000000,
@@ -148,7 +148,7 @@ For server-to-server communication where no human user is involved, Vouch suppor
 ### Token Exchange Request
 
 ```bash
-curl -X POST {{< instance-url >}}/oauth/token \
+curl -X POST https://{{< instance-url >}}/oauth/token \
   -d "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
   -d "subject_token=<access-token>" \
   -d "subject_token_type=urn:ietf:params:oauth:token-type:access_token" \
@@ -177,7 +177,7 @@ The new token is scoped to Service B's audience and inherits the user's identity
 ### Discovery endpoint not reachable
 
 ```
-Error: unable to fetch OpenID configuration from {{< instance-url >}}/.well-known/openid-configuration
+Error: unable to fetch OpenID configuration from https://{{< instance-url >}}/.well-known/openid-configuration
 ```
 
 - Verify the Vouch server URL is correct and accessible from your application server.
@@ -213,14 +213,14 @@ Error: ID token signature verification failed
 ```
 
 - Ensure your library is configured to use the `ES256` signing algorithm. Vouch uses ECDSA with P-256, not RSA.
-- Verify the JWKS endpoint is reachable: `{{< instance-url >}}/.well-known/jwks.json`
+- Verify the JWKS endpoint is reachable: `https://{{< instance-url >}}/.well-known/jwks.json`
 - Check that the `iss` claim matches your configured issuer URL exactly.
 - Ensure your server's clock is synchronized (token validation is time-sensitive).
 
 ### CORS errors in browser applications
 
 ```
-Access to fetch at '{{< instance-url >}}/oauth/token' has been blocked by CORS policy
+Access to fetch at 'https://{{< instance-url >}}/oauth/token' has been blocked by CORS policy
 ```
 
 For single-page applications, ensure your application's origin is registered as an allowed origin in the Vouch admin panel. The Vouch server must include your origin in its CORS `Access-Control-Allow-Origin` response header.

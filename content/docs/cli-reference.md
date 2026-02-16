@@ -333,3 +333,27 @@ Example:
 # Add to your ~/.zshrc
 eval "$(vouch completions zsh)"
 ```
+
+---
+
+## Binary download verification
+
+If you downloaded the Vouch CLI binary directly from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page, you can verify its integrity using the SHA256 checksums and SLSA provenance attestation published alongside each release.
+
+### SHA256 checksum
+
+Each release includes a `checksums.txt` file. Verify the downloaded binary:
+
+```bash
+sha256sum --check checksums.txt
+```
+
+### SLSA provenance
+
+Vouch release binaries are built with SLSA Level 3 provenance. You can verify the provenance attestation using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool:
+
+```bash
+slsa-verifier verify-artifact vouch-linux-amd64 \
+  --provenance-path vouch-linux-amd64.intoto.jsonl \
+  --source-uri github.com/vouch-sh/vouch
+```

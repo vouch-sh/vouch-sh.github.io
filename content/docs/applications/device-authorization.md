@@ -27,7 +27,7 @@ import os
 import time
 import requests
 
-VOUCH_URL = "{{< instance-url >}}"
+VOUCH_URL = "https://{{< instance-url >}}"
 CLIENT_ID = os.environ["VOUCH_CLIENT_ID"]
 
 # Step 1: Request device code
@@ -106,7 +106,7 @@ else:
 const https = require("https");
 const querystring = require("querystring");
 
-const VOUCH_URL = "{{< instance-url >}}";
+const VOUCH_URL = "https://{{< instance-url >}}";
 const CLIENT_ID = process.env.VOUCH_CLIENT_ID;
 
 function post(path, data) {
@@ -270,7 +270,7 @@ struct UserInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let vouch_url = "{{< instance-url >}}";
+    let vouch_url = "https://{{< instance-url >}}";
     let client_id = env::var("VOUCH_CLIENT_ID")
         .expect("VOUCH_CLIENT_ID environment variable not set");
 

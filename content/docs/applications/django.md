@@ -35,7 +35,7 @@ SOCIALACCOUNT_PROVIDERS = {
                 "client_id": os.environ["VOUCH_CLIENT_ID"],
                 "secret": os.environ["VOUCH_CLIENT_SECRET"],
                 "settings": {
-                    "server_url": "{{< instance-url >}}",
+                    "server_url": "https://{{< instance-url >}}",
                 },
             },
         ],

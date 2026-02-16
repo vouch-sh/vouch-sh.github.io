@@ -136,7 +136,7 @@ async fn callback(
 #[tokio::main]
 async fn main() {
     let issuer_url =
-        IssuerUrl::new("{{< instance-url >}}".to_string()).expect("Invalid issuer URL");
+        IssuerUrl::new("https://{{< instance-url >}}".to_string()).expect("Invalid issuer URL");
 
     let provider_metadata =
         CoreProviderMetadata::discover_async(issuer_url, async_http_client)

@@ -22,7 +22,7 @@ Add the provider configuration to `config/services.php`:
     'client_id' => env('VOUCH_CLIENT_ID'),
     'client_secret' => env('VOUCH_CLIENT_SECRET'),
     'redirect' => env('VOUCH_REDIRECT_URI', 'https://your-app.example.com/auth/vouch/callback'),
-    'discovery_url' => '{{< instance-url >}}/.well-known/openid-configuration',
+    'discovery_url' => 'https://{{< instance-url >}}/.well-known/openid-configuration',
 ],
 ```
 

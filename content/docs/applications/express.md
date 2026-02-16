@@ -40,10 +40,10 @@ passport.use(
   "vouch",
   new OpenIDConnectStrategy(
     {
-      issuer: "{{< instance-url >}}",
-      authorizationURL: "{{< instance-url >}}/oauth/authorize",
-      tokenURL: "{{< instance-url >}}/oauth/token",
-      userInfoURL: "{{< instance-url >}}/oauth/userinfo",
+      issuer: "https://{{< instance-url >}}",
+      authorizationURL: "https://{{< instance-url >}}/oauth/authorize",
+      tokenURL: "https://{{< instance-url >}}/oauth/token",
+      userInfoURL: "https://{{< instance-url >}}/oauth/userinfo",
       clientID: process.env.VOUCH_CLIENT_ID,
       clientSecret: process.env.VOUCH_CLIENT_SECRET,
       callbackURL: "https://your-app.example.com/auth/vouch/callback",

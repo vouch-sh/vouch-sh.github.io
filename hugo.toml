@@ -6,7 +6,7 @@ title = "Vouch — Hardware-Backed Developer Credentials"
   description = "Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access."
   ogImage = "/img/og-image.png"
   githubRepo = "https://github.com/vouch-sh/vouch"
-  usInstance = "https://us.vouch.sh"
+  usInstance = "us.vouch.sh"
 
 [markup.goldmark.renderer]
   unsafe = true

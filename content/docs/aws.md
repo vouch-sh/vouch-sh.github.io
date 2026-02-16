@@ -56,7 +56,7 @@ Before any user can assume a role, an administrator must register the Vouch serv
 ```bash
 aws iam create-open-id-connect-provider \
   --url "https://{{< instance-url >}}" \
-  --client-id-list "{{< instance-url >}}"
+  --client-id-list "https://{{< instance-url >}}"
 ```
 
 > **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
@@ -69,11 +69,11 @@ Description: Vouch OIDC Identity Provider
 
 Resources:
   VouchOIDCProvider:
-    Type: AWS::IAM::OIDCProvider
+    Type: "AWS::IAM::OIDCProvider"
     Properties:
       Url: "https://{{< instance-url >}}"
       ClientIdList:
-        - "{{< instance-url >}}"
+        - "https://{{< instance-url >}}"
 ```
 
 ### Terraform
@@ -81,7 +81,7 @@ Resources:
 ```hcl
 resource "aws_iam_openid_connect_provider" "vouch" {
   url            = "https://{{< instance-url >}}"
-  client_id_list = ["{{< instance-url >}}"]
+  client_id_list = ["https://{{< instance-url >}}"]
 }
 ```
 

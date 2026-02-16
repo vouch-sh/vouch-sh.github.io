@@ -26,7 +26,7 @@ const handler = NextAuth({
       id: "vouch",
       name: "Vouch",
       type: "oidc",
-      issuer: "{{< instance-url >}}",
+      issuer: "https://{{< instance-url >}}",
       clientId: process.env.VOUCH_CLIENT_ID,
       clientSecret: process.env.VOUCH_CLIENT_SECRET,
       authorization: { params: { scope: "openid email" } },

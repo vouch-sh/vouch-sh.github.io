@@ -44,7 +44,7 @@ vouch login
 Then create a SCIM token:
 
 ```bash
-curl -X POST {{< instance-url >}}/api/v1/org/scim-tokens \
+curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
   -b ~/.vouch/cookie.txt \
   -H "Content-Type: application/json" \
   -d '{"description": "Google Workspace SCIM", "expires_in_days": 365}'
@@ -74,7 +74,7 @@ Use the following values when configuring SCIM in your identity provider:
 
 | Setting | Value |
 |---|---|
-| **SCIM Base URL** | `{{< instance-url >}}/scim/v2` |
+| **SCIM Base URL** | `https://{{< instance-url >}}/scim/v2` |
 | **Authentication Type** | Bearer Token |
 | **Authorization Header** | `Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 
@@ -86,7 +86,7 @@ Replace the token value with the plaintext token you received in Step 1.
 2. Navigate to **Apps > Web and mobile apps**.
 3. Find or add the Vouch application.
 4. Open the **Auto-provisioning** section.
-5. Set the **SCIM Base URL** to `{{< instance-url >}}/scim/v2`.
+5. Set the **SCIM Base URL** to `https://{{< instance-url >}}/scim/v2`.
 6. Set the **Authentication Type** to **Bearer Token** and paste your SCIM token.
 7. Click **Test Connection** to verify.
 8. Enable auto-provisioning and configure the desired attribute mappings.
@@ -99,7 +99,7 @@ Replace the token value with the plaintext token you received in Step 1.
 3. Select or create the Vouch application.
 4. Go to the **Provisioning** tab and click **Configure API Integration**.
 5. Check **Enable API Integration**.
-6. Set the **SCIM 2.0 Base URL** to `{{< instance-url >}}/scim/v2`.
+6. Set the **SCIM 2.0 Base URL** to `https://{{< instance-url >}}/scim/v2`.
 7. Set the **API Token** to the SCIM bearer token from Step 1.
 8. Click **Test API Credentials** to verify connectivity.
 9. Click **Save**.
@@ -111,7 +111,7 @@ Replace the token value with the plaintext token you received in Step 1.
 2. Select or create the Vouch application.
 3. Go to **Provisioning** and set the **Provisioning Mode** to **Automatic**.
 4. Under **Admin Credentials**:
-   - Set **Tenant URL** to `{{< instance-url >}}/scim/v2`.
+   - Set **Tenant URL** to `https://{{< instance-url >}}/scim/v2`.
    - Set **Secret Token** to the SCIM bearer token from Step 1.
 5. Click **Test Connection** to verify that Azure can reach the Vouch SCIM endpoint.
 6. Configure attribute mappings under **Mappings** to align Azure AD attributes with Vouch user fields.
@@ -124,7 +124,7 @@ Replace the token value with the plaintext token you received in Step 1.
 2. Navigate to **Applications > Applications**.
 3. Select or create the Vouch application.
 4. Go to the **Provisioning** tab.
-5. Enable provisioning and set the **SCIM Base URL** to `{{< instance-url >}}/scim/v2`.
+5. Enable provisioning and set the **SCIM Base URL** to `https://{{< instance-url >}}/scim/v2`.
 6. Set the **SCIM Bearer Token** to the token from Step 1.
 7. Under **Provisioning Actions**, enable **Create user**, **Update user**, and **Delete user**.
 8. Click **Save**.
@@ -140,7 +140,7 @@ After configuring your identity provider, verify that the SCIM connection is wor
 This endpoint returns the SCIM capabilities supported by Vouch:
 
 ```bash
-curl -s {{< instance-url >}}/scim/v2/ServiceProviderConfig \
+curl -s https://{{< instance-url >}}/scim/v2/ServiceProviderConfig \
   -H "Authorization: Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
   | jq .
 ```
@@ -152,7 +152,7 @@ A successful response returns a JSON object describing the supported SCIM featur
 Retrieve the list of users that have been provisioned through SCIM:
 
 ```bash
-curl -s {{< instance-url >}}/scim/v2/Users \
+curl -s https://{{< instance-url >}}/scim/v2/Users \
   -H "Authorization: Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
   | jq .
 ```
@@ -164,7 +164,7 @@ This returns a `ListResponse` containing all SCIM-managed users and their attrib
 Retrieve the list of groups that have been provisioned through SCIM:
 
 ```bash
-curl -s {{< instance-url >}}/scim/v2/Groups \
+curl -s https://{{< instance-url >}}/scim/v2/Groups \
   -H "Authorization: Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
   | jq .
 ```
@@ -223,7 +223,7 @@ Organization administrators can list, create, and revoke SCIM tokens through the
 Retrieve all active SCIM tokens for your organization:
 
 ```bash
-curl -s {{< instance-url >}}/api/v1/org/scim-tokens \
+curl -s https://{{< instance-url >}}/api/v1/org/scim-tokens \
   -b ~/.vouch/cookie.txt \
   | jq .
 ```
@@ -233,7 +233,7 @@ The response includes token metadata (ID, description, creation date, expiration
 ### Create a New Token
 
 ```bash
-curl -X POST {{< instance-url >}}/api/v1/org/scim-tokens \
+curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
   -b ~/.vouch/cookie.txt \
   -H "Content-Type: application/json" \
   -d '{"description": "Okta SCIM Integration", "expires_in_days": 180}'
@@ -246,7 +246,7 @@ The response includes the plaintext token. Store it securely -- it will not be s
 Revoke a SCIM token by its ID to immediately disable it:
 
 ```bash
-curl -X DELETE {{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_abc123 \
+curl -X DELETE https://{{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_abc123 \
   -b ~/.vouch/cookie.txt
 ```
 
@@ -261,7 +261,7 @@ To rotate a SCIM token without interrupting provisioning, follow this four-step 
 1. **Create a new token** with a descriptive name that indicates it is the replacement:
 
    ```bash
-   curl -X POST {{< instance-url >}}/api/v1/org/scim-tokens \
+   curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
      -b ~/.vouch/cookie.txt \
      -H "Content-Type: application/json" \
      -d '{"description": "Google Workspace SCIM (rotated 2026-02)", "expires_in_days": 365}'
@@ -272,7 +272,7 @@ To rotate a SCIM token without interrupting provisioning, follow this four-step 
 3. **Test the new token** by triggering a sync from your identity provider or by querying the SCIM endpoint directly with the new token:
 
    ```bash
-   curl -s {{< instance-url >}}/scim/v2/Users \
+   curl -s https://{{< instance-url >}}/scim/v2/Users \
      -H "Authorization: Bearer vouch_scim_NEW_TOKEN_HERE" \
      | jq '.totalResults'
    ```
@@ -307,7 +307,7 @@ A user or group with the same unique identifier already exists.
 - Check whether the user already exists in Vouch by querying the Users endpoint with a filter:
 
   ```bash
-  curl -s "{{< instance-url >}}/scim/v2/Users?filter=userName%20eq%20%22alice%40example.com%22" \
+  curl -s "https://{{< instance-url >}}/scim/v2/Users?filter=userName%20eq%20%22alice%40example.com%22" \
     -H "Authorization: Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
     | jq .
   ```
@@ -318,11 +318,11 @@ A user or group with the same unique identifier already exists.
 
 If users are not appearing in Vouch after configuring SCIM:
 
-- **Verify the SCIM Base URL.** Ensure it is set to `{{< instance-url >}}/scim/v2` with no trailing slash.
+- **Verify the SCIM Base URL.** Ensure it is set to `https://{{< instance-url >}}/scim/v2` with no trailing slash.
 - **Test connectivity.** Use the `ServiceProviderConfig` endpoint to confirm the IdP can reach Vouch:
 
   ```bash
-  curl -s {{< instance-url >}}/scim/v2/ServiceProviderConfig \
+  curl -s https://{{< instance-url >}}/scim/v2/ServiceProviderConfig \
     -H "Authorization: Bearer vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
     | jq .
   ```

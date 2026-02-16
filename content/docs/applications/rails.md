@@ -25,7 +25,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     name: :vouch,
     scope: [:openid, :email],
     response_type: :code,
-    issuer: "{{< instance-url >}}",
+    issuer: "https://{{< instance-url >}}",
     discovery: true,
     client_options: {
       identifier: ENV["VOUCH_CLIENT_ID"],

@@ -29,7 +29,7 @@ import ReactDOM from "react-dom/client";
 import { AuthProvider, useAuth } from "react-oidc-context";
 
 const oidcConfig = {
-  authority: "{{< instance-url >}}",
+  authority: "https://{{< instance-url >}}",
   client_id: "your-client-id",
   redirect_uri: "https://your-app.example.com/callback",
   scope: "openid email",

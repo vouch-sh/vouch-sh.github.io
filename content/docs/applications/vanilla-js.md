@@ -40,7 +40,7 @@ For applications without a framework, use [`oidc-client-ts`](https://github.com/
     import { UserManager } from "https://cdn.jsdelivr.net/npm/oidc-client-ts/dist/browser/oidc-client-ts.min.js";
 
     const config = {
-      authority: "{{< instance-url >}}",
+      authority: "https://{{< instance-url >}}",
       client_id: "your-client-id",
       redirect_uri: window.location.origin + "/callback",
       scope: "openid email",

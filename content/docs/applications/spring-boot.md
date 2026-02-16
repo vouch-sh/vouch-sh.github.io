@@ -34,7 +34,7 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/vouch"
         provider:
           vouch:
-            issuer-uri: "{{< instance-url >}}"
+            issuer-uri: "https://{{< instance-url >}}"
 ```
 
 Configure Spring Security in your application:

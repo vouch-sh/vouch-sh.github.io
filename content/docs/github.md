@@ -102,7 +102,7 @@ Vouch handles authentication transparently. You do not need to enter a username,
 
 Organization administrators must complete the following steps before team members can use the GitHub integration:
 
-1. **Install the Vouch GitHub App** -- Navigate to the Vouch admin panel at {{< instance-url >}}/admin and follow the prompts to install the GitHub App in your organization. You can choose to grant access to all repositories or select specific ones.
+1. **Install the Vouch GitHub App** -- Navigate to the Vouch admin panel at https://{{< instance-url >}}/admin and follow the prompts to install the GitHub App in your organization. You can choose to grant access to all repositories or select specific ones.
 
 2. **Authorize the GitHub organization** -- After installing the app, confirm the organization connection in the Vouch admin panel. The server will verify it can issue tokens for the connected organization.
 
@@ -130,7 +130,7 @@ fatal: Authentication failed for 'https://github.com/org/repo.git'
 error: GitHub organization "org-name" is not connected to this Vouch server
 ```
 
-Your organization administrator has not yet installed the Vouch GitHub App for this organization. Ask them to connect the organization through the admin panel at {{< instance-url >}}/admin.
+Your organization administrator has not yet installed the Vouch GitHub App for this organization. Ask them to connect the organization through the admin panel at https://{{< instance-url >}}/admin.
 
 ### Requires membership
 

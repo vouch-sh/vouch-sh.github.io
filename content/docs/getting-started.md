@@ -15,7 +15,7 @@ Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](http
 ## Prerequisites
 
 - A **YubiKey 5 series** (or any compatible FIDO2 security key)
-- Your organization's Vouch server URL: {{< instance-url >}}
+- A **Vouch server instance**, such as https://{{< instance-url >}}
 
 ---
 
@@ -87,7 +87,7 @@ vouch --version
 Enrollment registers your YubiKey with the Vouch server and links it to your identity. You only need to do this once per key.
 
 ```
-vouch enroll --server {{< instance-url >}}
+vouch enroll --server https://{{< instance-url >}}
 ```
 
 This command will:
@@ -118,7 +118,27 @@ That is it. After login, every integration -- SSH, AWS, Git -- uses the session 
 
 ---
 
-## Step 4 -- Use SSH, AWS, and Git
+## Step 4 -- Set up integrations
+
+Before your tools can use Vouch credentials, your organization needs to configure the relevant integrations on the Vouch server. Work with your administrator to enable the services you need:
+
+- **[AWS Integration](/docs/aws/)** -- Federate into AWS with OIDC and assume IAM roles using short-lived STS credentials.
+- **[SSH Certificates](/docs/ssh/)** -- Connect to servers using Vouch-signed SSH certificates instead of static keys.
+- **[Amazon EKS](/docs/eks/)** -- Authenticate to Kubernetes clusters running on EKS.
+- **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
+- **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
+- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories.
+- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
+- **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.
+- **[SSM Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
+- **[Database Authentication](/docs/databases/)** -- Connect to RDS, Aurora, and Redshift with IAM authentication.
+- **[Infrastructure as Code](/docs/iac/)** -- Use CDK, Terraform, SAM, and other IaC tools.
+- **[CI/CD Integration](/docs/cicd/)** -- Add human authorization gates to deployments.
+- **[AI Model Access](/docs/bedrock/)** -- Hardware-verified access to Amazon Bedrock.
+
+---
+
+## Step 5 -- Use SSH, AWS, and Git
 
 With an active session, your tools work without any extra flags or configuration:
 
@@ -130,7 +150,7 @@ ssh user@server
 aws s3 ls --profile vouch
 ```
 
-Vouch provides credentials on demand to each tool through lightweight integrations described in the guides linked below.
+Vouch provides credentials on demand to each tool through the lightweight integrations configured in Step 4.
 
 ### What just started working?
 
@@ -147,7 +167,7 @@ One YubiKey tap gives you credentials that cascade across your entire toolchain:
 | `helm push` | OCI Charts |
 | `kubectl` | EKS |
 
-These tools read your AWS config or Docker config -- no additional setup beyond the integrations below.
+These tools read your AWS config or Docker config -- no additional setup beyond the integrations in Step 4.
 
 ---
 
@@ -163,46 +183,4 @@ When you run `vouch login`, the following takes place behind the scenes:
 
 Because every credential is short-lived and bound to a hardware key, there are no long-lived secrets on disk that can be stolen or leaked.
 
----
 
-## Binary download verification
-
-If you downloaded the Vouch CLI binary directly from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page, you can verify its integrity using the SHA256 checksums and SLSA provenance attestation published alongside each release.
-
-### SHA256 checksum
-
-Each release includes a `checksums.txt` file. Verify the downloaded binary:
-
-```bash
-sha256sum --check checksums.txt
-```
-
-### SLSA provenance
-
-Vouch release binaries are built with SLSA Level 3 provenance. You can verify the provenance attestation using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool:
-
-```bash
-slsa-verifier verify-artifact vouch-linux-amd64 \
-  --provenance-path vouch-linux-amd64.intoto.jsonl \
-  --source-uri github.com/vouch-sh/vouch
-```
-
----
-
-## Set up integrations
-
-Now that you can log in, configure the services you use:
-
-- **[AWS Integration](/docs/aws/)** -- Federate into AWS with OIDC and assume IAM roles using short-lived STS credentials.
-- **[SSH Certificates](/docs/ssh/)** -- Connect to servers using Vouch-signed SSH certificates instead of static keys.
-- **[Amazon EKS](/docs/eks/)** -- Authenticate to Kubernetes clusters running on EKS.
-- **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
-- **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
-- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories.
-- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
-- **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.
-- **[SSM Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
-- **[Database Authentication](/docs/databases/)** -- Connect to RDS, Aurora, and Redshift with IAM authentication.
-- **[Infrastructure as Code](/docs/iac/)** -- Use CDK, Terraform, SAM, and other IaC tools.
-- **[CI/CD Integration](/docs/cicd/)** -- Add human authorization gates to deployments.
-- **[AI Model Access](/docs/bedrock/)** -- Hardware-verified access to Amazon Bedrock.
