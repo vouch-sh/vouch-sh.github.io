@@ -173,6 +173,39 @@ These tools read your AWS config or Docker config -- no additional setup beyond 
 
 ---
 
+## Step 6 -- Onboard your team
+
+Once you have Vouch working for yourself, bring the rest of your team onboard.
+
+### Team enrollment
+
+Each team member installs the CLI and enrolls with the same Vouch server. As long as they authenticate with the same Google Workspace domain, they automatically join your organization:
+
+```bash
+# Each team member runs:
+brew install vouch-sh/tap/vouch
+brew services start vouch
+vouch enroll --server https://{{< instance-url >}}
+```
+
+No invite codes or admin approval are needed for enrollment. The first person to enroll from a domain becomes the organization owner; everyone else joins as a member.
+
+### Manual user management
+
+For small teams (under 15 people), manual management works well. As organization owner, you can view and manage team members through the Vouch server. When someone leaves, remove them manually to revoke their access.
+
+### When to adopt SCIM
+
+As your team grows, consider setting up [SCIM provisioning](/docs/scim/) to automate user lifecycle management. SCIM connects your identity provider (Google Workspace, Okta, Azure AD) to Vouch so that:
+
+- New hires are provisioned automatically when added to your IdP.
+- Departing employees are de-provisioned instantly when their IdP account is deactivated.
+- You never forget to revoke someone's access.
+
+SCIM is recommended for teams of 15+ people, but can be set up at any team size.
+
+---
+
 ## What happens when you login
 
 When you run `vouch login`, the following takes place behind the scenes:
