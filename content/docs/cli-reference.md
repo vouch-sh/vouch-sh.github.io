@@ -145,16 +145,17 @@ See [Cargo Integration](/docs/cargo/) for full details.
 Configure a package manager for an AWS CodeArtifact repository.
 
 ```
-vouch setup codeartifact --tool <TOOL> --domain <DOMAIN> --domain-owner <ACCOUNT_ID> --repository <REPO> [--region <REGION>]
+vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--profile <PROFILE>]
 ```
 
 | Flag | Description |
 |---|---|
 | `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
-| `--domain` | The CodeArtifact domain name (required) |
-| `--domain-owner` | AWS account ID that owns the domain (required) |
 | `--repository` | The CodeArtifact repository name (required) |
-| `--region` | AWS region (default: `us-east-1`) |
+| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
+| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
+| `--profile` | Named CodeArtifact profile to use or create (stores domain/owner/region for reuse) |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 
@@ -239,14 +240,15 @@ Cargo credential provider for private registries. This command is invoked automa
 Obtain an AWS CodeArtifact authorization token.
 
 ```
-vouch credential codeartifact --domain <DOMAIN> --domain-owner <ACCOUNT_ID> [--region <REGION>]
+vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--profile <PROFILE>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--domain` | The CodeArtifact domain name (required) |
-| `--domain-owner` | AWS account ID that owns the domain (required) |
-| `--region` | AWS region (default: `us-east-1`) |
+| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
+| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
+| `--profile` | Named CodeArtifact profile to use |
 
 ---
 
@@ -308,35 +310,49 @@ vouch keys rename <KEY_ID> <NEW_NAME>
 Run a command with Vouch credentials injected as environment variables.
 
 ```
-vouch exec --type <TYPE> [--role <ARN>] [--session-name <NAME>] -- <COMMAND> [ARGS...]
+vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
 ```
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type to inject: `aws` or `github` (required) |
+| `--type` | Credential type to inject: `aws`, `github`, or `codeartifact` (required) |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
-| `--session-name` | Session name for the assumed role |
+| `--session-name` | Session name for the assumed role (when `--type aws`) |
+| `--ca-domain` | CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-profile` | Named CodeArtifact profile to use (when `--type codeartifact`) |
 
-Example:
+When `--type codeartifact`, injects `CODEARTIFACT_AUTH_TOKEN` into the subprocess environment.
+
+Examples:
 
 ```bash
+# AWS credentials
 vouch exec --type aws --role arn:aws:iam::123456789012:role/VouchDeveloper -- terraform plan
+
+# CodeArtifact token
+vouch exec --type codeartifact -- mvn deploy -s settings.xml
 ```
 
 ### `vouch env`
 
-Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS) or `GITHUB_TOKEN` (for GitHub) in your current shell.
+Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS), `GITHUB_TOKEN` (for GitHub), or `CODEARTIFACT_AUTH_TOKEN` (for CodeArtifact) in your current shell.
 
 ```
-eval "$(vouch env --type <TYPE> [--shell <SHELL>] [--role <ROLE_ARN>] [--session-name <NAME>])"
+eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 ```
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type: `aws` or `github` (required) |
-| `--shell` | Shell syntax: `bash` or `fish` (default: `bash`) |
+| `--type` | Credential type: `aws`, `github`, or `codeartifact` (required) |
+| `--shell` | Shell syntax: `bash` or `fish` (default: `bash`). The `bash` syntax also works for zsh. |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
-| `--session-name` | Session name for the assumed role |
+| `--session-name` | Session name for the assumed role (when `--type aws`) |
+| `--ca-domain` | CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-profile` | Named CodeArtifact profile to use (when `--type codeartifact`) |
 
 ### `vouch init`
 

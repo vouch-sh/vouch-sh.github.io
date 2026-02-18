@@ -34,29 +34,66 @@ Before configuring the CodeArtifact integration, make sure you have:
 
 ## Step 1 -- Configure the Vouch CLI
 
-Run the setup command to configure Vouch for your CodeArtifact repository. You must specify the package manager (`--tool`), domain, domain owner (AWS account ID), and repository:
+Run the setup command to configure Vouch for your CodeArtifact repository:
 
 ```bash
-vouch setup codeartifact --tool cargo --domain my-domain --domain-owner 123456789012 --repository my-repo
+vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] [--domain-owner 123456789012] [--region us-east-1] [--profile my-profile]
 ```
 
-To specify a region (default: `us-east-1`):
-
-```bash
-vouch setup codeartifact --tool pip --domain my-domain --domain-owner 123456789012 --repository my-repo --region eu-west-1
-```
+| Flag | Description |
+|---|---|
+| `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
+| `--repository` | The CodeArtifact repository name (required) |
+| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
+| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
+| `--profile` | Named profile to use or create (see [Profiles](#profiles) below) |
 
 This configures the appropriate credential helper for your package manager and writes the necessary configuration files.
 
 ---
 
+## Profiles
+
+Vouch supports named profiles for CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
+
+### Default profile
+
+When you run `vouch setup codeartifact` with `--domain`, `--domain-owner`, and `--region`, these values are saved to the default profile. Subsequent commands can omit these flags:
+
+```bash
+# First time: specify all values (saved to default profile)
+vouch setup codeartifact --tool cargo --domain my-domain --domain-owner 123456789012 --repository my-repo --region us-east-1
+
+# Later: only --tool and --repository are needed
+vouch setup codeartifact --tool pip --repository my-pypi-repo
+```
+
+### Named profiles
+
+Use `--profile` to create and manage separate configurations for different CodeArtifact domains or accounts:
+
+```bash
+# Create a profile for the shared artifacts account
+vouch setup codeartifact --tool cargo --domain shared-packages --domain-owner 111111111111 --repository cargo-store --profile shared
+
+# Create a profile for the team account
+vouch setup codeartifact --tool cargo --domain team-packages --domain-owner 222222222222 --repository team-cargo --profile team
+```
+
+Named profiles are referenced by other commands using the `--profile` flag.
+
+---
+
 ## Supported package managers
 
-| Package Manager | Protocol | Authentication Method |
-|---|---|---|
-| **Cargo** | `sparse+https` | Bearer token via credential provider |
-| **pip** | HTTPS | Token embedded in index URL |
-| **npm** | HTTPS | Bearer token via `.npmrc` |
+| Package Manager | Protocol | Authentication Method | Token Model |
+|---|---|---|---|
+| **Cargo** | `sparse+https` | Bearer token via credential provider | Dynamic (fetched on demand) |
+| **pip** | HTTPS | Token embedded in index URL | Dynamic (fetched on demand) |
+| **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, ~12h expiry) |
+
+**Dynamic tokens** (Cargo, pip) are fetched transparently on each operation and do not expire during normal use. **Static tokens** (npm) are written to `.npmrc` during setup and expire after approximately 12 hours. When an npm token expires, re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh it.
 
 ---
 
@@ -84,6 +121,8 @@ cargo build
 cargo publish --registry my-codeartifact-registry
 ```
 
+Cargo tokens are fetched dynamically on each operation via the credential provider. No token refresh is needed.
+
 ### pip
 
 ```bash
@@ -94,6 +133,8 @@ pip install my-package --index-url https://my-domain-123456789012.d.codeartifact
 pip install -r requirements.txt
 ```
 
+pip tokens are fetched dynamically by embedding the credential helper in the index URL. No token refresh is needed.
+
 ### npm
 
 ```bash
@@ -103,6 +144,39 @@ npm install
 # Publish a package
 npm publish
 ```
+
+npm uses a static token written to `.npmrc`. If you see authentication errors after ~12 hours, re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh the token.
+
+---
+
+## Environment variables
+
+You can inject a `CODEARTIFACT_AUTH_TOKEN` environment variable into your shell or a subprocess using `vouch env` or `vouch exec`. This is useful for tools that read the token from the environment (such as Maven or custom scripts).
+
+### `vouch env`
+
+Output the token as a shell export statement:
+
+```bash
+eval "$(vouch env --type codeartifact [--ca-domain <DOMAIN>] [--ca-domain-owner <ACCOUNT_ID>] [--ca-region <REGION>] [--ca-profile <PROFILE>] [--shell <SHELL>])"
+```
+
+This sets `CODEARTIFACT_AUTH_TOKEN` in your current shell.
+
+### `vouch exec`
+
+Run a command with the token injected:
+
+```bash
+vouch exec --type codeartifact [--ca-domain <DOMAIN>] [--ca-domain-owner <ACCOUNT_ID>] [--ca-region <REGION>] [--ca-profile <PROFILE>] -- mvn deploy
+```
+
+| Flag | Description |
+|---|---|
+| `--ca-domain` | CodeArtifact domain name (optional if a profile is configured) |
+| `--ca-domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
+| `--ca-region` | AWS region (optional if a profile is configured) |
+| `--ca-profile` | Named CodeArtifact profile to use |
 
 ---
 
@@ -134,11 +208,13 @@ Use the `--region` flag during setup to configure the appropriate partition.
 
 ### "Token is expired"
 
-- Run `vouch login` to refresh your session. CodeArtifact tokens are derived from your Vouch session and expire when the session ends.
+- For **npm**: Re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh the static token in `.npmrc`.
+- For **Cargo/pip**: Run `vouch login` to refresh your session. Dynamic tokens are fetched on demand, so expiry usually indicates the Vouch session itself has ended.
 
 ### Wrong domain or repository
 
-- Run `vouch setup codeartifact` again with the correct `--tool`, `--domain`, `--domain-owner`, and `--repository` flags.
+- Run `vouch setup codeartifact` again with the correct `--tool` and `--repository` flags.
+- If using profiles, check `~/.vouch/config.json` for the stored domain and region values.
 - Check your package manager's configuration files for conflicting settings.
 
 ### Package manager not using Vouch
@@ -150,20 +226,20 @@ Use the `--region` flag during setup to configure the appropriate partition.
 
 ## Maven
 
-For Maven projects, use `aws codeartifact get-authorization-token` to generate a token and reference it in your `settings.xml`:
+For Maven projects, use `vouch credential codeartifact` or `vouch exec` to obtain a token:
 
 ```bash
-# Get an auth token for Maven
-export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact \
-  get-authorization-token \
-  --domain my-domain \
-  --domain-owner 123456789012 \
-  --query authorizationToken \
-  --output text \
-  --profile vouch)
+# Option 1: Set the token in your shell
+export CODEARTIFACT_AUTH_TOKEN=$(vouch credential codeartifact)
 
-# Use the token in your settings.xml or pass via CLI
-mvn deploy -s settings.xml
+# Option 2: Use vouch exec to inject the token into Maven
+vouch exec --type codeartifact -- mvn deploy -s settings.xml
+```
+
+If you need to specify the domain explicitly:
+
+```bash
+export CODEARTIFACT_AUTH_TOKEN=$(vouch credential codeartifact --domain my-domain --domain-owner 123456789012)
 ```
 
 In your `settings.xml`, reference the environment variable as the password:
@@ -180,25 +256,28 @@ In your `settings.xml`, reference the environment variable as the password:
 
 ## Cross-Account Access
 
-If your CodeArtifact domain is in a different AWS account, configure a separate Vouch profile with a role in that account:
+If your CodeArtifact domain is in a different AWS account, use named profiles to manage access:
 
 ```bash
-# Set up a second profile for the artifacts account
+# Set up a Vouch AWS profile for the artifacts account
 vouch setup aws \
   --role arn:aws:iam::ARTIFACTS_ACCOUNT:role/CodeArtifactReader \
   --profile vouch-artifacts
 
-# Use it when logging in to CodeArtifact
-aws codeartifact login \
+# Create a CodeArtifact profile that uses the artifacts account
+vouch setup codeartifact \
   --tool npm \
   --domain shared-packages \
   --domain-owner ARTIFACTS_ACCOUNT \
   --repository npm-store \
-  --profile vouch-artifacts
+  --profile artifacts
+
+# Use the profile when fetching credentials
+vouch credential codeartifact --profile artifacts
 ```
 
 ---
 
 ## Token Lifetime
 
-CodeArtifact authorization tokens are valid for up to **12 hours** by default. When the token expires, re-run `aws codeartifact login` to get a fresh token. You can set a longer duration with `--duration-seconds 43200` (12 hours max). If your Vouch session (8 hours) has also expired, run `vouch login` first.
+CodeArtifact authorization tokens are valid for up to **12 hours** by default. For Cargo and pip, Vouch fetches tokens dynamically on each operation, so expiry is transparent. For npm, the token is embedded in `.npmrc` and must be refreshed by re-running `vouch setup codeartifact --tool npm` when it expires. If your Vouch session (8 hours) has expired, run `vouch login` first.
