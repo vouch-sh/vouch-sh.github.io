@@ -16,7 +16,7 @@ If your team spends time rotating AWS keys, copying SSH public keys to servers, 
 2. **Register a security key** (one-time enrollment of a YubiKey or compatible FIDO2 key).
 3. **Tap your key** each workday to get 8 hours of credentials for every integrated service.
 
-After a single `vouch login`, credential helpers for SSH, AWS, GitHub, EKS, Docker, Cargo, CodeArtifact, and CodeCommit provide tokens on demand -- transparently and without any long-lived secrets on disk.
+After a single `vouch login`, credential helpers for SSH, AWS, GitHub, EKS, Docker, Cargo, AWS CodeArtifact, and AWS CodeCommit provide tokens on demand -- transparently and without any long-lived secrets on disk.
 
 ## Security model
 
@@ -37,7 +37,7 @@ Vouch provides native credential helpers for:
 - **[Cargo](/docs/cargo/)** -- Private Cargo registry authentication
 - **[AWS CodeArtifact](/docs/codeartifact/)** -- Package repository authentication
 - **[AWS CodeCommit](/docs/codecommit/)** -- Git repository authentication
-- **[SSM Session Manager](/docs/ssm/)** -- Secure shell access through AWS Systems Manager
+- **[AWS Systems Manager Session Manager](/docs/ssm/)** -- Secure shell access through AWS Systems Manager
 - **[Database Authentication](/docs/databases/)** -- IAM authentication for RDS, Aurora, and Redshift
 - **[Infrastructure as Code](/docs/iac/)** -- CDK, Terraform, SAM, and other IaC tools
 - **[CI/CD Integration](/docs/cicd/)** -- Human authorization gates for deployment pipelines

@@ -20,7 +20,7 @@ AWS provides two built-in CLI authentication commands. Here is how they compare 
 
 - **[`aws sso login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-sso)** -- Authenticates through AWS IAM Identity Center (formerly AWS SSO). It requires an Identity Center instance and an SSO-configured profile (`aws configure sso`). Like `aws login`, it only covers AWS services.
 
-- **`vouch login`** -- Authenticates with a FIDO2 hardware key (YubiKey) and provides credentials for AWS, SSH, GitHub, Docker registries, Cargo registries, CodeCommit, CodeArtifact, databases, and any OIDC-compatible application -- all from a single session. Every credential is tied to a hardware-verified human identity, and authentication is phishing-resistant by design.
+- **`vouch login`** -- Authenticates with a FIDO2 hardware key (YubiKey) and provides credentials for AWS, SSH, GitHub, Docker registries, Cargo registries, AWS CodeCommit, AWS CodeArtifact, databases, and any OIDC-compatible application -- all from a single session. Every credential is tied to a hardware-verified human identity, and authentication is phishing-resistant by design.
 
 | | `aws login` | `aws sso login` | `vouch login` |
 |---|---|---|---|

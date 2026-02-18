@@ -1,22 +1,22 @@
 ---
 title: "Access AWS CodeCommit without Git Credentials"
 linkTitle: "AWS CodeCommit"
-description: "Clone and push to CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys."
+description: "Clone and push to AWS CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys."
 weight: 8
 subtitle: "Authenticate to AWS CodeCommit repositories using Vouch"
 params:
   docsGroup: code
 ---
 
-AWS offers three ways to authenticate to [CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html): SSH keys, HTTPS Git credentials (static username/password from IAM), and IAM access keys with a credential helper. All three involve long-lived secrets that need to be distributed and rotated.
+AWS offers three ways to authenticate to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html): SSH keys, HTTPS Git credentials (static username/password from IAM), and IAM access keys with a credential helper. All three involve long-lived secrets that need to be distributed and rotated.
 
-Vouch provides a fourth option: short-lived STS credentials that require no static secrets at all. After a single `vouch login`, you can clone, pull, and push to CodeCommit repositories without managing Git credentials or IAM access keys. Vouch supports both HTTPS credential helper and native `codecommit://` remote helper authentication.
+Vouch provides a fourth option: short-lived STS credentials that require no static secrets at all. After a single `vouch login`, you can clone, pull, and push to AWS CodeCommit repositories without managing Git credentials or IAM access keys. Vouch supports both HTTPS credential helper and native `codecommit://` remote helper authentication.
 
 ## How it works
 
-1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to a CodeCommit repository.
+1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to an AWS CodeCommit repository.
 2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
-3. **SigV4 signing** -- Vouch uses the STS credentials to sign the Git HTTP request with AWS Signature Version 4, authenticating directly to CodeCommit without generating intermediate HTTPS Git credentials.
+3. **SigV4 signing** -- Vouch uses the STS credentials to sign the Git HTTP request with AWS Signature Version 4, authenticating directly to AWS CodeCommit without generating intermediate HTTPS Git credentials.
 4. **Git authenticates** -- The signed credentials are returned to Git and used for the current operation.
 
 Key characteristics:
@@ -30,7 +30,7 @@ Key characteristics:
 
 ## Prerequisites
 
-Before configuring the CodeCommit integration, make sure you have:
+Before configuring the AWS CodeCommit integration, make sure you have:
 
 - The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
 - The **[AWS integration](/docs/aws/)** configured (OIDC provider and IAM role)
@@ -40,7 +40,7 @@ Before configuring the CodeCommit integration, make sure you have:
 
 ## Step 1 -- Configure the Git credential helper
 
-Run the setup command to install the Vouch credential helper for CodeCommit:
+Run the setup command to install the Vouch credential helper for AWS CodeCommit:
 
 ```
 vouch setup codecommit [--region <REGION>] [--profile <PROFILE>] [--configure]
@@ -52,7 +52,7 @@ vouch setup codecommit [--region <REGION>] [--profile <PROFILE>] [--configure]
 | `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
 | `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
 
-This configures Git to use Vouch as the credential helper for CodeCommit HTTPS URLs across all supported AWS partitions. It adds the following to your `~/.gitconfig`:
+This configures Git to use Vouch as the credential helper for AWS CodeCommit HTTPS URLs across all supported AWS partitions. It adds the following to your `~/.gitconfig`:
 
 ```ini
 [credential "https://git-codecommit.*.amazonaws.com"]
@@ -89,7 +89,7 @@ Your session lasts for 8 hours. All Git operations during that window use the se
 With the credential helper configured and an active session, Git commands work without any extra flags or tokens:
 
 ```bash
-# Clone a CodeCommit repository
+# Clone an AWS CodeCommit repository
 git clone https://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-repo
 
 # Pull latest changes
@@ -148,7 +148,7 @@ Use `codecommit://` URLs when:
 
 ## Cross-partition support
 
-Vouch supports CodeCommit across all AWS partitions:
+Vouch supports AWS CodeCommit across all AWS partitions:
 
 | Partition | URL Suffix | Region Examples |
 |---|---|---|
@@ -174,12 +174,12 @@ fatal: Authentication failed for 'https://git-codecommit.us-east-1.amazonaws.com
 
 ### "Not authorized to perform codecommit:GitPull"
 
-- Verify the IAM role you are assuming has the correct CodeCommit permissions.
+- Verify the IAM role you are assuming has the correct AWS CodeCommit permissions.
 - Check that the IAM trust policy allows `AssumeRoleWithWebIdentity` from the Vouch OIDC provider.
 
 ### Wrong region
 
-- CodeCommit repository URLs include the region (e.g., `git-codecommit.us-east-1.amazonaws.com`). Make sure you are using the correct region for your repository.
+- AWS CodeCommit repository URLs include the region (e.g., `git-codecommit.us-east-1.amazonaws.com`). Make sure you are using the correct region for your repository.
 - Alternatively, use `codecommit://` URLs with an explicit region: `codecommit::us-east-1://vouch@my-repo`.
 
 ### Another credential helper is interfering

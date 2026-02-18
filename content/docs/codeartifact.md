@@ -1,7 +1,7 @@
 ---
 title: "Authenticate to AWS CodeArtifact without Stored Tokens"
 linkTitle: "AWS CodeArtifact"
-description: "Pull and publish packages from CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
+description: "Pull and publish packages from AWS CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
 weight: 7
 subtitle: "Authenticate to AWS CodeArtifact repositories using Vouch"
 params:
@@ -10,20 +10,20 @@ params:
 
 Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. Keeping them all current across a growing team is a constant chore.
 
-With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your CodeArtifact repositories without manual token management.
+With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your AWS CodeArtifact repositories without manual token management.
 
 ## How it works
 
-1. **Package manager requests a token** -- When a package manager needs to authenticate to a CodeArtifact repository, the Vouch credential helper intercepts the request.
+1. **Package manager requests a token** -- When a package manager needs to authenticate to an AWS CodeArtifact repository, the Vouch credential helper intercepts the request.
 2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
-3. **STS to CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain a CodeArtifact authorization token.
+3. **STS to AWS CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain an AWS CodeArtifact authorization token.
 4. **Package manager authenticates** -- The token is returned to the package manager and used for the current operation. Tokens are short-lived and never written to disk.
 
 ---
 
 ## Prerequisites
 
-Before configuring the CodeArtifact integration, make sure you have:
+Before configuring the AWS CodeArtifact integration, make sure you have:
 
 - The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
 - The **[AWS integration](/docs/aws/)** configured (OIDC provider and IAM role)
@@ -34,7 +34,7 @@ Before configuring the CodeArtifact integration, make sure you have:
 
 ## Step 1 -- Configure the Vouch CLI
 
-Run the setup command to configure Vouch for your CodeArtifact repository:
+Run the setup command to configure Vouch for your AWS CodeArtifact repository:
 
 ```bash
 vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] [--domain-owner 123456789012] [--region us-east-1] [--profile my-profile]
@@ -43,8 +43,8 @@ vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] 
 | Flag | Description |
 |---|---|
 | `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
-| `--repository` | The CodeArtifact repository name (required) |
-| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--repository` | The AWS CodeArtifact repository name (required) |
+| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
 | `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
 | `--profile` | Named profile to use or create (see [Profiles](#profiles) below) |
@@ -55,7 +55,7 @@ This configures the appropriate credential helper for your package manager and w
 
 ## Profiles
 
-Vouch supports named profiles for CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
+Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
 
 ### Default profile
 
@@ -71,7 +71,7 @@ vouch setup codeartifact --tool pip --repository my-pypi-repo
 
 ### Named profiles
 
-Use `--profile` to create and manage separate configurations for different CodeArtifact domains or accounts:
+Use `--profile` to create and manage separate configurations for different AWS CodeArtifact domains or accounts:
 
 ```bash
 # Create a profile for the shared artifacts account
@@ -105,7 +105,7 @@ If you have not already logged in today, authenticate with your YubiKey:
 vouch login
 ```
 
-Your session lasts for 8 hours. All CodeArtifact operations during that window use the session automatically.
+Your session lasts for 8 hours. All AWS CodeArtifact operations during that window use the session automatically.
 
 ---
 
@@ -117,7 +117,7 @@ Your session lasts for 8 hours. All CodeArtifact operations during that window u
 # Build a project that depends on private crates
 cargo build
 
-# Publish a crate to your CodeArtifact registry
+# Publish a crate to your AWS CodeArtifact registry
 cargo publish --registry my-codeartifact-registry
 ```
 
@@ -126,7 +126,7 @@ Cargo tokens are fetched dynamically on each operation via the credential provid
 ### pip
 
 ```bash
-# Install a package from your CodeArtifact repository
+# Install a package from your AWS CodeArtifact repository
 pip install my-package --index-url https://my-domain-123456789012.d.codeartifact.us-east-1.amazonaws.com/pypi/my-repo/simple/
 
 # Install from requirements.txt
@@ -173,16 +173,16 @@ vouch exec --type codeartifact [--ca-domain <DOMAIN>] [--ca-domain-owner <ACCOUN
 
 | Flag | Description |
 |---|---|
-| `--ca-domain` | CodeArtifact domain name (optional if a profile is configured) |
+| `--ca-domain` | AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--ca-domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
 | `--ca-region` | AWS region (optional if a profile is configured) |
-| `--ca-profile` | Named CodeArtifact profile to use |
+| `--ca-profile` | Named AWS CodeArtifact profile to use |
 
 ---
 
 ## Cross-partition support
 
-Vouch supports CodeArtifact across all AWS partitions:
+Vouch supports AWS CodeArtifact across all AWS partitions:
 
 | Partition | Region Examples |
 |---|---|
@@ -203,7 +203,7 @@ Use the `--region` flag during setup to configure the appropriate partition.
   - `codeartifact:GetRepositoryEndpoint`
   - `codeartifact:ReadFromRepository`
   - `sts:GetServiceBearerToken`
-- Confirm the CodeArtifact domain and repository names are correct.
+- Confirm the AWS CodeArtifact domain and repository names are correct.
 - Check that you have an active Vouch session: `vouch login`.
 
 ### "Token is expired"
@@ -220,7 +220,7 @@ Use the `--region` flag during setup to configure the appropriate partition.
 ### Package manager not using Vouch
 
 - Ensure no environment variables (e.g., `CODEARTIFACT_AUTH_TOKEN`) are overriding the credential helper.
-- Verify the package manager configuration points to the correct CodeArtifact endpoint.
+- Verify the package manager configuration points to the correct AWS CodeArtifact endpoint.
 
 ---
 
@@ -256,7 +256,7 @@ In your `settings.xml`, reference the environment variable as the password:
 
 ## Cross-Account Access
 
-If your CodeArtifact domain is in a different AWS account, use named profiles to manage access:
+If your AWS CodeArtifact domain is in a different AWS account, use named profiles to manage access:
 
 ```bash
 # Set up a Vouch AWS profile for the artifacts account
@@ -264,7 +264,7 @@ vouch setup aws \
   --role arn:aws:iam::ARTIFACTS_ACCOUNT:role/CodeArtifactReader \
   --profile vouch-artifacts
 
-# Create a CodeArtifact profile that uses the artifacts account
+# Create an AWS CodeArtifact profile that uses the artifacts account
 vouch setup codeartifact \
   --tool npm \
   --domain shared-packages \
@@ -280,4 +280,4 @@ vouch credential codeartifact --profile artifacts
 
 ## Token Lifetime
 
-CodeArtifact authorization tokens are valid for up to **12 hours** by default. For Cargo and pip, Vouch fetches tokens dynamically on each operation, so expiry is transparent. For npm, the token is embedded in `.npmrc` and must be refreshed by re-running `vouch setup codeartifact --tool npm` when it expires. If your Vouch session (8 hours) has expired, run `vouch login` first.
+AWS CodeArtifact authorization tokens are valid for up to **12 hours** by default. For Cargo and pip, Vouch fetches tokens dynamically on each operation, so expiry is transparent. For npm, the token is embedded in `.npmrc` and must be refreshed by re-running `vouch setup codeartifact --tool npm` when it expires. If your Vouch session (8 hours) has expired, run `vouch login` first.

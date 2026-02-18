@@ -151,11 +151,11 @@ vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [
 | Flag | Description |
 |---|---|
 | `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
-| `--repository` | The CodeArtifact repository name (required) |
-| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--repository` | The AWS CodeArtifact repository name (required) |
+| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
 | `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
-| `--profile` | Named CodeArtifact profile to use or create (stores domain/owner/region for reuse) |
+| `--profile` | Named AWS CodeArtifact profile to use or create (stores domain/owner/region for reuse) |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 
@@ -245,10 +245,10 @@ vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] 
 
 | Flag | Description |
 |---|---|
-| `--domain` | The CodeArtifact domain name (optional if a profile is configured) |
+| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
 | `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
-| `--profile` | Named CodeArtifact profile to use |
+| `--profile` | Named AWS CodeArtifact profile to use |
 
 ---
 
@@ -318,10 +318,10 @@ vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
 | `--type` | Credential type to inject: `aws`, `github`, or `codeartifact` (required) |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
 | `--session-name` | Session name for the assumed role (when `--type aws`) |
-| `--ca-domain` | CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-profile` | Named CodeArtifact profile to use (when `--type codeartifact`) |
+| `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
 
 When `--type codeartifact`, injects `CODEARTIFACT_AUTH_TOKEN` into the subprocess environment.
 
@@ -331,13 +331,13 @@ Examples:
 # AWS credentials
 vouch exec --type aws --role arn:aws:iam::123456789012:role/VouchDeveloper -- terraform plan
 
-# CodeArtifact token
+# AWS CodeArtifact token
 vouch exec --type codeartifact -- mvn deploy -s settings.xml
 ```
 
 ### `vouch env`
 
-Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS), `GITHUB_TOKEN` (for GitHub), or `CODEARTIFACT_AUTH_TOKEN` (for CodeArtifact) in your current shell.
+Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS), `GITHUB_TOKEN` (for GitHub), or `CODEARTIFACT_AUTH_TOKEN` (for AWS CodeArtifact) in your current shell.
 
 ```
 eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
@@ -349,10 +349,10 @@ eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 | `--shell` | Shell syntax: `bash` or `fish` (default: `bash`). The `bash` syntax also works for zsh. |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
 | `--session-name` | Session name for the assumed role (when `--type aws`) |
-| `--ca-domain` | CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--ca-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-profile` | Named CodeArtifact profile to use (when `--type codeartifact`) |
+| `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
 
 ### `vouch init`
 

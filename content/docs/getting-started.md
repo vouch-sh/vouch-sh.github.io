@@ -129,10 +129,10 @@ Before your tools can use Vouch credentials, your organization needs to configur
 - **[Amazon EKS](/docs/eks/)** -- Authenticate to Kubernetes clusters running on EKS.
 - **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
 - **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
-- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to CodeArtifact package repositories.
-- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to CodeCommit Git repositories.
+- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to AWS CodeArtifact package repositories.
+- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to AWS CodeCommit Git repositories.
 - **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.
-- **[SSM Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
+- **[AWS Systems Manager Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
 - **[Database Authentication](/docs/databases/)** -- Connect to RDS, Aurora, and Redshift with IAM authentication.
 - **[Infrastructure as Code](/docs/iac/)** -- Use CDK, Terraform, SAM, and other IaC tools.
 - **[CI/CD Integration](/docs/cicd/)** -- Add human authorization gates to deployments.
