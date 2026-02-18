@@ -50,7 +50,7 @@ vouch logout
 
 ### `vouch status`
 
-Display the current session status, including remaining session time and active integrations.
+Display the current session status, including remaining session time and active integrations (SSH, AWS, SSM, Git, Docker, Cargo).
 
 ```
 vouch status [--json]
@@ -191,6 +191,23 @@ vouch setup eks --cluster <CLUSTER_NAME> [--region <REGION>] [--profile <PROFILE
 | `--kubeconfig` | Path to kubeconfig file (defaults to `~/.kube/config`) |
 
 See [Amazon EKS](/docs/eks/) for full details.
+
+### `vouch setup ssm`
+
+Configure SSH to use AWS Systems Manager Session Manager as a proxy for connections to EC2 and managed instances.
+
+```
+vouch setup ssm [--profile <PROFILE>] [--region <REGION>] [--hosts <HOSTS>] [--force]
+```
+
+| Flag | Description |
+|---|---|
+| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--region` | AWS region to use in the ProxyCommand |
+| `--hosts` | Host patterns to match (default: `i-* mi-*`) |
+| `--force` | Overwrite any existing SSM configuration in `~/.ssh/config` |
+
+See [AWS Systems Manager](/docs/ssm/) for full details.
 
 ---
 
@@ -386,7 +403,7 @@ This checks:
 - CLI version and updates
 - Agent connectivity
 - Server reachability
-- Integration configurations (SSH, AWS, Git, Docker, Cargo)
+- Integration configurations (SSH, AWS, SSM, Git, Docker, Cargo)
 
 ### `vouch completions`
 

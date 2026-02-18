@@ -54,15 +54,48 @@ This opens an interactive shell session on the target instance without SSH.
 
 You can also use AWS SSM as a transport for standard SSH connections. This lets you use familiar SSH tooling (scp, rsync, port forwarding) while routing traffic through AWS SSM instead of direct TCP connections.
 
-Add the following to your `~/.ssh/config`:
+### Automated setup (recommended)
+
+The `vouch setup ssm` command configures your SSH client automatically:
+
+```bash
+vouch setup ssm
+```
+
+| Flag | Description |
+|---|---|
+| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--region` | AWS region to use in the ProxyCommand |
+| `--hosts` | Host patterns to match (default: `i-* mi-*`) |
+| `--force` | Overwrite any existing SSM configuration in `~/.ssh/config` |
+
+To specify a profile and region explicitly:
+
+```bash
+vouch setup ssm --profile vouch --region us-east-1
+```
+
+This adds the following to your `~/.ssh/config`:
 
 ```
-Host i-*
-    ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p' --profile vouch"
-    User ec2-user
+Host i-* mi-*
+    ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p' --profile vouch --region us-east-1"
 ```
 
-Then connect with SSH as usual:
+### Manual setup
+
+Alternatively, add the following to your `~/.ssh/config` manually:
+
+```
+Host i-* mi-*
+    ProxyCommand sh -c "aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters 'portNumber=%p' --profile vouch --region <YOUR_REGION>"
+```
+
+Replace `<YOUR_REGION>` with your AWS region (e.g., `us-east-1`).
+
+### Connect
+
+With either setup method, connect with SSH as usual:
 
 ```bash
 ssh i-0abc123def456
@@ -145,3 +178,15 @@ The target instance does not have a running AWS SSM agent or cannot reach the AW
 - Verify your IAM role has `ssm:StartSession` permission for the target instance.
 - Check that the instance ARN matches the resource constraints in your IAM policy.
 - Ensure you have an active Vouch session: `vouch login`.
+
+### `vouch setup ssm` reports existing SSM configuration
+
+If the command detects an existing SSM block in your `~/.ssh/config`, it will not overwrite it by default. Use the `--force` flag to replace the existing configuration:
+
+```bash
+vouch setup ssm --force
+```
+
+### `vouch doctor` reports SSM issues
+
+Run `vouch doctor` to diagnose SSM configuration problems. If issues are found, run `vouch setup ssm` to reconfigure your SSH client automatically.
