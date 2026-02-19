@@ -1,0 +1,744 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Add Hardware-Backed Sign-In to Your Application on Vouch — Hardware-Backed Developer Credentials</title><link>https://vouch.sh/docs/applications/</link><description>Recent content in Add Hardware-Backed Sign-In to Your Application on Vouch — Hardware-Backed Developer Credentials</description><generator>Hugo</generator><language>en-us</language><atom:link href="https://vouch.sh/docs/applications/index.xml" rel="self" type="application/rss+xml"/><item><title>Rails (OmniAuth)</title><link>https://vouch.sh/docs/applications/rails/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/rails/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://github.com/omniauth/omniauth_openid_connect">OmniAuth OpenID Connect&lt;/a> provides a standard OIDC strategy for Rails applications.&lt;/p>
+&lt;p>Add the &lt;code>omniauth_openid_connect&lt;/code> gem to your &lt;code>Gemfile&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-ruby" data-lang="ruby">&lt;span style="display:flex;">&lt;span>gem &lt;span style="color:#e6db74">&amp;#39;omniauth_openid_connect&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure the provider in &lt;code>config/initializers/omniauth.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-ruby" data-lang="ruby">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">Rails&lt;/span>&lt;span style="color:#f92672">.&lt;/span>application&lt;span style="color:#f92672">.&lt;/span>config&lt;span style="color:#f92672">.&lt;/span>middleware&lt;span style="color:#f92672">.&lt;/span>use &lt;span style="color:#66d9ef">OmniAuth&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#66d9ef">Builder&lt;/span> &lt;span style="color:#66d9ef">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> provider &lt;span style="color:#e6db74">:openid_connect&lt;/span>, {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name: &lt;span style="color:#e6db74">:vouch&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">scope&lt;/span>: &lt;span style="color:#f92672">[&lt;/span>&lt;span style="color:#e6db74">:openid&lt;/span>, &lt;span style="color:#e6db74">:email&lt;/span>&lt;span style="color:#f92672">]&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">response_type&lt;/span>: &lt;span style="color:#e6db74">:code&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">issuer&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">discovery&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">client_options&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">identifier&lt;/span>: &lt;span style="color:#66d9ef">ENV&lt;/span>&lt;span style="color:#f92672">[&lt;/span>&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>&lt;span style="color:#f92672">]&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">secret&lt;/span>: &lt;span style="color:#66d9ef">ENV&lt;/span>&lt;span style="color:#f92672">[&lt;/span>&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET&amp;#34;&lt;/span>&lt;span style="color:#f92672">]&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">redirect_uri&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;https://your-app.example.com/auth/vouch/callback&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add the callback route in &lt;code>config/routes.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-ruby" data-lang="ruby">&lt;span style="display:flex;">&lt;span>get &lt;span style="color:#e6db74">&amp;#34;/auth/vouch/callback&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">to&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;sessions#create&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>post &lt;span style="color:#e6db74">&amp;#34;/auth/vouch/callback&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">to&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;sessions#create&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Handle the callback in &lt;code>app/controllers/sessions_controller.rb&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-ruby" data-lang="ruby">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SessionsController&lt;/span> &lt;span style="color:#f92672">&amp;lt;&lt;/span> &lt;span style="color:#66d9ef">ApplicationController&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">create&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> auth &lt;span style="color:#f92672">=&lt;/span> request&lt;span style="color:#f92672">.&lt;/span>env&lt;span style="color:#f92672">[&lt;/span>&lt;span style="color:#e6db74">&amp;#34;omniauth.auth&amp;#34;&lt;/span>&lt;span style="color:#f92672">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> user &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">User&lt;/span>&lt;span style="color:#f92672">.&lt;/span>find_or_create_by(&lt;span style="color:#e6db74">vouch_id&lt;/span>: auth&lt;span style="color:#f92672">.&lt;/span>uid) &lt;span style="color:#66d9ef">do&lt;/span> &lt;span style="color:#f92672">|&lt;/span>u&lt;span style="color:#f92672">|&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> u&lt;span style="color:#f92672">.&lt;/span>email &lt;span style="color:#f92672">=&lt;/span> auth&lt;span style="color:#f92672">.&lt;/span>info&lt;span style="color:#f92672">.&lt;/span>email
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> u&lt;span style="color:#f92672">.&lt;/span>name &lt;span style="color:#f92672">=&lt;/span> auth&lt;span style="color:#f92672">.&lt;/span>info&lt;span style="color:#f92672">.&lt;/span>name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> session&lt;span style="color:#f92672">[&lt;/span>&lt;span style="color:#e6db74">:user_id&lt;/span>&lt;span style="color:#f92672">]&lt;/span> &lt;span style="color:#f92672">=&lt;/span> user&lt;span style="color:#f92672">.&lt;/span>id
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> redirect_to root_path, &lt;span style="color:#e6db74">notice&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Signed in successfully.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Django (django-allauth)</title><link>https://vouch.sh/docs/applications/django/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/django/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Install &lt;a href="https://django-allauth.readthedocs.io/">django-allauth&lt;/a> with OpenID Connect support:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install django-allauth&lt;span style="color:#f92672">[&lt;/span>openid_connect&lt;span style="color:#f92672">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add the provider to your &lt;code>settings.py&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>INSTALLED_APPS &lt;span style="color:#f92672">=&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;allauth&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;allauth.account&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;allauth.socialaccount&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;allauth.socialaccount.providers.openid_connect&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SOCIALACCOUNT_PROVIDERS &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;openid_connect&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;APPS&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;provider_id&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;client_id&amp;#34;&lt;/span>: os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;secret&amp;#34;&lt;/span>: os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;settings&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;server_url&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add the allauth URLs to your &lt;code>urls.py&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> django.urls &lt;span style="color:#f92672">import&lt;/span> path, include
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>urlpatterns &lt;span style="color:#f92672">=&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path(&lt;span style="color:#e6db74">&amp;#34;accounts/&amp;#34;&lt;/span>, include(&lt;span style="color:#e6db74">&amp;#34;allauth.urls&amp;#34;&lt;/span>)),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>]
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Express.js (Passport)</title><link>https://vouch.sh/docs/applications/express/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/express/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Install the required packages:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>npm install passport passport-openidconnect express-session
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure &lt;a href="https://www.passportjs.org/">Passport&lt;/a> in your Express application:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-javascript" data-lang="javascript">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">express&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;express&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">session&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;express-session&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">passport&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;passport&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">OpenIDConnectStrategy&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;passport-openidconnect&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">app&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">express&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">use&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">session&lt;/span>({
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">secret&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">SESSION_SECRET&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">resave&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">false&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">saveUninitialized&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#66d9ef">false&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">use&lt;/span>(&lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">initialize&lt;/span>());
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">use&lt;/span>(&lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">session&lt;/span>());
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">use&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#a6e22e">OpenIDConnectStrategy&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">issuer&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">authorizationURL&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh/oauth/authorize&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">tokenURL&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh/oauth/token&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">userInfoURL&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh/oauth/userinfo&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">clientID&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">VOUCH_CLIENT_ID&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">clientSecret&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">VOUCH_CLIENT_SECRET&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbackURL&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://your-app.example.com/auth/vouch/callback&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">scope&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#a6e22e">issuer&lt;/span>, &lt;span style="color:#a6e22e">profile&lt;/span>, &lt;span style="color:#a6e22e">done&lt;/span>) =&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Find or create user based on profile
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">done&lt;/span>(&lt;span style="color:#66d9ef">null&lt;/span>, &lt;span style="color:#a6e22e">profile&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">serializeUser&lt;/span>((&lt;span style="color:#a6e22e">user&lt;/span>, &lt;span style="color:#a6e22e">done&lt;/span>) =&amp;gt; &lt;span style="color:#a6e22e">done&lt;/span>(&lt;span style="color:#66d9ef">null&lt;/span>, &lt;span style="color:#a6e22e">user&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">deserializeUser&lt;/span>((&lt;span style="color:#a6e22e">user&lt;/span>, &lt;span style="color:#a6e22e">done&lt;/span>) =&amp;gt; &lt;span style="color:#a6e22e">done&lt;/span>(&lt;span style="color:#66d9ef">null&lt;/span>, &lt;span style="color:#a6e22e">user&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/auth/vouch&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">authenticate&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">get&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;/auth/vouch/callback&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">passport&lt;/span>.&lt;span style="color:#a6e22e">authenticate&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>, {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">successRedirect&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">failureRedirect&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">app&lt;/span>.&lt;span style="color:#a6e22e">listen&lt;/span>(&lt;span style="color:#ae81ff">3000&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Next.js (NextAuth.js)</title><link>https://vouch.sh/docs/applications/nextjs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/nextjs/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Install &lt;a href="https://next-auth.js.org/">NextAuth.js&lt;/a>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>npm install next-auth
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Create the auth configuration in &lt;code>app/api/auth/[...nextauth]/route.js&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-javascript" data-lang="javascript">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">import&lt;/span> &lt;span style="color:#a6e22e">NextAuth&lt;/span> &lt;span style="color:#a6e22e">from&lt;/span> &lt;span style="color:#e6db74">&amp;#34;next-auth&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">handler&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">NextAuth&lt;/span>({
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">providers&lt;/span>&lt;span style="color:#f92672">:&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">id&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">name&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;Vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">type&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;oidc&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">issuer&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">clientId&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">VOUCH_CLIENT_ID&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">clientSecret&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">VOUCH_CLIENT_SECRET&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">authorization&lt;/span>&lt;span style="color:#f92672">:&lt;/span> { &lt;span style="color:#a6e22e">params&lt;/span>&lt;span style="color:#f92672">:&lt;/span> { &lt;span style="color:#a6e22e">scope&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span> } },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">profile&lt;/span>(&lt;span style="color:#a6e22e">profile&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">id&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">profile&lt;/span>.&lt;span style="color:#a6e22e">sub&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">name&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">profile&lt;/span>.&lt;span style="color:#a6e22e">name&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">email&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">profile&lt;/span>.&lt;span style="color:#a6e22e">email&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> };
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">callbacks&lt;/span>&lt;span style="color:#f92672">:&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#a6e22e">jwt&lt;/span>({ &lt;span style="color:#a6e22e">token&lt;/span>, &lt;span style="color:#a6e22e">account&lt;/span>, &lt;span style="color:#a6e22e">profile&lt;/span> }) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">account&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">token&lt;/span>.&lt;span style="color:#a6e22e">accessToken&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">account&lt;/span>.&lt;span style="color:#a6e22e">access_token&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">token&lt;/span>.&lt;span style="color:#a6e22e">vouchId&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">profile&lt;/span>.&lt;span style="color:#a6e22e">sub&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">token&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#a6e22e">session&lt;/span>({ &lt;span style="color:#a6e22e">session&lt;/span>, &lt;span style="color:#a6e22e">token&lt;/span> }) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">session&lt;/span>.&lt;span style="color:#a6e22e">accessToken&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">token&lt;/span>.&lt;span style="color:#a6e22e">accessToken&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">session&lt;/span>.&lt;span style="color:#a6e22e">user&lt;/span>.&lt;span style="color:#a6e22e">vouchId&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">token&lt;/span>.&lt;span style="color:#a6e22e">vouchId&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">session&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">export&lt;/span> { &lt;span style="color:#a6e22e">handler&lt;/span> &lt;span style="color:#a6e22e">as&lt;/span> &lt;span style="color:#a6e22e">GET&lt;/span>, &lt;span style="color:#a6e22e">handler&lt;/span> &lt;span style="color:#a6e22e">as&lt;/span> &lt;span style="color:#a6e22e">POST&lt;/span> };
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add environment variables to &lt;code>.env.local&lt;/code>:&lt;/p></description></item><item><title>Laravel (Socialite)</title><link>https://vouch.sh/docs/applications/laravel/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/laravel/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Install the &lt;a href="https://laravel.com/docs/socialite">Socialite&lt;/a> OpenID Connect driver:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>composer require socialiteproviders/openid-connect
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add the provider configuration to &lt;code>config/services.php&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#39;vouch&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;client_id&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">env&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;VOUCH_CLIENT_ID&amp;#39;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;client_secret&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">env&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;VOUCH_CLIENT_SECRET&amp;#39;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;redirect&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">env&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;VOUCH_REDIRECT_URI&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;https://your-app.example.com/auth/vouch/callback&amp;#39;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;discovery_url&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> &lt;span style="color:#e6db74">&amp;#39;https://us.vouch.sh/.well-known/openid-configuration&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>],
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Register the event listener in &lt;code>app/Providers/EventServiceProvider.php&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">protected&lt;/span> $listen &lt;span style="color:#f92672">=&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">\SocialiteProviders\Manager\SocialiteWasCalled&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">class&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">\SocialiteProviders\OpenIDConnect\OpenIDConnectExtendSocialite&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">class&lt;/span> &lt;span style="color:#f92672">.&lt;/span> &lt;span style="color:#e6db74">&amp;#39;@handle&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>];
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Add routes in &lt;code>routes/web.php&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-php" data-lang="php">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> &lt;span style="color:#a6e22e">Laravel\Socialite\Facades\Socialite&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">Route&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;/auth/vouch&amp;#39;&lt;/span>, &lt;span style="color:#66d9ef">function&lt;/span> () {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">Socialite&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">driver&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;openid-connect&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">setConfig&lt;/span>(&lt;span style="color:#a6e22e">config&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;services.vouch&amp;#39;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">scopes&lt;/span>([&lt;span style="color:#e6db74">&amp;#39;openid&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;email&amp;#39;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">redirect&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">Route&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;/auth/vouch/callback&amp;#39;&lt;/span>, &lt;span style="color:#66d9ef">function&lt;/span> () {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> $user &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">Socialite&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">driver&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;openid-connect&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">setConfig&lt;/span>(&lt;span style="color:#a6e22e">config&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;services.vouch&amp;#39;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">user&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> $localUser &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">User&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">updateOrCreate&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> [&lt;span style="color:#e6db74">&amp;#39;vouch_id&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> $user&lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">getId&lt;/span>()],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;name&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> $user&lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">getName&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;email&amp;#39;&lt;/span> &lt;span style="color:#f92672">=&amp;gt;&lt;/span> $user&lt;span style="color:#f92672">-&amp;gt;&lt;/span>&lt;span style="color:#a6e22e">getEmail&lt;/span>(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Auth&lt;/span>&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#a6e22e">login&lt;/span>($localUser);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">redirect&lt;/span>(&lt;span style="color:#e6db74">&amp;#39;/dashboard&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Flask (Authlib)</title><link>https://vouch.sh/docs/applications/flask/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/flask/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Install &lt;a href="https://authlib.org/">Authlib&lt;/a>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install authlib flask
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure the OIDC client in your Flask application:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> flask &lt;span style="color:#f92672">import&lt;/span> Flask, redirect, url_for, session
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> authlib.integrations.flask_client &lt;span style="color:#f92672">import&lt;/span> OAuth
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>app &lt;span style="color:#f92672">=&lt;/span> Flask(__name__)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>app&lt;span style="color:#f92672">.&lt;/span>secret_key &lt;span style="color:#f92672">=&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;FLASK_SECRET_KEY&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>oauth &lt;span style="color:#f92672">=&lt;/span> OAuth(app)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>vouch &lt;span style="color:#f92672">=&lt;/span> oauth&lt;span style="color:#f92672">.&lt;/span>register(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_id&lt;span style="color:#f92672">=&lt;/span>os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_secret&lt;span style="color:#f92672">=&lt;/span>os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> server_metadata_url&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh/.well-known/openid-configuration&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_kwargs&lt;span style="color:#f92672">=&lt;/span>{&lt;span style="color:#e6db74">&amp;#34;scope&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.route&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">login&lt;/span>():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> redirect_uri &lt;span style="color:#f92672">=&lt;/span> url_for(&lt;span style="color:#e6db74">&amp;#34;callback&amp;#34;&lt;/span>, _external&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> vouch&lt;span style="color:#f92672">.&lt;/span>authorize_redirect(redirect_uri)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.route&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/auth/callback&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> token &lt;span style="color:#f92672">=&lt;/span> vouch&lt;span style="color:#f92672">.&lt;/span>authorize_access_token()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userinfo &lt;span style="color:#f92672">=&lt;/span> token[&lt;span style="color:#e6db74">&amp;#34;userinfo&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> session[&lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span>] &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;sub&amp;#34;&lt;/span>: userinfo[&lt;span style="color:#e6db74">&amp;#34;sub&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;name&amp;#34;&lt;/span>: userinfo&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;name&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;email&amp;#34;&lt;/span>: userinfo&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;email&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> redirect(&lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.route&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">index&lt;/span>():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> user &lt;span style="color:#f92672">=&lt;/span> session&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> user:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Hello, &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>user[&lt;span style="color:#e6db74">&amp;#39;name&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">!&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#e6db74">&amp;#39;&amp;lt;a href=&amp;#34;/login&amp;#34;&amp;gt;Sign in with Vouch&amp;lt;/a&amp;gt;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>FastAPI (Authlib)</title><link>https://vouch.sh/docs/applications/fastapi/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/fastapi/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://authlib.org/">Authlib&lt;/a> provides OAuth and OpenID Connect client support for Starlette-based applications.&lt;/p>
+&lt;p>Install the required packages:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install authlib httpx fastapi uvicorn itsdangerous
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure the OIDC client in your FastAPI application:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> os
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fastapi &lt;span style="color:#f92672">import&lt;/span> FastAPI, Request
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fastapi.responses &lt;span style="color:#f92672">import&lt;/span> RedirectResponse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> authlib.integrations.starlette_client &lt;span style="color:#f92672">import&lt;/span> OAuth
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> starlette.middleware.sessions &lt;span style="color:#f92672">import&lt;/span> SessionMiddleware
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>app &lt;span style="color:#f92672">=&lt;/span> FastAPI()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>app&lt;span style="color:#f92672">.&lt;/span>add_middleware(SessionMiddleware, secret_key&lt;span style="color:#f92672">=&lt;/span>os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;SESSION_SECRET&amp;#34;&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>oauth &lt;span style="color:#f92672">=&lt;/span> OAuth()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>oauth&lt;span style="color:#f92672">.&lt;/span>register(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;vouch&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_id&lt;span style="color:#f92672">=&lt;/span>os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_secret&lt;span style="color:#f92672">=&lt;/span>os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> server_metadata_url&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh/.well-known/openid-configuration&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> client_kwargs&lt;span style="color:#f92672">=&lt;/span>{&lt;span style="color:#e6db74">&amp;#34;scope&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">login&lt;/span>(request: Request):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> redirect_uri &lt;span style="color:#f92672">=&lt;/span> request&lt;span style="color:#f92672">.&lt;/span>url_for(&lt;span style="color:#e6db74">&amp;#34;callback&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> oauth&lt;span style="color:#f92672">.&lt;/span>vouch&lt;span style="color:#f92672">.&lt;/span>authorize_redirect(request, redirect_uri)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/auth/callback&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>(request: Request):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> token &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> oauth&lt;span style="color:#f92672">.&lt;/span>vouch&lt;span style="color:#f92672">.&lt;/span>authorize_access_token(request)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userinfo &lt;span style="color:#f92672">=&lt;/span> token[&lt;span style="color:#e6db74">&amp;#34;userinfo&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request&lt;span style="color:#f92672">.&lt;/span>session[&lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span>] &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;sub&amp;#34;&lt;/span>: userinfo[&lt;span style="color:#e6db74">&amp;#34;sub&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;name&amp;#34;&lt;/span>: userinfo&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;name&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;email&amp;#34;&lt;/span>: userinfo&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;email&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> RedirectResponse(url&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@app.get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">index&lt;/span>(request: Request):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> user &lt;span style="color:#f92672">=&lt;/span> request&lt;span style="color:#f92672">.&lt;/span>session&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> user:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> {&lt;span style="color:#e6db74">&amp;#34;message&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Hello, &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>user[&lt;span style="color:#e6db74">&amp;#39;name&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">!&amp;#34;&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> {&lt;span style="color:#e6db74">&amp;#34;message&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Not authenticated. Visit /login to sign in.&amp;#34;&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>Spring Boot (Spring Security)</title><link>https://vouch.sh/docs/applications/spring-boot/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/spring-boot/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>Add the &lt;a href="https://spring.io/projects/spring-security">Spring Security&lt;/a> OAuth2 Client dependency to your &lt;code>pom.xml&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-xml" data-lang="xml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">&amp;lt;dependency&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;lt;groupId&amp;gt;&lt;/span>org.springframework.boot&lt;span style="color:#f92672">&amp;lt;/groupId&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;lt;artifactId&amp;gt;&lt;/span>spring-boot-starter-oauth2-client&lt;span style="color:#f92672">&amp;lt;/artifactId&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">&amp;lt;/dependency&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure the OIDC provider in &lt;code>application.yml&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spring&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">security&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">oauth2&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">client&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">registration&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">vouch&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">client-id&lt;/span>: &lt;span style="color:#ae81ff">${VOUCH_CLIENT_ID}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">client-secret&lt;/span>: &lt;span style="color:#ae81ff">${VOUCH_CLIENT_SECRET}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">scope&lt;/span>: &lt;span style="color:#ae81ff">openid, email&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">authorization-grant-type&lt;/span>: &lt;span style="color:#ae81ff">authorization_code&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">redirect-uri&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{baseUrl}/login/oauth2/code/vouch&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">provider&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">vouch&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">issuer-uri&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Configure Spring Security in your application:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> org.springframework.context.annotation.Bean;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> org.springframework.context.annotation.Configuration;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> org.springframework.security.config.annotation.web.builders.HttpSecurity;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> org.springframework.security.web.SecurityFilterChain;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@EnableWebSecurity&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SecurityConfig&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Bean&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> SecurityFilterChain &lt;span style="color:#a6e22e">securityFilterChain&lt;/span>(HttpSecurity http) &lt;span style="color:#66d9ef">throws&lt;/span> Exception {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> http
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">authorizeHttpRequests&lt;/span>(auth &lt;span style="color:#f92672">-&amp;gt;&lt;/span> auth
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">requestMatchers&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>).&lt;span style="color:#a6e22e">permitAll&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">anyRequest&lt;/span>().&lt;span style="color:#a6e22e">authenticated&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">oauth2Login&lt;/span>(oauth2 &lt;span style="color:#f92672">-&amp;gt;&lt;/span> oauth2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">defaultSuccessUrl&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/dashboard&amp;#34;&lt;/span>, &lt;span style="color:#66d9ef">true&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> http.&lt;span style="color:#a6e22e">build&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Create a controller to access user information:&lt;/p></description></item><item><title>Axum (openidconnect-rs)</title><link>https://vouch.sh/docs/applications/axum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/axum/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a href="https://github.com/ramosbugs/openidconnect-rs">openidconnect-rs&lt;/a> provides a type-safe OpenID Connect client for Rust.&lt;/p>
+&lt;p>Add the required dependencies to your &lt;code>Cargo.toml&lt;/code>:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-toml" data-lang="toml">&lt;span style="display:flex;">&lt;span>[&lt;span style="color:#a6e22e">dependencies&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">axum&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;0.7&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">axum-extra&lt;/span> = { &lt;span style="color:#a6e22e">version&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;0.9&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">features&lt;/span> = [&lt;span style="color:#e6db74">&amp;#34;cookie&amp;#34;&lt;/span>] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">openidconnect&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;3&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">reqwest&lt;/span> = { &lt;span style="color:#a6e22e">version&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;0.12&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">features&lt;/span> = [&lt;span style="color:#e6db74">&amp;#34;rustls-tls&amp;#34;&lt;/span>] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">serde&lt;/span> = { &lt;span style="color:#a6e22e">version&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;1&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">features&lt;/span> = [&lt;span style="color:#e6db74">&amp;#34;derive&amp;#34;&lt;/span>] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">tokio&lt;/span> = { &lt;span style="color:#a6e22e">version&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;1&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">features&lt;/span> = [&lt;span style="color:#e6db74">&amp;#34;full&amp;#34;&lt;/span>] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">tower-sessions&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;0.13&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">url&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;2&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Implement the OIDC integration:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> axum::{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> extract::{Query, State},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response::{IntoResponse, Redirect},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> routing::get,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Router,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> openidconnect::{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> core::{CoreClient, CoreProviderMetadata, CoreResponseType},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reqwest::async_http_client,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CsrfToken, IssuerUrl, Nonce, RedirectUrl, Scope, TokenResponse,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> serde::Deserialize;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> std::sync::Arc;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">use&lt;/span> tower_sessions::{MemoryStore, Session, SessionManagerLayer};
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">CSRF_TOKEN_KEY&lt;/span>: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">str&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;csrf_token&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#66d9ef">NONCE_KEY&lt;/span>: &lt;span style="color:#66d9ef">&amp;amp;&lt;/span>&lt;span style="color:#66d9ef">str&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;nonce&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">AppState&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> oidc_client: &lt;span style="color:#a6e22e">CoreClient&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#[derive(Deserialize)]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">struct&lt;/span> &lt;span style="color:#a6e22e">CallbackParams&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> code: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> state: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">login&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> State(state): &lt;span style="color:#a6e22e">State&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>Arc&lt;span style="color:#f92672">&amp;lt;&lt;/span>AppState&lt;span style="color:#f92672">&amp;gt;&amp;gt;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> session: &lt;span style="color:#a6e22e">Session&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) -&amp;gt; &lt;span style="color:#a6e22e">impl&lt;/span> IntoResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> (auth_url, csrf_token, nonce) &lt;span style="color:#f92672">=&lt;/span> state
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .oidc_client
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .authorize_url(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> AuthenticationFlow::&lt;span style="color:#f92672">&amp;lt;&lt;/span>CoreResponseType&lt;span style="color:#f92672">&amp;gt;&lt;/span>::AuthorizationCode,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CsrfToken::new_random,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Nonce::new_random,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .add_scope(Scope::new(&lt;span style="color:#e6db74">&amp;#34;email&amp;#34;&lt;/span>.to_string()))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .url();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Store the CSRF token and nonce in the session so we can verify them
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// when the provider redirects back to the callback endpoint.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> session
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .insert(&lt;span style="color:#66d9ef">CSRF_TOKEN_KEY&lt;/span>, csrf_token.secret().clone())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to store CSRF token&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> session
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .insert(&lt;span style="color:#66d9ef">NONCE_KEY&lt;/span>, nonce.secret().clone())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to store nonce&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Redirect::to(auth_url.as_str())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">callback&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> State(state): &lt;span style="color:#a6e22e">State&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>Arc&lt;span style="color:#f92672">&amp;lt;&lt;/span>AppState&lt;span style="color:#f92672">&amp;gt;&amp;gt;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> session: &lt;span style="color:#a6e22e">Session&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Query(params): &lt;span style="color:#a6e22e">Query&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>CallbackParams&lt;span style="color:#f92672">&amp;gt;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) -&amp;gt; &lt;span style="color:#a6e22e">impl&lt;/span> IntoResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Retrieve and remove the CSRF token from the session.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> stored_csrf: String &lt;span style="color:#f92672">=&lt;/span> session
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .remove(&lt;span style="color:#66d9ef">CSRF_TOKEN_KEY&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Session error&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Missing CSRF token in session -- login flow was not initiated&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Verify the state parameter matches the CSRF token we stored.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">if&lt;/span> params.state &lt;span style="color:#f92672">!=&lt;/span> stored_csrf {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> panic!(&lt;span style="color:#e6db74">&amp;#34;CSRF token mismatch -- possible CSRF attack&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Retrieve and remove the nonce from the session.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> stored_nonce: String &lt;span style="color:#f92672">=&lt;/span> session
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .remove(&lt;span style="color:#66d9ef">NONCE_KEY&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Session error&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Missing nonce in session&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> nonce &lt;span style="color:#f92672">=&lt;/span> Nonce::new(stored_nonce);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> token_response &lt;span style="color:#f92672">=&lt;/span> state
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .oidc_client
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .exchange_code(AuthorizationCode::new(params.code))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .request_async(async_http_client)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to exchange code&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> id_token &lt;span style="color:#f92672">=&lt;/span> token_response
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .id_token()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Server did not return an ID token&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Verify the ID token using the nonce from the original authorization request.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> claims &lt;span style="color:#f92672">=&lt;/span> id_token
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .claims(&lt;span style="color:#f92672">&amp;amp;&lt;/span>state.oidc_client.id_token_verifier(), &lt;span style="color:#f92672">&amp;amp;&lt;/span>nonce)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to verify ID token&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> format!(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;Welcome! Subject: &lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">, Email: &lt;/span>&lt;span style="color:#e6db74">{:?}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> claims.subject(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> claims.email()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#[tokio::main]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> issuer_url &lt;span style="color:#f92672">=&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> IssuerUrl::new(&lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>.to_string()).expect(&lt;span style="color:#e6db74">&amp;#34;Invalid issuer URL&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> provider_metadata &lt;span style="color:#f92672">=&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CoreProviderMetadata::discover_async(issuer_url, async_http_client)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to discover provider&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> client &lt;span style="color:#f92672">=&lt;/span> CoreClient::from_provider_metadata(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> provider_metadata,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ClientId::new(std::env::var(&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>).expect(&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID not set&amp;#34;&lt;/span>)),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Some(ClientSecret::new(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> std::env::var(&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET&amp;#34;&lt;/span>).expect(&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_SECRET not set&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .set_redirect_uri(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RedirectUrl::new(&lt;span style="color:#e6db74">&amp;#34;https://your-app.example.com/auth/callback&amp;#34;&lt;/span>.to_string())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Invalid redirect URL&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> state &lt;span style="color:#f92672">=&lt;/span> Arc::new(AppState {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> oidc_client: &lt;span style="color:#a6e22e">client&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Use an in-memory session store. In production, replace with a
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#75715e">// persistent store (e.g., Redis) for multi-instance deployments.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> session_store &lt;span style="color:#f92672">=&lt;/span> MemoryStore::default();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> session_layer &lt;span style="color:#f92672">=&lt;/span> SessionManagerLayer::new(session_store);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> app &lt;span style="color:#f92672">=&lt;/span> Router::new()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .route(&lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>, get(login))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .route(&lt;span style="color:#e6db74">&amp;#34;/auth/callback&amp;#34;&lt;/span>, get(callback))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .layer(session_layer)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .with_state(state);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> listener &lt;span style="color:#f92672">=&lt;/span> tokio::net::TcpListener::bind(&lt;span style="color:#e6db74">&amp;#34;0.0.0.0:3000&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#66d9ef">await&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .expect(&lt;span style="color:#e6db74">&amp;#34;Failed to bind&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> axum::serve(listener, app).&lt;span style="color:#66d9ef">await&lt;/span>.expect(&lt;span style="color:#e6db74">&amp;#34;Server error&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>React (react-oidc-context)</title><link>https://vouch.sh/docs/applications/react/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/react/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>For client-side applications running in the browser, use the authorization code flow with PKCE. These examples do not use a client secret since the code runs in the user&amp;rsquo;s browser.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>PKCE is required&lt;/strong> for browser-based clients. &lt;code>oidc-client-ts&lt;/code> enables PKCE by default &amp;ndash; no additional configuration is needed. To handle token expiry, enable &lt;code>automaticSilentRenew&lt;/code> in the OIDC configuration (shown below) so tokens are refreshed transparently before they expire.&lt;/p></description></item><item><title>Vue (oidc-client-ts)</title><link>https://vouch.sh/docs/applications/vue/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/vue/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>For client-side applications running in the browser, use the authorization code flow with PKCE. These examples do not use a client secret since the code runs in the user&amp;rsquo;s browser.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>PKCE is required&lt;/strong> for browser-based clients. &lt;code>oidc-client-ts&lt;/code> enables PKCE by default &amp;ndash; no additional configuration is needed. To handle token expiry, enable &lt;code>automaticSilentRenew&lt;/code> in the UserManager configuration (shown below) so tokens are refreshed transparently before they expire.&lt;/p></description></item><item><title>Vanilla JavaScript</title><link>https://vouch.sh/docs/applications/vanilla-js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/vanilla-js/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>For client-side applications running in the browser, use the authorization code flow with PKCE. These examples do not use a client secret since the code runs in the user&amp;rsquo;s browser.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>PKCE is required&lt;/strong> for browser-based clients. &lt;code>oidc-client-ts&lt;/code> enables PKCE by default &amp;ndash; no additional configuration is needed. To handle token expiry, enable &lt;code>automaticSilentRenew&lt;/code> in the UserManager configuration (shown below) so tokens are refreshed transparently before they expire.&lt;/p></description></item><item><title>Device Authorization (CLI)</title><link>https://vouch.sh/docs/applications/device-authorization/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/device-authorization/</guid><description>&lt;blockquote>
+&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;/blockquote>
+&lt;p>For native desktop applications and CLI tools that cannot open a browser redirect, use the &lt;strong>Device Authorization Grant&lt;/strong> (&lt;a href="https://datatracker.ietf.org/doc/html/rfc8628">RFC 8628&lt;/a>). This flow displays a URL and code that the user enters in a browser on any device.&lt;/p>
+&lt;h2 id="device-authorization-flow">Device Authorization Flow&lt;/h2>
+&lt;ol>
+&lt;li>Your application requests a device code from the Vouch server.&lt;/li>
+&lt;li>The server returns a &lt;code>device_code&lt;/code>, a &lt;code>user_code&lt;/code>, and a &lt;code>verification_uri&lt;/code>.&lt;/li>
+&lt;li>Your application displays the &lt;code>user_code&lt;/code> and &lt;code>verification_uri&lt;/code> to the user.&lt;/li>
+&lt;li>The user opens &lt;code>verification_uri&lt;/code> in a browser, enters the code, and authenticates with their YubiKey.&lt;/li>
+&lt;li>Your application polls the token endpoint until the user completes authentication.&lt;/li>
+&lt;li>Once approved, the token endpoint returns an access token and ID token.&lt;/li>
+&lt;/ol>
+&lt;h2 id="python">Python&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> os
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> time
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> requests
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>VOUCH_URL &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>CLIENT_ID &lt;span style="color:#f92672">=&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>environ[&lt;span style="color:#e6db74">&amp;#34;VOUCH_CLIENT_ID&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Step 1: Request device code&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>device_response &lt;span style="color:#f92672">=&lt;/span> requests&lt;span style="color:#f92672">.&lt;/span>post(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>VOUCH_URL&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">/oauth/device/code&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> data&lt;span style="color:#f92672">=&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;client_id&amp;#34;&lt;/span>: CLIENT_ID,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;scope&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>device_data &lt;span style="color:#f92672">=&lt;/span> device_response&lt;span style="color:#f92672">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>device_code &lt;span style="color:#f92672">=&lt;/span> device_data[&lt;span style="color:#e6db74">&amp;#34;device_code&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>user_code &lt;span style="color:#f92672">=&lt;/span> device_data[&lt;span style="color:#e6db74">&amp;#34;user_code&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>verification_uri &lt;span style="color:#f92672">=&lt;/span> device_data[&lt;span style="color:#e6db74">&amp;#34;verification_uri&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>interval &lt;span style="color:#f92672">=&lt;/span> device_data&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;interval&amp;#34;&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>expires_in &lt;span style="color:#f92672">=&lt;/span> device_data&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;expires_in&amp;#34;&lt;/span>, &lt;span style="color:#ae81ff">600&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Step 2: Display instructions to the user&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">To sign in, open this URL in your browser:&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34; &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>verification_uri&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;And enter the code: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>user_code&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">&amp;#34;Waiting for authentication...&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Step 3: Poll for the token&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>deadline &lt;span style="color:#f92672">=&lt;/span> time&lt;span style="color:#f92672">.&lt;/span>time() &lt;span style="color:#f92672">+&lt;/span> expires_in
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">while&lt;/span> time&lt;span style="color:#f92672">.&lt;/span>time() &lt;span style="color:#f92672">&amp;lt;&lt;/span> deadline:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> time&lt;span style="color:#f92672">.&lt;/span>sleep(interval)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> token_response &lt;span style="color:#f92672">=&lt;/span> requests&lt;span style="color:#f92672">.&lt;/span>post(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>VOUCH_URL&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">/oauth/token&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> data&lt;span style="color:#f92672">=&lt;/span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;grant_type&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;urn:ietf:params:oauth:grant-type:device_code&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;device_code&amp;#34;&lt;/span>: device_code,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;client_id&amp;#34;&lt;/span>: CLIENT_ID,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> token_response&lt;span style="color:#f92672">.&lt;/span>status_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">200&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tokens &lt;span style="color:#f92672">=&lt;/span> token_response&lt;span style="color:#f92672">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">Authenticated successfully!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Access token: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>tokens[&lt;span style="color:#e6db74">&amp;#39;access_token&amp;#39;&lt;/span>][:&lt;span style="color:#ae81ff">20&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">...&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># Fetch user info&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userinfo &lt;span style="color:#f92672">=&lt;/span> requests&lt;span style="color:#f92672">.&lt;/span>get(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>VOUCH_URL&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">/oauth/userinfo&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> headers&lt;span style="color:#f92672">=&lt;/span>{&lt;span style="color:#e6db74">&amp;#34;Authorization&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Bearer &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>tokens[&lt;span style="color:#e6db74">&amp;#39;access_token&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )&lt;span style="color:#f92672">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Hello, &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>userinfo&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#39;name&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;user&amp;#39;&lt;/span>)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> error_data &lt;span style="color:#f92672">=&lt;/span> token_response&lt;span style="color:#f92672">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> error &lt;span style="color:#f92672">=&lt;/span> error_data&lt;span style="color:#f92672">.&lt;/span>get(&lt;span style="color:#e6db74">&amp;#34;error&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> error &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#34;authorization_pending&amp;#34;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> error &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#34;slow_down&amp;#34;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> interval &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> error &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#34;expired_token&amp;#34;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">&amp;#34;The device code has expired. Please try again.&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> error &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#34;access_denied&amp;#34;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">&amp;#34;Authentication was denied.&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;Unexpected error: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>error&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#e6db74">&amp;#34;Timed out waiting for authentication.&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="nodejs">Node.js&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-javascript" data-lang="javascript">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">https&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;https&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">querystring&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">require&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;querystring&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">VOUCH_URL&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;https://us.vouch.sh&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">CLIENT_ID&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">process&lt;/span>.&lt;span style="color:#a6e22e">env&lt;/span>.&lt;span style="color:#a6e22e">VOUCH_CLIENT_ID&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">function&lt;/span> &lt;span style="color:#a6e22e">post&lt;/span>(&lt;span style="color:#a6e22e">path&lt;/span>, &lt;span style="color:#a6e22e">data&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> Promise((&lt;span style="color:#a6e22e">resolve&lt;/span>, &lt;span style="color:#a6e22e">reject&lt;/span>) =&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">url&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#a6e22e">URL&lt;/span>(&lt;span style="color:#a6e22e">path&lt;/span>, &lt;span style="color:#a6e22e">VOUCH_URL&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">body&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">querystring&lt;/span>.&lt;span style="color:#a6e22e">stringify&lt;/span>(&lt;span style="color:#a6e22e">data&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">req&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">https&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">url&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">method&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;POST&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">headers&lt;/span>&lt;span style="color:#f92672">:&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;Content-Type&amp;#34;&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;application/x-www-form-urlencoded&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;Content-Length&amp;#34;&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">Buffer&lt;/span>.&lt;span style="color:#a6e22e">byteLength&lt;/span>(&lt;span style="color:#a6e22e">body&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#a6e22e">res&lt;/span>) =&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">res&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;data&amp;#34;&lt;/span>, (&lt;span style="color:#a6e22e">chunk&lt;/span>) =&amp;gt; (&lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#a6e22e">chunk&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">res&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;end&amp;#34;&lt;/span>, () =&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">resolve&lt;/span>({ &lt;span style="color:#a6e22e">status&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">res&lt;/span>.&lt;span style="color:#a6e22e">statusCode&lt;/span>, &lt;span style="color:#a6e22e">body&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">JSON&lt;/span>.&lt;span style="color:#a6e22e">parse&lt;/span>(&lt;span style="color:#a6e22e">data&lt;/span>) })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">req&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;error&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">reject&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">req&lt;/span>.&lt;span style="color:#a6e22e">write&lt;/span>(&lt;span style="color:#a6e22e">body&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">req&lt;/span>.&lt;span style="color:#a6e22e">end&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">function&lt;/span> &lt;span style="color:#a6e22e">get&lt;/span>(&lt;span style="color:#a6e22e">path&lt;/span>, &lt;span style="color:#a6e22e">token&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> Promise((&lt;span style="color:#a6e22e">resolve&lt;/span>, &lt;span style="color:#a6e22e">reject&lt;/span>) =&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">url&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#a6e22e">URL&lt;/span>(&lt;span style="color:#a6e22e">path&lt;/span>, &lt;span style="color:#a6e22e">VOUCH_URL&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">req&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">https&lt;/span>.&lt;span style="color:#a6e22e">request&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">url&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">method&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;GET&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">headers&lt;/span>&lt;span style="color:#f92672">:&lt;/span> { &lt;span style="color:#a6e22e">Authorization&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">`Bearer &lt;/span>&lt;span style="color:#e6db74">${&lt;/span>&lt;span style="color:#a6e22e">token&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">`&lt;/span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#a6e22e">res&lt;/span>) =&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;&amp;#34;&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">res&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;data&amp;#34;&lt;/span>, (&lt;span style="color:#a6e22e">chunk&lt;/span>) =&amp;gt; (&lt;span style="color:#a6e22e">data&lt;/span> &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#a6e22e">chunk&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">res&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;end&amp;#34;&lt;/span>, () =&amp;gt; &lt;span style="color:#a6e22e">resolve&lt;/span>(&lt;span style="color:#a6e22e">JSON&lt;/span>.&lt;span style="color:#a6e22e">parse&lt;/span>(&lt;span style="color:#a6e22e">data&lt;/span>)));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> );
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">req&lt;/span>.&lt;span style="color:#a6e22e">on&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;error&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">reject&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">req&lt;/span>.&lt;span style="color:#a6e22e">end&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">async&lt;/span> &lt;span style="color:#66d9ef">function&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Step 1: Request device code
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">deviceResponse&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">post&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/oauth/device/code&amp;#34;&lt;/span>, {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">client_id&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">CLIENT_ID&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">scope&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;openid email&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> { &lt;span style="color:#a6e22e">device_code&lt;/span>, &lt;span style="color:#a6e22e">user_code&lt;/span>, &lt;span style="color:#a6e22e">verification_uri&lt;/span>, &lt;span style="color:#a6e22e">interval&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#a6e22e">expires_in&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">600&lt;/span> } &lt;span style="color:#f92672">=&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">deviceResponse&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Step 2: Display instructions
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">`\nTo sign in, open this URL in your browser:\n`&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">` &lt;/span>&lt;span style="color:#e6db74">${&lt;/span>&lt;span style="color:#a6e22e">verification_uri&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">\n`&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">`And enter the code: &lt;/span>&lt;span style="color:#e6db74">${&lt;/span>&lt;span style="color:#a6e22e">user_code&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">\n`&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Waiting for authentication...&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Step 3: Poll for the token
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#a6e22e">pollInterval&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">interval&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">deadline&lt;/span> &lt;span style="color:#f92672">=&lt;/span> Date.&lt;span style="color:#a6e22e">now&lt;/span>() &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#a6e22e">expires_in&lt;/span> &lt;span style="color:#f92672">*&lt;/span> &lt;span style="color:#ae81ff">1000&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> (Date.&lt;span style="color:#a6e22e">now&lt;/span>() &lt;span style="color:#f92672">&amp;lt;&lt;/span> &lt;span style="color:#a6e22e">deadline&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> Promise((&lt;span style="color:#a6e22e">r&lt;/span>) =&amp;gt; &lt;span style="color:#a6e22e">setTimeout&lt;/span>(&lt;span style="color:#a6e22e">r&lt;/span>, &lt;span style="color:#a6e22e">pollInterval&lt;/span> &lt;span style="color:#f92672">*&lt;/span> &lt;span style="color:#ae81ff">1000&lt;/span>));
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">tokenResponse&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">post&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/oauth/token&amp;#34;&lt;/span>, {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">grant_type&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;urn:ietf:params:oauth:grant-type:device_code&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">device_code&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">client_id&lt;/span>&lt;span style="color:#f92672">:&lt;/span> &lt;span style="color:#a6e22e">CLIENT_ID&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">tokenResponse&lt;/span>.&lt;span style="color:#a6e22e">status&lt;/span> &lt;span style="color:#f92672">===&lt;/span> &lt;span style="color:#ae81ff">200&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;\nAuthenticated successfully!&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">userinfo&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">await&lt;/span> &lt;span style="color:#a6e22e">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/oauth/userinfo&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">tokenResponse&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>.&lt;span style="color:#a6e22e">access_token&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">`Hello, &lt;/span>&lt;span style="color:#e6db74">${&lt;/span>&lt;span style="color:#a6e22e">userinfo&lt;/span>.&lt;span style="color:#a6e22e">name&lt;/span> &lt;span style="color:#f92672">||&lt;/span> &lt;span style="color:#e6db74">&amp;#34;user&amp;#34;&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">!`&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">const&lt;/span> &lt;span style="color:#a6e22e">error&lt;/span> &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#a6e22e">tokenResponse&lt;/span>.&lt;span style="color:#a6e22e">body&lt;/span>.&lt;span style="color:#a6e22e">error&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">error&lt;/span> &lt;span style="color:#f92672">===&lt;/span> &lt;span style="color:#e6db74">&amp;#34;authorization_pending&amp;#34;&lt;/span>) &lt;span style="color:#66d9ef">continue&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">error&lt;/span> &lt;span style="color:#f92672">===&lt;/span> &lt;span style="color:#e6db74">&amp;#34;slow_down&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">pollInterval&lt;/span> &lt;span style="color:#f92672">+=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">error&lt;/span> &lt;span style="color:#f92672">===&lt;/span> &lt;span style="color:#e6db74">&amp;#34;expired_token&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;The device code has expired. Please try again.&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#a6e22e">error&lt;/span> &lt;span style="color:#f92672">===&lt;/span> &lt;span style="color:#e6db74">&amp;#34;access_denied&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Authentication was denied.&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">`Unexpected error: &lt;/span>&lt;span style="color:#e6db74">${&lt;/span>&lt;span style="color:#a6e22e">error&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">`&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span>;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">log&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;Timed out waiting for authentication.&amp;#34;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">main&lt;/span>().&lt;span style="color:#66d9ef">catch&lt;/span>(&lt;span style="color:#a6e22e">console&lt;/span>.&lt;span style="color:#a6e22e">error&lt;/span>);
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="rust">Rust&lt;/h2>
+&lt;p>Add the required dependencies to your &lt;code>Cargo.toml&lt;/code>:&lt;/p></description></item></channel></rss>
