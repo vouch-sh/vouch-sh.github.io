@@ -12,6 +12,18 @@ This page documents all available Vouch CLI commands. For installation instructi
 
 ---
 
+## Global flags
+
+These flags are available on all commands.
+
+| Flag | Description |
+|---|---|
+| `--server <URL>` | Vouch server URL (also settable via `VOUCH_SERVER` environment variable). Saved locally after enrollment. |
+| `-v`, `--verbose` | Enable debug logging |
+| `--color <MODE>` | Control color output: `auto` (default), `always`, or `never` |
+
+---
+
 ## Authentication
 
 ### `vouch enroll`
@@ -21,8 +33,6 @@ Register your YubiKey with a Vouch server and link it to your identity.
 ```
 vouch enroll --server <SERVER_URL>
 ```
-
-The `--server` flag is a global option available on all commands (e.g., `--server https://us.vouch.sh`). The CLI saves the server configuration locally after enrollment, so subsequent commands use it automatically.
 
 You only need to enroll once per YubiKey.
 
@@ -53,12 +63,12 @@ vouch logout
 Display the current session status, including remaining session time and active integrations (SSH, AWS, SSM, Git, Docker, Cargo).
 
 ```
-vouch status [--json]
+vouch status [--format <FORMAT>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--json` | Output as JSON |
+| `--format` | Output format: `human` (default), `json`, or `shell`. The `shell` format outputs key=value pairs suitable for `eval`. |
 
 ---
 
@@ -154,7 +164,7 @@ vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [
 | `--repository` | The AWS CodeArtifact repository name (required) |
 | `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
+| `--region` | AWS region (optional if a profile is configured) |
 | `--profile` | Named AWS CodeArtifact profile to use or create (stores domain/owner/region for reuse) |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
@@ -264,8 +274,30 @@ vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] 
 |---|---|
 | `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
+| `--region` | AWS region (optional if a profile is configured) |
 | `--profile` | Named AWS CodeArtifact profile to use |
+
+### `vouch credential codecommit`
+
+Git credential helper for AWS CodeCommit. This command is invoked automatically by Git when configured via `vouch setup codecommit`. Users should not call it directly.
+
+### `vouch credential pip`
+
+Credential helper for pip/PyPI. This command is invoked automatically by pip when configured via `vouch setup codeartifact --tool pip`. Users should not call it directly.
+
+### `vouch credential token`
+
+Print the raw session access token to stdout for use with curl or other tools.
+
+```
+vouch credential token
+```
+
+Example:
+
+```bash
+curl -H "Authorization: Bearer $(vouch credential token)" https://api.example.com/endpoint
+```
 
 ---
 
@@ -421,6 +453,21 @@ Example:
 # Add to your ~/.zshrc
 eval "$(vouch completions zsh)"
 ```
+
+---
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Success |
+| `1` | General error |
+| `2` | Not authenticated (session expired or missing) |
+| `3` | Hardware key not detected |
+| `4` | Network or server unreachable |
+| `5` | Permission denied |
+| `6` | Configuration error |
+| `7` | Step-up authentication required |
 
 ---
 
