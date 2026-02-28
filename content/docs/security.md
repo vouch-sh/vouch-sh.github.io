@@ -74,26 +74,7 @@ Vouch operates across three trust boundaries:
 
 ## Threat model
 
-### What Vouch mitigates
-
-| Threat | Mitigation |
-|---|---|
-| **Credential theft** | No long-lived secrets on disk. Credentials are in-memory, short-lived, and sender-constrained — a stolen token cannot be used from a different machine. |
-| **Phishing** | FIDO2 origin binding prevents credentials from being used on attacker-controlled domains. |
-| **Lateral movement** | Credentials are scoped to a single user and expire within hours. A compromised credential limits blast radius. |
-| **Insider threats** | Every credential issuance is tied to a hardware-verified identity. CloudTrail and server logs provide full attribution. |
-| **Offboarding gaps** | SCIM de-provisioning revokes sessions immediately. Outstanding credentials expire within hours. |
-| **Credential sharing** | Credentials are bound to a FIDO2 assertion that requires physical possession of the enrolled key. |
-| **Token replay** | Access tokens are bound to the requesting client (DPoP). Authorization parameters are transmitted server-side (PAR), preventing injection. |
-
-### What Vouch does not mitigate
-
-| Threat | Explanation |
-|---|---|
-| **Compromised endpoint with active session** | If an attacker gains access to a machine with an active Vouch session, they can use the in-memory credentials until the session expires (up to 8 hours). DPoP prevents stolen tokens from being used on a different machine, but does not protect against an attacker on the same machine. |
-| **Server compromise** | If the Vouch server is compromised, an attacker could issue sessions for any enrolled user. The server does not hold AWS keys or SSH private keys, but it can broker new credentials. |
-| **Physical key theft with known PIN** | If an attacker obtains both the YubiKey and the PIN, they can authenticate as the enrolled user. Use a strong PIN and report lost keys immediately. |
-| **Supply chain attacks on external services** | Vouch relies on AWS STS, GitHub APIs, and other external services. Vulnerabilities in those services are outside Vouch's control. |
+For the complete STRIDE-based threat analysis — including threat actors, trust boundaries, assumptions, structured threat statements, and mitigations — see the dedicated [Threat Model](/docs/threat-model/) page.
 
 ---
 

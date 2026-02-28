@@ -2,7 +2,7 @@
 title: "Architecture Overview"
 linkTitle: "Architecture"
 description: "System components, protocols, and trust boundaries — how the Vouch CLI, agent, and server work together."
-weight: 19
+weight: 20
 subtitle: "Understand how Vouch components interact to issue and manage credentials"
 params:
   docsGroup: manage
