@@ -72,6 +72,9 @@ The Vouch server acts as an OIDC identity provider. After FIDO2 authentication, 
 | `exp` | Token expiration (short-lived) |
 | `iat` | Token issued-at timestamp |
 | `hd` | Google Workspace hosted domain |
+| `amr` | Authentication methods (e.g., `["hwk", "pin"]`) |
+| `acr` | Authentication context class (NIST AAL3) |
+| `cnf` | DPoP key thumbprint for sender-constrained tokens |
 
 External services (AWS, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint.
 
@@ -90,6 +93,10 @@ The Vouch agent implements the [SSH agent protocol](https://datatracker.ietf.org
 ### AWS STS (AssumeRoleWithWebIdentity)
 
 The Vouch CLI calls [AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) with the OIDC ID token. AWS validates the token against the Vouch JWKS endpoint and returns temporary credentials (access key ID, secret access key, session token).
+
+### FAPI 2.0
+
+The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server.
 
 ### SCIM 2.0
 

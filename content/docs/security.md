@@ -78,18 +78,19 @@ Vouch operates across three trust boundaries:
 
 | Threat | Mitigation |
 |---|---|
-| **Credential theft** | No long-lived secrets on disk. Credentials are in-memory and short-lived. |
+| **Credential theft** | No long-lived secrets on disk. Credentials are in-memory, short-lived, and sender-constrained — a stolen token cannot be used from a different machine. |
 | **Phishing** | FIDO2 origin binding prevents credentials from being used on attacker-controlled domains. |
 | **Lateral movement** | Credentials are scoped to a single user and expire within hours. A compromised credential limits blast radius. |
 | **Insider threats** | Every credential issuance is tied to a hardware-verified identity. CloudTrail and server logs provide full attribution. |
 | **Offboarding gaps** | SCIM de-provisioning revokes sessions immediately. Outstanding credentials expire within hours. |
 | **Credential sharing** | Credentials are bound to a FIDO2 assertion that requires physical possession of the enrolled key. |
+| **Token replay** | Access tokens are bound to the requesting client (DPoP). Authorization parameters are transmitted server-side (PAR), preventing injection. |
 
 ### What Vouch does not mitigate
 
 | Threat | Explanation |
 |---|---|
-| **Compromised endpoint with active session** | If an attacker gains access to a machine with an active Vouch session, they can use the in-memory credentials until the session expires (up to 8 hours). This is the same exposure window as any session-based system. |
+| **Compromised endpoint with active session** | If an attacker gains access to a machine with an active Vouch session, they can use the in-memory credentials until the session expires (up to 8 hours). DPoP prevents stolen tokens from being used on a different machine, but does not protect against an attacker on the same machine. |
 | **Server compromise** | If the Vouch server is compromised, an attacker could issue sessions for any enrolled user. The server does not hold AWS keys or SSH private keys, but it can broker new credentials. |
 | **Physical key theft with known PIN** | If an attacker obtains both the YubiKey and the PIN, they can authenticate as the enrolled user. Use a strong PIN and report lost keys immediately. |
 | **Supply chain attacks on external services** | Vouch relies on AWS STS, GitHub APIs, and other external services. Vulnerabilities in those services are outside Vouch's control. |
@@ -122,6 +123,20 @@ Vouch uses [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) for all user authen
 - **Hardware key storage** -- The private key is generated on the YubiKey's secure element and cannot be extracted, cloned, or backed up.
 - **User verification** -- Every assertion requires the user's PIN and a physical touch of the key, providing two-factor authentication in a single gesture.
 - **Replay protection** -- Each assertion includes a signature counter that the server tracks. Replayed assertions are rejected.
+
+---
+
+## OAuth 2.0 security architecture
+
+FIDO2 proves the human is present. The OAuth 2.0 layer protects everything after — how the CLI identifies itself, how authorization requests are transmitted, and how tokens are bound to the device that requested them. Together, these form a [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-security-profile-2_0-final.html).
+
+**No shared secrets.** The CLI generates its own key pair and registers with the server automatically ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Client authentication uses `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) — there is no client secret to extract from a binary or config file.
+
+**Protected authorization requests.** Authorization parameters are sent directly to the server over a back-channel ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) and signed as JWTs ([RFC 9101](https://datatracker.ietf.org/doc/html/rfc9101)). The browser redirect carries only an opaque reference — nothing sensitive in URLs, browser history, or referrer headers.
+
+**Sender-constrained tokens.** Every access token is bound to the CLI's key pair via DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)). A stolen token cannot be used from a different machine.
+
+**Audience-restricted tokens.** Each token includes a resource indicator ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) restricting it to a specific service. A token issued for AWS cannot be presented to GitHub.
 
 ---
 
@@ -173,16 +188,16 @@ When installed via Homebrew, APT, or DNF, package signatures are verified automa
 
 ---
 
-## AWS Well-Architected alignment
+## Compliance
 
-Vouch addresses several controls from the [AWS Well-Architected Framework Security Pillar](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html):
+Vouch's FAPI 2.0 security profile and hardware-backed authentication satisfy requirements across multiple compliance frameworks:
 
-| Control | How Vouch addresses it |
-|---|---|
-| **SEC02 -- Manage identities** | Every credential traces to a hardware-verified human identity. No shared or service accounts for human access. |
-| **SEC03 -- Manage permissions** | Short-lived STS credentials with scoped IAM roles. Session tags enable attribute-based access control (ABAC). |
-| **SEC04 -- Detect and investigate** | CloudTrail logs include the authenticated user's email for every API call. Server audit logs capture all authentication events. |
-| **SEC09 -- Protect data in transit** | All Vouch communication uses TLS 1.2+. FIDO2 assertions are cryptographically bound to the relying party origin. |
+- **NIST 800-53** — IA-2 (identification/authentication), IA-5 (authenticator management), SC-23 (session authenticity)
+- **SOC 2** — CC6.1 (logical access), CC6.8 (unauthorized access prevention), CC7.1 (detection)
+- **FedRAMP** — Hardware MFA, DPoP sender-constrained tokens, non-extractable keys
+- **HIPAA** — 164.312(d) (person authentication), 164.312(e) (transmission security)
+
+Detailed control-by-control mappings are available in the [Vouch server documentation](https://docs.vouch.sh/reference/compliance.html).
 
 ---
 

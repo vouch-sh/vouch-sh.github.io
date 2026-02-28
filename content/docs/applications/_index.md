@@ -71,6 +71,9 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **Supported Scopes** | `openid`, `email` |
 | **Device Authorization Endpoint** | `https://{{< instance-url >}}/oauth/device/code` |
 | **Device Verification URL** | `https://{{< instance-url >}}/oauth/device` |
+| **PAR Endpoint** | `https://{{< instance-url >}}/oauth/par` |
+| **Token Revocation Endpoint** | `https://{{< instance-url >}}/oauth/revoke` |
+| **Token Introspection Endpoint** | `https://{{< instance-url >}}/oauth/introspect` |
 
 Most OIDC libraries can auto-configure themselves from the Discovery URL alone.
 
@@ -85,6 +88,8 @@ Vouch ID tokens include additional claims beyond the standard OIDC claims. These
 | `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens. |
 | `hardware_aaguid` | string | The AAGUID (Authenticator Attestation GUID) of the hardware key used for authentication. This identifies the make and model of the security key (e.g., YubiKey 5 series). |
 | `cnf` | object | Confirmation claim containing key binding information per RFC 7800. Includes a `kid` field referencing the specific credential used. |
+| `amr` | array | Authentication methods used (e.g., `["hwk", "pin"]`). |
+| `acr` | string | Authentication context class (e.g., NIST AAL3 for hardware MFA). |
 
 Example ID token payload with Vouch-specific claims:
 
@@ -99,6 +104,8 @@ Example ID token payload with Vouch-specific claims:
   "email_verified": true,
   "hardware_verified": true,
   "hardware_aaguid": "2fc0579f-8113-47ea-b116-bb5a8db9202a",
+  "amr": ["hwk", "pin"],
+  "acr": "urn:nist:authentication:assurance-level:aal3",
   "cnf": {
     "kid": "credential_xyz789"
   }
