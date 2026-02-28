@@ -2,7 +2,7 @@
 title: "Availability and Failure Modes"
 linkTitle: "Availability"
 description: "What happens when the Vouch server is unreachable — offline behavior, credential expiry, and blast radius."
-weight: 20
+weight: 21
 subtitle: "Understand the blast radius when things go wrong"
 params:
   docsGroup: manage

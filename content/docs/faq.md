@@ -2,7 +2,7 @@
 title: "Frequently Asked Questions"
 linkTitle: "FAQ"
 description: "Common questions about Vouch — supported hardware, session behavior, platform support, and cost."
-weight: 22
+weight: 23
 subtitle: "Answers to the most common questions about using Vouch"
 params:
   docsGroup: manage
