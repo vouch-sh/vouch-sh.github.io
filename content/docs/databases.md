@@ -15,19 +15,56 @@ Static database passwords are shared across developers, stored in configuration 
 ## How it works
 
 1. **`vouch login`** -- The developer authenticates with their YubiKey.
-2. **`credential_process`** -- The AWS CLI calls Vouch to obtain temporary STS credentials.
-3. **`generate-db-auth-token`** -- The AWS CLI uses the STS credentials to generate a short-lived database authentication token.
-4. **Database client** -- The token is passed as the password to `psql`, `mysql`, or another database client.
+2. **`vouch credential rds`** or **`vouch credential redshift`** -- Vouch generates a short-lived database authentication token or temporary credentials directly.
+3. **Database client** -- The token is passed as the password to `psql`, `mysql`, or another database client.
 
 ```
-vouch login → credential_process → STS → generate-db-auth-token → database client
+vouch login → vouch credential rds → database client
+vouch login → vouch credential redshift → database client
+```
+
+Or use `vouch exec` to skip manual token handling entirely:
+
+```
+vouch login → vouch exec --type rds -- psql
+vouch login → vouch exec --type redshift -- psql
 ```
 
 ---
 
 ## RDS / Aurora PostgreSQL
 
-Generate a 15-minute authentication token and pass it as the password to `psql`:
+### Using Vouch CLI
+
+The simplest approach is `vouch exec`, which generates the token and injects PostgreSQL environment variables (`PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE=require`) automatically:
+
+```bash
+vouch exec --type rds \
+  --rds-hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --rds-username mydbuser \
+  -- psql -d mydb
+```
+
+To set the variables in your current shell instead:
+
+```bash
+eval "$(vouch env --type rds \
+  --rds-hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --rds-username mydbuser)"
+psql -d mydb
+```
+
+To generate just the token (e.g., for scripts or non-PostgreSQL clients):
+
+```bash
+TOKEN=$(vouch credential rds \
+  --hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --username mydbuser)
+```
+
+### Using AWS CLI
+
+You can also use the AWS CLI with Vouch's `credential_process` integration:
 
 ```bash
 # Generate an IAM auth token (valid for 15 minutes)
@@ -56,7 +93,29 @@ GRANT rds_iam TO mydbuser;
 
 ## RDS / Aurora MySQL
 
-MySQL requires the `--enable-cleartext-plugin` flag because the IAM token is sent as a cleartext password over TLS:
+MySQL requires the `--enable-cleartext-plugin` flag because the IAM token is sent as a cleartext password over TLS.
+
+### Using Vouch CLI
+
+Generate the token with `vouch credential rds` and pass it to the MySQL client:
+
+```bash
+TOKEN=$(vouch credential rds \
+  --hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --username mydbuser \
+  --port 3306)
+
+mysql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  -P 3306 \
+  -u mydbuser \
+  --password="$TOKEN" \
+  --ssl-mode=REQUIRED \
+  --enable-cleartext-plugin
+```
+
+> **Note:** `vouch exec --type rds` and `vouch env --type rds` inject PostgreSQL-style environment variables (`PGPASSWORD`, `PGHOST`, etc.), so MySQL users should use `vouch credential rds` to get the token and pass it manually.
+
+### Using AWS CLI
 
 ```bash
 # Generate an IAM auth token
@@ -85,7 +144,56 @@ CREATE USER 'mydbuser'@'%' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
 
 ## Amazon Redshift
 
-Redshift uses `get-cluster-credentials` to generate temporary database credentials with a configurable lifetime (15--60 minutes):
+Redshift generates temporary database credentials with a configurable lifetime (15--60 minutes). Vouch supports both provisioned clusters and Redshift Serverless workgroups.
+
+### Using Vouch CLI (provisioned cluster)
+
+The simplest approach is `vouch exec`, which generates credentials and injects PostgreSQL environment variables (`PGPASSWORD`, `PGUSER`, `PGSSLMODE=require`) automatically:
+
+```bash
+vouch exec --type redshift \
+  --redshift-cluster-id my-cluster \
+  --redshift-db-name mydb \
+  -- psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
+```
+
+To set the variables in your current shell:
+
+```bash
+eval "$(vouch env --type redshift \
+  --redshift-cluster-id my-cluster \
+  --redshift-db-name mydb)"
+psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
+```
+
+To generate just the credentials:
+
+```bash
+vouch credential redshift --cluster-id my-cluster --db-name mydb
+```
+
+The `--duration` flag controls credential lifetime for provisioned clusters (900--3600 seconds, default: 900):
+
+```bash
+vouch credential redshift --cluster-id my-cluster --duration 3600
+```
+
+### Using Vouch CLI (Redshift Serverless)
+
+```bash
+vouch exec --type redshift \
+  --redshift-workgroup my-workgroup \
+  --redshift-db-name mydb \
+  -- psql -h my-workgroup.123456789012.us-east-1.redshift-serverless.amazonaws.com -p 5439
+```
+
+Or generate credentials directly:
+
+```bash
+vouch credential redshift --workgroup my-workgroup --db-name mydb
+```
+
+### Using AWS CLI
 
 ```bash
 # Get temporary Redshift credentials
@@ -111,7 +219,9 @@ PGPASSWORD="$DB_PASS" psql \
 
 ## Required IAM permissions
 
-Your Vouch IAM role needs permission to generate database auth tokens:
+Your Vouch IAM role needs permission to generate database auth tokens and credentials.
+
+**RDS / Aurora:**
 
 ```json
 {
@@ -126,7 +236,35 @@ Your Vouch IAM role needs permission to generate database auth tokens:
 }
 ```
 
-For Redshift, use `redshift:GetClusterCredentials` instead.
+**Redshift (provisioned clusters):**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "redshift:GetClusterCredentialsWithIAM",
+      "Resource": "arn:aws:redshift:us-east-1:123456789012:dbname:my-cluster/*"
+    }
+  ]
+}
+```
+
+**Redshift Serverless:**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "redshift-serverless:GetCredentials",
+      "Resource": "arn:aws:redshift-serverless:us-east-1:123456789012:workgroup/*"
+    }
+  ]
+}
+```
 
 ---
 

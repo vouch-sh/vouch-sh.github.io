@@ -285,6 +285,59 @@ Git credential helper for AWS CodeCommit. This command is invoked automatically 
 
 Credential helper for pip/PyPI. This command is invoked automatically by pip when configured via `vouch setup codeartifact --tool pip`. Users should not call it directly.
 
+### `vouch credential rds`
+
+Generate an RDS IAM authentication token for database connections. The token is valid for 15 minutes.
+
+```
+vouch credential rds --hostname <HOSTNAME> --username <USERNAME> [--port <PORT>] [--region <REGION>] [--role <ROLE>]
+```
+
+| Flag | Description |
+|---|---|
+| `--hostname` | RDS instance hostname (required) |
+| `--username` | Database username (required) |
+| `--port` | Database port (default: `5432`) |
+| `--region` | AWS region (auto-detected if not specified) |
+| `--role` | AWS IAM role ARN (auto-detected from vouch profile if not specified) |
+
+Example:
+
+```bash
+TOKEN=$(vouch credential rds \
+  --hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --username mydbuser)
+
+PGPASSWORD="$TOKEN" psql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com -U mydbuser -d mydb "sslmode=require"
+```
+
+### `vouch credential redshift`
+
+Generate temporary credentials for Amazon Redshift. Supports both provisioned clusters and Redshift Serverless workgroups.
+
+```
+vouch credential redshift (--cluster-id <ID> | --workgroup <NAME>) [--db-name <NAME>] [--region <REGION>] [--role <ROLE>] [--duration <SECONDS>]
+```
+
+| Flag | Description |
+|---|---|
+| `--cluster-id` | Redshift provisioned cluster identifier (mutually exclusive with `--workgroup`) |
+| `--workgroup` | Redshift Serverless workgroup name (mutually exclusive with `--cluster-id`) |
+| `--db-name` | Database name (optional) |
+| `--region` | AWS region (auto-detected if not specified) |
+| `--role` | AWS IAM role ARN (auto-detected from vouch profile if not specified) |
+| `--duration` | Credential duration in seconds, 900--3600 (provisioned clusters only, default: `900`) |
+
+Examples:
+
+```bash
+# Provisioned cluster
+vouch credential redshift --cluster-id my-cluster --db-name mydb
+
+# Serverless workgroup
+vouch credential redshift --workgroup my-workgroup --db-name mydb
+```
+
 ### `vouch credential token`
 
 Print the raw session access token to stdout for use with curl or other tools.
@@ -364,15 +417,30 @@ vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type to inject: `aws`, `github`, or `codeartifact` (required) |
+| `--type` | Credential type to inject: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
 | `--session-name` | Session name for the assumed role (when `--type aws`) |
 | `--ca-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
+| `--rds-hostname` | RDS instance hostname (required when `--type rds`) |
+| `--rds-username` | Database username (required when `--type rds`) |
+| `--rds-port` | Database port (when `--type rds`, default: `5432`) |
+| `--redshift-cluster-id` | Redshift provisioned cluster identifier (when `--type redshift`; mutually exclusive with `--redshift-workgroup`) |
+| `--redshift-workgroup` | Redshift Serverless workgroup name (when `--type redshift`; mutually exclusive with `--redshift-cluster-id`) |
+| `--redshift-db-name` | Database name (when `--type redshift`) |
+| `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
 
-When `--type codeartifact`, injects `CODEARTIFACT_AUTH_TOKEN` into the subprocess environment.
+Environment variables injected by type:
+
+| Type | Variables |
+|---|---|
+| `aws` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` |
+| `github` | `GITHUB_TOKEN` |
+| `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
+| `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
+| `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
 
 Examples:
 
@@ -382,6 +450,23 @@ vouch exec --type aws --role arn:aws:iam::123456789012:role/VouchDeveloper -- te
 
 # AWS CodeArtifact token
 vouch exec --type codeartifact -- mvn deploy -s settings.xml
+
+# RDS PostgreSQL — connect with psql, no manual token handling
+vouch exec --type rds \
+  --rds-hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --rds-username mydbuser \
+  -- psql -d mydb
+
+# Redshift provisioned cluster
+vouch exec --type redshift \
+  --redshift-cluster-id my-cluster \
+  --redshift-db-name mydb \
+  -- psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
+
+# Redshift Serverless
+vouch exec --type redshift \
+  --redshift-workgroup my-workgroup \
+  -- psql -h my-workgroup.123456789012.us-east-1.redshift-serverless.amazonaws.com -p 5439
 ```
 
 ### `vouch env`
@@ -394,7 +479,7 @@ eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type: `aws`, `github`, or `codeartifact` (required) |
+| `--type` | Credential type: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--shell` | Shell syntax: `bash` or `fish` (default: `bash`). The `bash` syntax also works for zsh. |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
 | `--session-name` | Session name for the assumed role (when `--type aws`) |
@@ -402,6 +487,39 @@ eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 | `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
 | `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
+| `--rds-hostname` | RDS instance hostname (required when `--type rds`) |
+| `--rds-username` | Database username (required when `--type rds`) |
+| `--rds-port` | Database port (when `--type rds`, default: `5432`) |
+| `--redshift-cluster-id` | Redshift provisioned cluster identifier (when `--type redshift`; mutually exclusive with `--redshift-workgroup`) |
+| `--redshift-workgroup` | Redshift Serverless workgroup name (when `--type redshift`; mutually exclusive with `--redshift-cluster-id`) |
+| `--redshift-db-name` | Database name (when `--type redshift`) |
+| `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
+
+Environment variables set by type:
+
+| Type | Variables |
+|---|---|
+| `aws` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` |
+| `github` | `GITHUB_TOKEN` |
+| `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
+| `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
+| `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
+
+Examples:
+
+```bash
+# RDS PostgreSQL
+eval "$(vouch env --type rds \
+  --rds-hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
+  --rds-username mydbuser)"
+psql -d mydb
+
+# Redshift
+eval "$(vouch env --type redshift \
+  --redshift-cluster-id my-cluster \
+  --redshift-db-name mydb)"
+psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
+```
 
 ### `vouch init`
 
