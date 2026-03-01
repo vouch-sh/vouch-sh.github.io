@@ -1,0 +1,174 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Axum (openidconnect-rs) — Vouch — Hardware-Backed Developer Credentials</title>
+<meta name=description content="Integrate Vouch OIDC authentication into a Rust Axum application using openidconnect-rs."><link rel=canonical href=https://vouch.sh/docs/applications/axum/><meta property="og:title" content="Axum (openidconnect-rs) — Vouch — Hardware-Backed Developer Credentials"><meta property="og:description" content="Integrate Vouch OIDC authentication into a Rust Axum application using openidconnect-rs."><meta property="og:url" content="https://vouch.sh/docs/applications/axum/"><meta property="og:site_name" content="Vouch"><meta property="og:type" content="article"><meta property="og:image" content="https://vouch.sh/img/og-image.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Axum (openidconnect-rs) — Vouch — Hardware-Backed Developer Credentials"><meta name=twitter:description content="Integrate Vouch OIDC authentication into a Rust Axum application using openidconnect-rs."><meta name=twitter:image content="https://vouch.sh/img/og-image.png"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"><link rel=icon href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>"><link rel=author href=/humans.txt><script type=application/ld+json>{"@context":"https://schema.org","@type":"WebSite","description":"Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access.","name":"Vouch","url":"https://vouch.sh/"}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","logo":"https://vouch.sh/img/og-image.png","name":"Smoke Turner, LLC","sameAs":["https://github.com/vouch-sh/vouch"],"url":"https://smoketurner.com"}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"TechArticle","author":{"@type":"Organization","name":"Smoke Turner, LLC"},"description":"Integrate Vouch OIDC authentication into a Rust Axum application using openidconnect-rs.","headline":"Axum (openidconnect-rs)","mainEntityOfPage":{"@id":"https://vouch.sh/docs/applications/axum/","@type":"WebPage"},"publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://vouch.sh/img/og-image.png"},"name":"Smoke Turner, LLC"}}</script><link rel=stylesheet href=https://vouch.sh/css/main.min.696319dec26a9f9526ac8dae8c8e12c4271af4250b998632e1aca67447bb363d.css></head><body><header class=nav><div class=nav-inner><a href=/ class=nav-logo><svg viewBox="0 0 32 32" fill="none"><rect x="9" y="14" width="14" height="12" rx="2" stroke="currentcolor" stroke-width="2"/><path d="M12 14V10a4 4 0 118 0v4" stroke="currentcolor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="20" r="1.5" fill="currentcolor"/><line x1="16" y1="21.5" x2="16" y2="23.5" stroke="currentcolor" stroke-width="1.5" stroke-linecap="round"/></svg>
+vouch
+</a><button class=nav-toggle aria-label="Toggle navigation" onclick='document.querySelector(".nav-links").classList.toggle("open")'><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><ul class=nav-links><li><a href=/docs/>Docs</a></li><li><a href=/blog/>Blog</a></li><li><a href=/about/>About</a></li><li><a href=https://github.com/vouch-sh/vouch target=_blank rel=noopener>GitHub<svg class="github-icon" viewBox="0 0 24 24" fill="currentcolor"><path d="M12 0C5.37.0.0 5.37.0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57.0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925.0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18.0.0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225.0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22.0 1.605-.015 2.895-.015 3.3.0.315.225.69.825.57A12.02 12.02.0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a></li></ul></div></header><main class=content-wrapper><div class=docs-layout><aside class=docs-sidebar id=docs-sidebar><div class=docs-sidebar-title>Documentation</div><nav><ul><li><a href=https://vouch.sh/docs/getting-started/>Getting Started</a></li><li><a href=https://vouch.sh/docs/startups/>Startups</a></li><li class=sidebar-section-group><span class=sidebar-section-label>Infrastructure</span><ul><li><a href=https://vouch.sh/docs/aws/>AWS</a></li><li><a href=https://vouch.sh/docs/aws-multi-account/>AWS Multi-Account</a></li><li><a href=https://vouch.sh/docs/ssh/>SSH Certificates</a></li><li><a href=https://vouch.sh/docs/eks/>Amazon EKS</a></li><li><a href=https://vouch.sh/docs/ssm/>AWS Systems Manager</a></li><li><a href=https://vouch.sh/docs/databases/>Databases</a></li><li><a href=https://vouch.sh/docs/bedrock/>Amazon Bedrock</a></li></ul></li><li class=sidebar-section-group><span class=sidebar-section-label>Code & Packages</span><ul><li><a href=https://vouch.sh/docs/github/>GitHub</a></li><li><a href=https://vouch.sh/docs/docker/>Docker Registries</a></li><li><a href=https://vouch.sh/docs/codeartifact/>AWS CodeArtifact</a></li><li><a href=https://vouch.sh/docs/codecommit/>AWS CodeCommit</a></li><li><a href=https://vouch.sh/docs/cargo/>Cargo</a></li></ul></li><li class=sidebar-section-group><span class=sidebar-section-label>Platform</span><ul><li class="sidebar-group open"><div class=sidebar-group-header><a href=https://vouch.sh/docs/applications/>Applications (OIDC)
+</a><button class=sidebar-chevron onclick='this.closest(".sidebar-group").classList.toggle("open")' aria-label="Toggle section"><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div><ul class=sidebar-children><li><a href=https://vouch.sh/docs/applications/rails/>Rails (OmniAuth)</a></li><li><a href=https://vouch.sh/docs/applications/django/>Django (django-allauth)</a></li><li><a href=https://vouch.sh/docs/applications/express/>Express.js (Passport)</a></li><li><a href=https://vouch.sh/docs/applications/nextjs/>Next.js (NextAuth.js)</a></li><li><a href=https://vouch.sh/docs/applications/laravel/>Laravel (Socialite)</a></li><li><a href=https://vouch.sh/docs/applications/flask/>Flask (Authlib)</a></li><li><a href=https://vouch.sh/docs/applications/fastapi/>FastAPI (Authlib)</a></li><li><a href=https://vouch.sh/docs/applications/spring-boot/>Spring Boot (Spring Security)</a></li><li><a href=https://vouch.sh/docs/applications/axum/ class=active>Axum (openidconnect-rs)</a></li><li><a href=https://vouch.sh/docs/applications/react/>React (react-oidc-context)</a></li><li><a href=https://vouch.sh/docs/applications/vue/>Vue (oidc-client-ts)</a></li><li><a href=https://vouch.sh/docs/applications/vanilla-js/>Vanilla JavaScript</a></li><li><a href=https://vouch.sh/docs/applications/device-authorization/>Device Authorization (CLI)</a></li></ul></li><li><a href=https://vouch.sh/docs/scim/>SCIM Provisioning</a></li><li><a href=https://vouch.sh/docs/iac/>Infrastructure as Code</a></li><li><a href=https://vouch.sh/docs/cicd/>CI/CD</a></li><li><a href=https://vouch.sh/docs/cli-reference/>CLI Reference</a></li><li><a href=https://vouch.sh/docs/security/>Security</a></li><li><a href=https://vouch.sh/docs/threat-model/>Threat Model</a></li><li><a href=https://vouch.sh/docs/architecture/>Architecture</a></li><li><a href=https://vouch.sh/docs/availability/>Availability</a></li><li><a href=https://vouch.sh/docs/migration/>Migration</a></li><li><a href=https://vouch.sh/docs/faq/>FAQ</a></li></ul></li></ul></nav></aside><article class=docs-content><div class=docs-breadcrumb><a href=https://vouch.sh/docs/>Docs</a><span class=separator>/</span><a href=https://vouch.sh/docs/applications/>Add Hardware-Backed Sign-In to Your Application</a><span class=separator>/</span>
+Axum (openidconnect-rs)</div><h1>Axum (openidconnect-rs)</h1><blockquote><p>See the <a href=https://vouch.sh/docs/applications/>Applications overview</a> for prerequisites, configuration endpoints, and available scopes.</p></blockquote><p><a href=https://github.com/ramosbugs/openidconnect-rs>openidconnect-rs</a> provides a type-safe OpenID Connect client for Rust.</p><p>Add the required dependencies to your <code>Cargo.toml</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-toml data-lang=toml><span style=display:flex><span>[<span style=color:#a6e22e>dependencies</span>]
+</span></span><span style=display:flex><span><span style=color:#a6e22e>axum</span> = <span style=color:#e6db74>&#34;0.7&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>axum-extra</span> = { <span style=color:#a6e22e>version</span> = <span style=color:#e6db74>&#34;0.9&#34;</span>, <span style=color:#a6e22e>features</span> = [<span style=color:#e6db74>&#34;cookie&#34;</span>] }
+</span></span><span style=display:flex><span><span style=color:#a6e22e>openidconnect</span> = <span style=color:#e6db74>&#34;3&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>reqwest</span> = { <span style=color:#a6e22e>version</span> = <span style=color:#e6db74>&#34;0.12&#34;</span>, <span style=color:#a6e22e>features</span> = [<span style=color:#e6db74>&#34;rustls-tls&#34;</span>] }
+</span></span><span style=display:flex><span><span style=color:#a6e22e>serde</span> = { <span style=color:#a6e22e>version</span> = <span style=color:#e6db74>&#34;1&#34;</span>, <span style=color:#a6e22e>features</span> = [<span style=color:#e6db74>&#34;derive&#34;</span>] }
+</span></span><span style=display:flex><span><span style=color:#a6e22e>tokio</span> = { <span style=color:#a6e22e>version</span> = <span style=color:#e6db74>&#34;1&#34;</span>, <span style=color:#a6e22e>features</span> = [<span style=color:#e6db74>&#34;full&#34;</span>] }
+</span></span><span style=display:flex><span><span style=color:#a6e22e>tower-sessions</span> = <span style=color:#e6db74>&#34;0.13&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>url</span> = <span style=color:#e6db74>&#34;2&#34;</span>
+</span></span></code></pre></div><p>Implement the OIDC integration:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-rust data-lang=rust><span style=display:flex><span><span style=color:#66d9ef>use</span> axum::{
+</span></span><span style=display:flex><span>    extract::{Query, State},
+</span></span><span style=display:flex><span>    response::{IntoResponse, Redirect},
+</span></span><span style=display:flex><span>    routing::get,
+</span></span><span style=display:flex><span>    Router,
+</span></span><span style=display:flex><span>};
+</span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> openidconnect::{
+</span></span><span style=display:flex><span>    core::{CoreClient, CoreProviderMetadata, CoreResponseType},
+</span></span><span style=display:flex><span>    reqwest::async_http_client,
+</span></span><span style=display:flex><span>    AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret,
+</span></span><span style=display:flex><span>    CsrfToken, IssuerUrl, Nonce, RedirectUrl, Scope, TokenResponse,
+</span></span><span style=display:flex><span>};
+</span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> serde::Deserialize;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> std::sync::Arc;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>use</span> tower_sessions::{MemoryStore, Session, SessionManagerLayer};
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#66d9ef>CSRF_TOKEN_KEY</span>: <span style=color:#66d9ef>&amp;</span><span style=color:#66d9ef>str</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;csrf_token&#34;</span>;
+</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#66d9ef>NONCE_KEY</span>: <span style=color:#66d9ef>&amp;</span><span style=color:#66d9ef>str</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;nonce&#34;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>AppState</span> {
+</span></span><span style=display:flex><span>    oidc_client: <span style=color:#a6e22e>CoreClient</span>,
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#[derive(Deserialize)]</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>struct</span> <span style=color:#a6e22e>CallbackParams</span> {
+</span></span><span style=display:flex><span>    code: String,
+</span></span><span style=display:flex><span>    state: String,
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>async</span> <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>login</span>(
+</span></span><span style=display:flex><span>    State(state): <span style=color:#a6e22e>State</span><span style=color:#f92672>&lt;</span>Arc<span style=color:#f92672>&lt;</span>AppState<span style=color:#f92672>&gt;&gt;</span>,
+</span></span><span style=display:flex><span>    session: <span style=color:#a6e22e>Session</span>,
+</span></span><span style=display:flex><span>) -&gt; <span style=color:#a6e22e>impl</span> IntoResponse {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> (auth_url, csrf_token, nonce) <span style=color:#f92672>=</span> state
+</span></span><span style=display:flex><span>        .oidc_client
+</span></span><span style=display:flex><span>        .authorize_url(
+</span></span><span style=display:flex><span>            AuthenticationFlow::<span style=color:#f92672>&lt;</span>CoreResponseType<span style=color:#f92672>&gt;</span>::AuthorizationCode,
+</span></span><span style=display:flex><span>            CsrfToken::new_random,
+</span></span><span style=display:flex><span>            Nonce::new_random,
+</span></span><span style=display:flex><span>        )
+</span></span><span style=display:flex><span>        .add_scope(Scope::new(<span style=color:#e6db74>&#34;email&#34;</span>.to_string()))
+</span></span><span style=display:flex><span>        .url();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Store the CSRF token and nonce in the session so we can verify them
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#75715e>// when the provider redirects back to the callback endpoint.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    session
+</span></span><span style=display:flex><span>        .insert(<span style=color:#66d9ef>CSRF_TOKEN_KEY</span>, csrf_token.secret().clone())
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Failed to store CSRF token&#34;</span>);
+</span></span><span style=display:flex><span>    session
+</span></span><span style=display:flex><span>        .insert(<span style=color:#66d9ef>NONCE_KEY</span>, nonce.secret().clone())
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Failed to store nonce&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    Redirect::to(auth_url.as_str())
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>async</span> <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>callback</span>(
+</span></span><span style=display:flex><span>    State(state): <span style=color:#a6e22e>State</span><span style=color:#f92672>&lt;</span>Arc<span style=color:#f92672>&lt;</span>AppState<span style=color:#f92672>&gt;&gt;</span>,
+</span></span><span style=display:flex><span>    session: <span style=color:#a6e22e>Session</span>,
+</span></span><span style=display:flex><span>    Query(params): <span style=color:#a6e22e>Query</span><span style=color:#f92672>&lt;</span>CallbackParams<span style=color:#f92672>&gt;</span>,
+</span></span><span style=display:flex><span>) -&gt; <span style=color:#a6e22e>impl</span> IntoResponse {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Retrieve and remove the CSRF token from the session.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>let</span> stored_csrf: String <span style=color:#f92672>=</span> session
+</span></span><span style=display:flex><span>        .remove(<span style=color:#66d9ef>CSRF_TOKEN_KEY</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Session error&#34;</span>)
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Missing CSRF token in session -- login flow was not initiated&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Verify the state parameter matches the CSRF token we stored.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>if</span> params.state <span style=color:#f92672>!=</span> stored_csrf {
+</span></span><span style=display:flex><span>        panic!(<span style=color:#e6db74>&#34;CSRF token mismatch -- possible CSRF attack&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Retrieve and remove the nonce from the session.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>let</span> stored_nonce: String <span style=color:#f92672>=</span> session
+</span></span><span style=display:flex><span>        .remove(<span style=color:#66d9ef>NONCE_KEY</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Session error&#34;</span>)
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Missing nonce in session&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> nonce <span style=color:#f92672>=</span> Nonce::new(stored_nonce);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> token_response <span style=color:#f92672>=</span> state
+</span></span><span style=display:flex><span>        .oidc_client
+</span></span><span style=display:flex><span>        .exchange_code(AuthorizationCode::new(params.code))
+</span></span><span style=display:flex><span>        .request_async(async_http_client)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Failed to exchange code&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> id_token <span style=color:#f92672>=</span> token_response
+</span></span><span style=display:flex><span>        .id_token()
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Server did not return an ID token&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Verify the ID token using the nonce from the original authorization request.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>let</span> claims <span style=color:#f92672>=</span> id_token
+</span></span><span style=display:flex><span>        .claims(<span style=color:#f92672>&amp;</span>state.oidc_client.id_token_verifier(), <span style=color:#f92672>&amp;</span>nonce)
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Failed to verify ID token&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    format!(
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;Welcome! Subject: </span><span style=color:#e6db74>{}</span><span style=color:#e6db74>, Email: </span><span style=color:#e6db74>{:?}</span><span style=color:#e6db74>&#34;</span>,
+</span></span><span style=display:flex><span>        claims.subject(),
+</span></span><span style=display:flex><span>        claims.email()
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#[tokio::main]</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>async</span> <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> issuer_url <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>        IssuerUrl::new(<span style=color:#e6db74>&#34;https://us.vouch.sh&#34;</span>.to_string()).expect(<span style=color:#e6db74>&#34;Invalid issuer URL&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> provider_metadata <span style=color:#f92672>=</span>
+</span></span><span style=display:flex><span>        CoreProviderMetadata::discover_async(issuer_url, async_http_client)
+</span></span><span style=display:flex><span>            .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>            .expect(<span style=color:#e6db74>&#34;Failed to discover provider&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> client <span style=color:#f92672>=</span> CoreClient::from_provider_metadata(
+</span></span><span style=display:flex><span>        provider_metadata,
+</span></span><span style=display:flex><span>        ClientId::new(std::env::var(<span style=color:#e6db74>&#34;VOUCH_CLIENT_ID&#34;</span>).expect(<span style=color:#e6db74>&#34;VOUCH_CLIENT_ID not set&#34;</span>)),
+</span></span><span style=display:flex><span>        Some(ClientSecret::new(
+</span></span><span style=display:flex><span>            std::env::var(<span style=color:#e6db74>&#34;VOUCH_CLIENT_SECRET&#34;</span>).expect(<span style=color:#e6db74>&#34;VOUCH_CLIENT_SECRET not set&#34;</span>),
+</span></span><span style=display:flex><span>        )),
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>    .set_redirect_uri(
+</span></span><span style=display:flex><span>        RedirectUrl::new(<span style=color:#e6db74>&#34;https://your-app.example.com/auth/callback&#34;</span>.to_string())
+</span></span><span style=display:flex><span>            .expect(<span style=color:#e6db74>&#34;Invalid redirect URL&#34;</span>),
+</span></span><span style=display:flex><span>    );
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> state <span style=color:#f92672>=</span> Arc::new(AppState {
+</span></span><span style=display:flex><span>        oidc_client: <span style=color:#a6e22e>client</span>,
+</span></span><span style=display:flex><span>    });
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// Use an in-memory session store. In production, replace with a
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#75715e>// persistent store (e.g., Redis) for multi-instance deployments.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#66d9ef>let</span> session_store <span style=color:#f92672>=</span> MemoryStore::default();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> session_layer <span style=color:#f92672>=</span> SessionManagerLayer::new(session_store);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> app <span style=color:#f92672>=</span> Router::new()
+</span></span><span style=display:flex><span>        .route(<span style=color:#e6db74>&#34;/login&#34;</span>, get(login))
+</span></span><span style=display:flex><span>        .route(<span style=color:#e6db74>&#34;/auth/callback&#34;</span>, get(callback))
+</span></span><span style=display:flex><span>        .layer(session_layer)
+</span></span><span style=display:flex><span>        .with_state(state);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>let</span> listener <span style=color:#f92672>=</span> tokio::net::TcpListener::bind(<span style=color:#e6db74>&#34;0.0.0.0:3000&#34;</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#66d9ef>await</span>
+</span></span><span style=display:flex><span>        .expect(<span style=color:#e6db74>&#34;Failed to bind&#34;</span>);
+</span></span><span style=display:flex><span>    axum::serve(listener, app).<span style=color:#66d9ef>await</span>.expect(<span style=color:#e6db74>&#34;Server error&#34;</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></article></div><div class=sidebar-overlay id=sidebar-overlay onclick=closeSidebar()></div><button class=sidebar-toggle onclick=toggleSidebar() aria-label="Toggle sidebar">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<script>function toggleSidebar(){document.getElementById("docs-sidebar").classList.toggle("open"),document.getElementById("sidebar-overlay").classList.toggle("open")}function closeSidebar(){document.getElementById("docs-sidebar").classList.remove("open"),document.getElementById("sidebar-overlay").classList.remove("open")}</script></main><footer class=footer><div class=footer-inner><div class=footer-left><div>&copy; 2026 Smoke Turner, LLC</div><div class=footer-instances>Instances:
+<a href=https://us.vouch.sh>US</a>
+&#183;
+<span class=coming-soon>EU (coming soon)</span>
+&#183;
+<span class=coming-soon>APAC (coming soon)</span></div></div><div class=footer-links><a href=/about/>About</a>
+<a href=/docs/security/>Security</a>
+<a href=/privacy/>Privacy</a>
+<a href=/terms/>Terms</a>
+<a href=https://github.com/vouch-sh/vouch target=_blank rel=noopener>GitHub</a></div></div></footer></body></html>

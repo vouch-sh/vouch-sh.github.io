@@ -1,0 +1,221 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Multi-Account AWS Strategy — Vouch — Hardware-Backed Developer Credentials</title>
+<meta name=description content="Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs."><link rel=canonical href=https://vouch.sh/docs/aws-multi-account/><meta property="og:title" content="Multi-Account AWS Strategy — Vouch — Hardware-Backed Developer Credentials"><meta property="og:description" content="Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs."><meta property="og:url" content="https://vouch.sh/docs/aws-multi-account/"><meta property="og:site_name" content="Vouch"><meta property="og:type" content="article"><meta property="og:image" content="https://vouch.sh/img/og-image.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Multi-Account AWS Strategy — Vouch — Hardware-Backed Developer Credentials"><meta name=twitter:description content="Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs."><meta name=twitter:image content="https://vouch.sh/img/og-image.png"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"><link rel=icon href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>"><link rel=author href=/humans.txt><script type=application/ld+json>{"@context":"https://schema.org","@type":"WebSite","description":"Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access.","name":"Vouch","url":"https://vouch.sh/"}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","logo":"https://vouch.sh/img/og-image.png","name":"Smoke Turner, LLC","sameAs":["https://github.com/vouch-sh/vouch"],"url":"https://smoketurner.com"}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"TechArticle","author":{"@type":"Organization","name":"Smoke Turner, LLC"},"description":"Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs.","headline":"Multi-Account AWS Strategy","mainEntityOfPage":{"@id":"https://vouch.sh/docs/aws-multi-account/","@type":"WebPage"},"publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://vouch.sh/img/og-image.png"},"name":"Smoke Turner, LLC"}}</script><link rel=stylesheet href=https://vouch.sh/css/main.min.696319dec26a9f9526ac8dae8c8e12c4271af4250b998632e1aca67447bb363d.css></head><body><header class=nav><div class=nav-inner><a href=/ class=nav-logo><svg viewBox="0 0 32 32" fill="none"><rect x="9" y="14" width="14" height="12" rx="2" stroke="currentcolor" stroke-width="2"/><path d="M12 14V10a4 4 0 118 0v4" stroke="currentcolor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="20" r="1.5" fill="currentcolor"/><line x1="16" y1="21.5" x2="16" y2="23.5" stroke="currentcolor" stroke-width="1.5" stroke-linecap="round"/></svg>
+vouch
+</a><button class=nav-toggle aria-label="Toggle navigation" onclick='document.querySelector(".nav-links").classList.toggle("open")'><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><ul class=nav-links><li><a href=/docs/>Docs</a></li><li><a href=/blog/>Blog</a></li><li><a href=/about/>About</a></li><li><a href=https://github.com/vouch-sh/vouch target=_blank rel=noopener>GitHub<svg class="github-icon" viewBox="0 0 24 24" fill="currentcolor"><path d="M12 0C5.37.0.0 5.37.0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57.0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925.0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18.0.0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225.0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22.0 1.605-.015 2.895-.015 3.3.0.315.225.69.825.57A12.02 12.02.0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a></li></ul></div></header><main class=content-wrapper><div class=docs-layout><aside class=docs-sidebar id=docs-sidebar><div class=docs-sidebar-title>Documentation</div><nav><ul><li><a href=https://vouch.sh/docs/getting-started/>Getting Started</a></li><li><a href=https://vouch.sh/docs/startups/>Startups</a></li><li class=sidebar-section-group><span class=sidebar-section-label>Infrastructure</span><ul><li><a href=https://vouch.sh/docs/aws/>AWS</a></li><li><a href=https://vouch.sh/docs/aws-multi-account/ class=active>AWS Multi-Account</a></li><li><a href=https://vouch.sh/docs/ssh/>SSH Certificates</a></li><li><a href=https://vouch.sh/docs/eks/>Amazon EKS</a></li><li><a href=https://vouch.sh/docs/ssm/>AWS Systems Manager</a></li><li><a href=https://vouch.sh/docs/databases/>Databases</a></li><li><a href=https://vouch.sh/docs/bedrock/>Amazon Bedrock</a></li></ul></li><li class=sidebar-section-group><span class=sidebar-section-label>Code & Packages</span><ul><li><a href=https://vouch.sh/docs/github/>GitHub</a></li><li><a href=https://vouch.sh/docs/docker/>Docker Registries</a></li><li><a href=https://vouch.sh/docs/codeartifact/>AWS CodeArtifact</a></li><li><a href=https://vouch.sh/docs/codecommit/>AWS CodeCommit</a></li><li><a href=https://vouch.sh/docs/cargo/>Cargo</a></li></ul></li><li class=sidebar-section-group><span class=sidebar-section-label>Platform</span><ul><li class=sidebar-group><div class=sidebar-group-header><a href=https://vouch.sh/docs/applications/>Applications (OIDC)
+</a><button class=sidebar-chevron onclick='this.closest(".sidebar-group").classList.toggle("open")' aria-label="Toggle section"><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div><ul class=sidebar-children><li><a href=https://vouch.sh/docs/applications/rails/>Rails (OmniAuth)</a></li><li><a href=https://vouch.sh/docs/applications/django/>Django (django-allauth)</a></li><li><a href=https://vouch.sh/docs/applications/express/>Express.js (Passport)</a></li><li><a href=https://vouch.sh/docs/applications/nextjs/>Next.js (NextAuth.js)</a></li><li><a href=https://vouch.sh/docs/applications/laravel/>Laravel (Socialite)</a></li><li><a href=https://vouch.sh/docs/applications/flask/>Flask (Authlib)</a></li><li><a href=https://vouch.sh/docs/applications/fastapi/>FastAPI (Authlib)</a></li><li><a href=https://vouch.sh/docs/applications/spring-boot/>Spring Boot (Spring Security)</a></li><li><a href=https://vouch.sh/docs/applications/axum/>Axum (openidconnect-rs)</a></li><li><a href=https://vouch.sh/docs/applications/react/>React (react-oidc-context)</a></li><li><a href=https://vouch.sh/docs/applications/vue/>Vue (oidc-client-ts)</a></li><li><a href=https://vouch.sh/docs/applications/vanilla-js/>Vanilla JavaScript</a></li><li><a href=https://vouch.sh/docs/applications/device-authorization/>Device Authorization (CLI)</a></li></ul></li><li><a href=https://vouch.sh/docs/scim/>SCIM Provisioning</a></li><li><a href=https://vouch.sh/docs/iac/>Infrastructure as Code</a></li><li><a href=https://vouch.sh/docs/cicd/>CI/CD</a></li><li><a href=https://vouch.sh/docs/cli-reference/>CLI Reference</a></li><li><a href=https://vouch.sh/docs/security/>Security</a></li><li><a href=https://vouch.sh/docs/threat-model/>Threat Model</a></li><li><a href=https://vouch.sh/docs/architecture/>Architecture</a></li><li><a href=https://vouch.sh/docs/availability/>Availability</a></li><li><a href=https://vouch.sh/docs/migration/>Migration</a></li><li><a href=https://vouch.sh/docs/faq/>FAQ</a></li></ul></li></ul></nav></aside><article class=docs-content><div class=docs-breadcrumb><a href=https://vouch.sh/docs/>Docs</a><span class=separator>/</span>
+Multi-Account AWS Strategy</div><h1>Multi-Account AWS Strategy</h1><p style=color:var(--text-muted);font-size:1.1rem;margin-bottom:2rem>Federate Vouch into dev, staging, and production AWS accounts</p><p>Most startups outgrow a single AWS account quickly. By the time you have a dev and production environment, you have two accounts. Add staging, a shared services account for CI/CD, and a logging account, and you have five. Each account needs an OIDC provider and IAM roles that trust Vouch.</p><p>This guide covers deploying Vouch OIDC federation across an AWS Organization using CloudFormation StackSets, Terraform modules, and SCPs to enforce that only Vouch can federate into your accounts.</p><hr><h2 id=architecture>Architecture</h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>AWS Organization (Management Account)
+</span></span><span style=display:flex><span>├── Shared Services (CI/CD, logging)
+</span></span><span style=display:flex><span>├── Development
+</span></span><span style=display:flex><span>├── Staging
+</span></span><span style=display:flex><span>└── Production
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>Each account gets:
+</span></span><span style=display:flex><span>  ├── OIDC Provider (trusting us.vouch.sh)
+</span></span><span style=display:flex><span>  └── IAM Roles (VouchDeveloper, VouchReadOnly, etc.)
+</span></span></code></pre></div><p>Every developer uses the same <code>vouch login</code> session. The AWS profile they select determines which account and role they assume.</p><hr><h2 id=option-1----cloudformation-stacksets>Option 1 &ndash; CloudFormation StackSets</h2><p>StackSets deploy a CloudFormation template across all accounts in an AWS Organization (or a subset).</p><h3 id=template>Template</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>AWSTemplateFormatVersion</span>: <span style=color:#e6db74>&#34;2010-09-09&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>Description</span>: <span style=color:#e6db74>&#34;Vouch OIDC federation (deployed via StackSet)&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>Parameters</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>VouchServerUrl</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Type</span>: <span style=color:#ae81ff>String</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Default</span>: <span style=color:#e6db74>&#34;us.vouch.sh&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>RoleName</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Type</span>: <span style=color:#ae81ff>String</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Default</span>: <span style=color:#e6db74>&#34;VouchDeveloper&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ManagedPolicyArn</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Type</span>: <span style=color:#ae81ff>String</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Default</span>: <span style=color:#e6db74>&#34;arn:aws:iam::aws:policy/ReadOnlyAccess&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Description</span>: <span style=color:#e6db74>&#34;Permissions policy to attach to the role&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>Resources</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>VouchOIDCProvider</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Type</span>: <span style=color:#ae81ff>AWS::IAM::OIDCProvider</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Properties</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>Url</span>: !<span style=color:#ae81ff>Sub &#34;https://${VouchServerUrl}&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>ClientIdList</span>:
+</span></span><span style=display:flex><span>        - !<span style=color:#ae81ff>Sub &#34;https://${VouchServerUrl}&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>VouchRole</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Type</span>: <span style=color:#ae81ff>AWS::IAM::Role</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Properties</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>RoleName</span>: !<span style=color:#ae81ff>Ref RoleName</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>AssumeRolePolicyDocument</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>Version</span>: <span style=color:#e6db74>&#34;2012-10-17&#34;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>Statement</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#f92672>Effect</span>: <span style=color:#ae81ff>Allow</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>Principal</span>:
+</span></span><span style=display:flex><span>              <span style=color:#f92672>Federated</span>: !<span style=color:#ae81ff>Sub &#34;arn:aws:iam::${AWS::AccountId}:oidc-provider/${VouchServerUrl}&#34;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>Action</span>: <span style=color:#e6db74>&#34;sts:AssumeRoleWithWebIdentity&#34;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>Condition</span>:
+</span></span><span style=display:flex><span>              <span style=color:#f92672>StringEquals</span>:
+</span></span><span style=display:flex><span>                !<span style=color:#ae81ff>Sub &#34;${VouchServerUrl}:aud&#34;: !Sub &#34;https://${VouchServerUrl}&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>ManagedPolicyArns</span>:
+</span></span><span style=display:flex><span>        - !<span style=color:#ae81ff>Ref ManagedPolicyArn</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>Outputs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>RoleArn</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>Value</span>: !<span style=color:#ae81ff>GetAtt VouchRole.Arn</span>
+</span></span></code></pre></div><h3 id=deploy-to-all-accounts>Deploy to all accounts</h3><p>From the management account:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>aws cloudformation create-stack-set <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --stack-set-name vouch-federation <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --template-body file://vouch-stackset.yaml <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --capabilities CAPABILITY_NAMED_IAM <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --permission-model SERVICE_MANAGED <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --auto-deployment Enabled<span style=color:#f92672>=</span>true,RetainStacksOnAccountRemoval<span style=color:#f92672>=</span>false
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>aws cloudformation create-stack-instances <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --stack-set-name vouch-federation <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --deployment-targets OrganizationalUnitIds<span style=color:#f92672>=</span>ou-xxxx-xxxxxxxx <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --regions us-east-1
+</span></span></code></pre></div><p>With <code>--auto-deployment Enabled</code>, new accounts added to the OU automatically receive the Vouch OIDC provider and IAM role.</p><h3 id=per-account-role-customization>Per-account role customization</h3><p>Use different parameter overrides per account to control permissions:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Development: PowerUserAccess</span>
+</span></span><span style=display:flex><span>aws cloudformation create-stack-instances <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --stack-set-name vouch-federation <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --accounts <span style=color:#ae81ff>111111111111</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --regions us-east-1 <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --parameter-overrides ParameterKey<span style=color:#f92672>=</span>ManagedPolicyArn,ParameterValue<span style=color:#f92672>=</span>arn:aws:iam::aws:policy/PowerUserAccess ParameterKey<span style=color:#f92672>=</span>RoleName,ParameterValue<span style=color:#f92672>=</span>VouchDeveloper
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Production: ReadOnlyAccess</span>
+</span></span><span style=display:flex><span>aws cloudformation create-stack-instances <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --stack-set-name vouch-federation <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --accounts <span style=color:#ae81ff>222222222222</span> <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --regions us-east-1 <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --parameter-overrides ParameterKey<span style=color:#f92672>=</span>ManagedPolicyArn,ParameterValue<span style=color:#f92672>=</span>arn:aws:iam::aws:policy/ReadOnlyAccess ParameterKey<span style=color:#f92672>=</span>RoleName,ParameterValue<span style=color:#f92672>=</span>VouchReadOnly
+</span></span></code></pre></div><hr><h2 id=option-2----terraform>Option 2 &ndash; Terraform</h2><h3 id=module>Module</h3><p>Create a reusable Terraform module:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=display:flex><span><span style=color:#75715e># modules/vouch-federation/main.tf
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>variable</span> <span style=color:#e6db74>&#34;vouch_server_url&#34;</span> {
+</span></span><span style=display:flex><span>  type    <span style=color:#f92672>=</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>  default <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;us.vouch.sh&#34;</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>variable</span> <span style=color:#e6db74>&#34;role_name&#34;</span> {
+</span></span><span style=display:flex><span>  type    <span style=color:#f92672>=</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>  default <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;VouchDeveloper&#34;</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>variable</span> <span style=color:#e6db74>&#34;policy_arns&#34;</span> {
+</span></span><span style=display:flex><span>  type    <span style=color:#f92672>=</span> <span style=color:#66d9ef>list</span>(<span style=color:#66d9ef>string</span>)
+</span></span><span style=display:flex><span>  default <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;arn:aws:iam::aws:policy/ReadOnlyAccess&#34;</span>]
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>data</span> <span style=color:#e6db74>&#34;aws_caller_identity&#34; &#34;current&#34;</span> {}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>resource</span> <span style=color:#e6db74>&#34;aws_iam_openid_connect_provider&#34; &#34;vouch&#34;</span> {
+</span></span><span style=display:flex><span>  url            <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;https://${var.vouch_server_url}&#34;</span>
+</span></span><span style=display:flex><span>  client_id_list <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;https://${var.vouch_server_url}&#34;</span>]
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>resource</span> <span style=color:#e6db74>&#34;aws_iam_role&#34; &#34;vouch&#34;</span> {
+</span></span><span style=display:flex><span>  name <span style=color:#f92672>=</span> <span style=color:#66d9ef>var</span>.<span style=color:#66d9ef>role_name</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  assume_role_policy <span style=color:#f92672>=</span> <span style=color:#66d9ef>jsonencode</span>({
+</span></span><span style=display:flex><span>    Version <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;2012-10-17&#34;</span>
+</span></span><span style=display:flex><span>    Statement <span style=color:#f92672>=</span> [
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        Effect <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;Allow&#34;</span>
+</span></span><span style=display:flex><span>        Principal <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>          Federated <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.vouch_server_url}&#34;</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        Action <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;sts:AssumeRoleWithWebIdentity&#34;</span>
+</span></span><span style=display:flex><span>        Condition <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>          StringEquals <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>            &#34;${var.vouch_server_url}:aud&#34; <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;https://${var.vouch_server_url}&#34;</span>
+</span></span><span style=display:flex><span>          }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    ]
+</span></span><span style=display:flex><span>  })
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>resource</span> <span style=color:#e6db74>&#34;aws_iam_role_policy_attachment&#34; &#34;vouch&#34;</span> {
+</span></span><span style=display:flex><span>  count      <span style=color:#f92672>=</span> <span style=color:#66d9ef>length</span>(<span style=color:#66d9ef>var</span>.<span style=color:#66d9ef>policy_arns</span>)
+</span></span><span style=display:flex><span>  role       <span style=color:#f92672>=</span> <span style=color:#66d9ef>aws_iam_role</span>.<span style=color:#66d9ef>vouch</span>.<span style=color:#66d9ef>name</span>
+</span></span><span style=display:flex><span>  policy_arn <span style=color:#f92672>=</span> <span style=color:#66d9ef>var</span>.<span style=color:#66d9ef>policy_arns</span>[<span style=color:#66d9ef>count</span>.<span style=color:#66d9ef>index</span>]
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>output</span> <span style=color:#e6db74>&#34;role_arn&#34;</span> {
+</span></span><span style=display:flex><span>  value <span style=color:#f92672>=</span> <span style=color:#66d9ef>aws_iam_role</span>.<span style=color:#66d9ef>vouch</span>.<span style=color:#66d9ef>arn</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=usage-per-account>Usage per account</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-hcl data-lang=hcl><span style=display:flex><span><span style=color:#75715e># environments/dev/main.tf
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>module</span> <span style=color:#e6db74>&#34;vouch&#34;</span> {
+</span></span><span style=display:flex><span>  source      <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;../../modules/vouch-federation&#34;</span>
+</span></span><span style=display:flex><span>  role_name   <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;VouchDeveloper&#34;</span>
+</span></span><span style=display:flex><span>  policy_arns <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;arn:aws:iam::aws:policy/PowerUserAccess&#34;</span>]
+</span></span><span style=display:flex><span>}<span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e>
+</span></span></span><span style=display:flex><span><span style=color:#75715e># environments/prod/main.tf
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>module</span> <span style=color:#e6db74>&#34;vouch&#34;</span> {
+</span></span><span style=display:flex><span>  source      <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;../../modules/vouch-federation&#34;</span>
+</span></span><span style=display:flex><span>  role_name   <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;VouchReadOnly&#34;</span>
+</span></span><span style=display:flex><span>  policy_arns <span style=color:#f92672>=</span> [<span style=color:#e6db74>&#34;arn:aws:iam::aws:policy/ReadOnlyAccess&#34;</span>]
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><hr><h2 id=restricting-federation-with-scps>Restricting federation with SCPs</h2><p>Use <a href=https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html>Service Control Policies</a> to ensure that only the Vouch OIDC provider can federate into your accounts. This prevents anyone from registering a rogue OIDC provider:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;Version&#34;</span>: <span style=color:#e6db74>&#34;2012-10-17&#34;</span>,
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;Statement&#34;</span>: [
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#f92672>&#34;Sid&#34;</span>: <span style=color:#e6db74>&#34;DenyNonVouchOIDCProviders&#34;</span>,
+</span></span><span style=display:flex><span>      <span style=color:#f92672>&#34;Effect&#34;</span>: <span style=color:#e6db74>&#34;Deny&#34;</span>,
+</span></span><span style=display:flex><span>      <span style=color:#f92672>&#34;Action&#34;</span>: [
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;iam:CreateOpenIDConnectProvider&#34;</span>,
+</span></span><span style=display:flex><span>        <span style=color:#e6db74>&#34;iam:DeleteOpenIDConnectProvider&#34;</span>
+</span></span><span style=display:flex><span>      ],
+</span></span><span style=display:flex><span>      <span style=color:#f92672>&#34;Resource&#34;</span>: <span style=color:#e6db74>&#34;*&#34;</span>,
+</span></span><span style=display:flex><span>      <span style=color:#f92672>&#34;Condition&#34;</span>: {
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&#34;StringNotEquals&#34;</span>: {
+</span></span><span style=display:flex><span>          <span style=color:#f92672>&#34;aws:PrincipalOrgID&#34;</span>: <span style=color:#e6db74>&#34;${aws:PrincipalOrgID}&#34;</span>
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>  ]
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><blockquote><p><strong>Note:</strong> Adjust this SCP to allow your management account or deployment pipeline to manage OIDC providers. The goal is to prevent individual developers from creating unauthorized OIDC providers in member accounts.</p></blockquote><hr><h2 id=developer-setup>Developer setup</h2><p>Each developer configures a named AWS profile for each account:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Development account</span>
+</span></span><span style=display:flex><span>vouch setup aws <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --role arn:aws:iam::111111111111:role/VouchDeveloper <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --profile vouch-dev
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Staging account</span>
+</span></span><span style=display:flex><span>vouch setup aws <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --role arn:aws:iam::333333333333:role/VouchDeveloper <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --profile vouch-staging
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Production account (read-only)</span>
+</span></span><span style=display:flex><span>vouch setup aws <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --role arn:aws:iam::222222222222:role/VouchReadOnly <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>  --profile vouch-prod
+</span></span></code></pre></div><p>This produces the following <code>~/.aws/config</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-ini data-lang=ini><span style=display:flex><span><span style=color:#66d9ef>[profile vouch-dev]</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>credential_process</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>vouch credential aws --role arn:aws:iam::111111111111:role/VouchDeveloper</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>[profile vouch-staging]</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>credential_process</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>vouch credential aws --role arn:aws:iam::333333333333:role/VouchDeveloper</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>[profile vouch-prod]</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>credential_process</span> <span style=color:#f92672>=</span> <span style=color:#e6db74>vouch credential aws --role arn:aws:iam::222222222222:role/VouchReadOnly</span>
+</span></span></code></pre></div><p>Use profiles per command:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#75715e># Deploy to dev</span>
+</span></span><span style=display:flex><span>cdk deploy --profile vouch-dev
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Check production (read-only)</span>
+</span></span><span style=display:flex><span>aws s3 ls --profile vouch-prod
+</span></span></code></pre></div><p>Or set a default:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>export AWS_PROFILE<span style=color:#f92672>=</span>vouch-dev
+</span></span></code></pre></div><hr><h2 id=role-design-patterns>Role design patterns</h2><h3 id=by-environment>By environment</h3><table><thead><tr><th>Account</th><th>Role</th><th>Policy</th><th>Who</th></tr></thead><tbody><tr><td>Development</td><td><code>VouchDeveloper</code></td><td><code>PowerUserAccess</code></td><td>All developers</td></tr><tr><td>Staging</td><td><code>VouchDeveloper</code></td><td><code>PowerUserAccess</code></td><td>All developers</td></tr><tr><td>Production</td><td><code>VouchReadOnly</code></td><td><code>ReadOnlyAccess</code></td><td>All developers</td></tr><tr><td>Production</td><td><code>VouchDeployer</code></td><td>Custom deploy policy</td><td>Senior engineers only</td></tr></tbody></table><h3 id=restricting-production-access-by-email>Restricting production access by email</h3><p>Add an email condition to the production deployer role&rsquo;s trust policy:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json><span style=display:flex><span><span style=color:#e6db74>&#34;Condition&#34;</span><span style=color:#960050;background-color:#1e0010>:</span> {
+</span></span><span style=display:flex><span>  <span style=color:#f92672>&#34;StringEquals&#34;</span>: {
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;us.vouch.sh:aud&#34;</span>: <span style=color:#e6db74>&#34;https://us.vouch.sh&#34;</span>,
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&#34;us.vouch.sh:sub&#34;</span>: [
+</span></span><span style=display:flex><span>      <span style=color:#e6db74>&#34;alice@example.com&#34;</span>,
+</span></span><span style=display:flex><span>      <span style=color:#e6db74>&#34;bob@example.com&#34;</span>
+</span></span><span style=display:flex><span>    ]
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Only Alice and Bob can assume the <code>VouchDeployer</code> role. Everyone else can still assume <code>VouchReadOnly</code>.</p><hr><h2 id=troubleshooting>Troubleshooting</h2><h3 id=oidc-provider-already-exists>&ldquo;OIDC provider already exists&rdquo;</h3><p>The OIDC provider URL must be unique per account. If you already created one manually, the StackSet deployment will fail for that account. Either import the existing resource or delete it before deploying.</p><h3 id=credentials-for-the-wrong-account>Credentials for the wrong account</h3><p>If <code>aws sts get-caller-identity</code> shows an unexpected account, verify you are using the correct profile:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>aws sts get-caller-identity --profile vouch-dev
+</span></span></code></pre></div><p>Check <code>~/.aws/config</code> for the correct role ARN in each profile.</p></article></div><div class=sidebar-overlay id=sidebar-overlay onclick=closeSidebar()></div><button class=sidebar-toggle onclick=toggleSidebar() aria-label="Toggle sidebar">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+<script>function toggleSidebar(){document.getElementById("docs-sidebar").classList.toggle("open"),document.getElementById("sidebar-overlay").classList.toggle("open")}function closeSidebar(){document.getElementById("docs-sidebar").classList.remove("open"),document.getElementById("sidebar-overlay").classList.remove("open")}</script></main><footer class=footer><div class=footer-inner><div class=footer-left><div>&copy; 2026 Smoke Turner, LLC</div><div class=footer-instances>Instances:
+<a href=https://us.vouch.sh>US</a>
+&#183;
+<span class=coming-soon>EU (coming soon)</span>
+&#183;
+<span class=coming-soon>APAC (coming soon)</span></div></div><div class=footer-links><a href=/about/>About</a>
+<a href=/docs/security/>Security</a>
+<a href=/privacy/>Privacy</a>
+<a href=/terms/>Terms</a>
+<a href=https://github.com/vouch-sh/vouch target=_blank rel=noopener>GitHub</a></div></div></footer></body></html>

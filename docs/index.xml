@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Documentation on Vouch — Hardware-Backed Developer Credentials</title><link>https://vouch.sh/docs/</link><description>Recent content in Documentation on Vouch — Hardware-Backed Developer Credentials</description><generator>Hugo</generator><language>en-us</language><atom:link href="https://vouch.sh/docs/index.xml" rel="self" type="application/rss+xml"/><item><title>Getting Started with Vouch</title><link>https://vouch.sh/docs/getting-started/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/getting-started/</guid><description>&lt;p>Most developer credential systems rely on static secrets: SSH private keys sitting in &lt;code>~/.ssh&lt;/code>, AWS access keys in &lt;code>~/.aws/credentials&lt;/code>, GitHub PATs pasted into environment variables. These secrets never expire, are trivially exfiltrated by malware, and have no proof of who used them.&lt;/p>
+&lt;p>Vouch replaces all of them with credentials derived from a &lt;a href="https://fidoalliance.org/fido2/">FIDO2/WebAuthn&lt;/a> hardware key assertion &amp;ndash; every credential is short-lived, bound to a verified human identity, and logged. This guide walks you through installing the CLI, enrolling your YubiKey, and performing your first login. By the end you will have hardware-backed credentials ready for SSH, AWS, and Git.&lt;/p></description></item><item><title>Replace AWS Access Keys with Short-Lived Credentials</title><link>https://vouch.sh/docs/aws/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/aws/</guid><description>&lt;p>If your team distributes AWS access keys through &lt;code>~/.aws/credentials&lt;/code>, you have credentials that never expire, are trivially exfiltrated by malware, and leave no trace of who used them. Rotating keys is a manual chore that rarely happens on schedule, and a single compromised laptop exposes keys that work indefinitely.&lt;/p>
+&lt;p>Vouch eliminates static access keys entirely. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials &amp;ndash; valid for up to 1 hour &amp;ndash; after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail. There are no keys to rotate, no credentials on disk, and no shared secrets.&lt;/p></description></item><item><title>Multi-Account AWS Strategy</title><link>https://vouch.sh/docs/aws-multi-account/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/aws-multi-account/</guid><description>&lt;p>Most startups outgrow a single AWS account quickly. By the time you have a dev and production environment, you have two accounts. Add staging, a shared services account for CI/CD, and a logging account, and you have five. Each account needs an OIDC provider and IAM roles that trust Vouch.&lt;/p>
+&lt;p>This guide covers deploying Vouch OIDC federation across an AWS Organization using CloudFormation StackSets, Terraform modules, and SCPs to enforce that only Vouch can federate into your accounts.&lt;/p></description></item><item><title>Replace SSH Keys with Short-Lived Certificates</title><link>https://vouch.sh/docs/ssh/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/ssh/</guid><description>&lt;p>Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. Keys never expire, and there is no way to know who used them.&lt;/p>
+&lt;p>Vouch eliminates this entirely. Administrators trust a single certificate authority (CA) key, and developers receive short-lived SSH certificates that expire after 8 hours. There is no key distribution, no &lt;code>authorized_keys&lt;/code> sprawl, and no offboarding checklist. Developers authenticate with &lt;code>vouch login&lt;/code> and then &lt;code>ssh&lt;/code> into any trusted server without passwords or key copying.&lt;/p></description></item><item><title>Authenticate to Amazon EKS without Static Credentials</title><link>https://vouch.sh/docs/eks/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/eks/</guid><description>&lt;p>Managing Kubernetes access with ConfigMap-based &lt;code>aws-auth&lt;/code> entries is error-prone and hard to audit. Who has access? When was it granted? Long-lived kubeconfig tokens get shared across machines, and revoking access means editing a ConfigMap by hand.&lt;/p>
+&lt;p>EKS Access Entries provide a cleaner model: IAM principals map directly to Kubernetes permissions, and every authentication event is recorded in CloudTrail. Combined with Vouch, every &lt;code>kubectl&lt;/code> command traces back to a hardware-verified human identity &amp;ndash; no static tokens, no shared kubeconfigs.&lt;/p></description></item><item><title>Access GitHub Repos without Personal Access Tokens</title><link>https://vouch.sh/docs/github/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/github/</guid><description>&lt;p>GitHub personal access tokens are long-lived, broadly scoped, and stored in plaintext in shell configs and CI environments. Deploy keys are limited to a single repository per key and require manual management on every machine. A single leaked PAT can expose every private repo it has access to.&lt;/p>
+&lt;p>Vouch replaces both with 15-minute tokens issued through a &lt;a href="https://docs.github.com/en/apps">GitHub App&lt;/a> installed in your organization &amp;ndash; automatically scoped to the right repositories and tied to a hardware-verified identity. After running &lt;code>vouch login&lt;/code>, you can clone, pull, and push to private repositories without managing any GitHub tokens yourself.&lt;/p></description></item><item><title>Authenticate to Container Registries without Stored Passwords</title><link>https://vouch.sh/docs/docker/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/docker/</guid><description>&lt;p>Container registry credentials are a frequent source of leaks. Docker stores them in plaintext in &lt;code>~/.docker/config.json&lt;/code>, and ECR&amp;rsquo;s &lt;code>get-login-password&lt;/code> tokens require a cron job or wrapper script to refresh every 12 hours. If you&amp;rsquo;ve ever committed a &lt;code>.docker/config.json&lt;/code> to a dotfiles repo, those credentials are permanently exposed.&lt;/p>
+&lt;p>Vouch&amp;rsquo;s &lt;a href="https://docs.docker.com/engine/reference/commandline/login/#credential-helpers">credential helper&lt;/a> generates tokens on demand &amp;ndash; no stored passwords, no refresh scripts, and full auditability through &lt;a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html">ECR authentication&lt;/a> logs. After a single &lt;code>vouch login&lt;/code>, you can pull and push container images to supported registries without running &lt;code>docker login&lt;/code> or managing any secrets.&lt;/p></description></item><item><title>Authenticate to AWS CodeArtifact without Stored Tokens</title><link>https://vouch.sh/docs/codeartifact/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/codeartifact/</guid><description>&lt;p>Every package manager has its own credential mechanism &amp;ndash; pip uses &lt;code>~/.pip/pip.conf&lt;/code> or &lt;code>PIP_INDEX_URL&lt;/code>, npm uses &lt;code>.npmrc&lt;/code>, Cargo uses &lt;code>~/.cargo/credentials.toml&lt;/code>, and Maven uses &lt;code>settings.xml&lt;/code>. Each requires a different token format and rotation process. Keeping them all current across a growing team is a constant chore.&lt;/p>
+&lt;p>With &lt;a href="https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html">AWS CodeArtifact&lt;/a>, you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single &lt;code>vouch login&lt;/code>, package managers like Cargo, pip, and npm can pull and publish packages from your AWS CodeArtifact repositories without manual token management.&lt;/p></description></item><item><title>Access AWS CodeCommit without Git Credentials</title><link>https://vouch.sh/docs/codecommit/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/codecommit/</guid><description>&lt;p>AWS offers three ways to authenticate to &lt;a href="https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html">AWS CodeCommit&lt;/a>: SSH keys, HTTPS Git credentials (static username/password from IAM), and IAM access keys with a credential helper. All three involve long-lived secrets that need to be distributed and rotated.&lt;/p>
+&lt;p>Vouch provides a fourth option: short-lived STS credentials that require no static secrets at all. After a single &lt;code>vouch login&lt;/code>, you can clone, pull, and push to AWS CodeCommit repositories without managing Git credentials or IAM access keys. Vouch supports both HTTPS credential helper and native &lt;code>codecommit://&lt;/code> remote helper authentication.&lt;/p></description></item><item><title>Authenticate to Private Cargo Registries</title><link>https://vouch.sh/docs/cargo/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/cargo/</guid><description>&lt;p>Cargo&amp;rsquo;s default credential mechanism stores a plaintext token in &lt;code>~/.cargo/credentials.toml&lt;/code> with no expiration. If that file is committed to a dotfiles repo, included in a backup, or read by malware, the token works forever.&lt;/p>
+&lt;p>Vouch&amp;rsquo;s credential provider replaces this with tokens derived from your hardware-backed session &amp;ndash; short-lived, never written to disk, and revoked the moment your session ends. After a single &lt;code>vouch login&lt;/code>, commands like &lt;code>cargo build&lt;/code>, &lt;code>cargo publish&lt;/code>, and &lt;code>cargo add&lt;/code> work seamlessly against private registries.&lt;/p></description></item><item><title>Automate User Provisioning with SCIM</title><link>https://vouch.sh/docs/scim/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/scim/</guid><description>&lt;p>Manually adding and removing users from Vouch when people join or leave your organization is error-prone and easy to forget. A missed offboarding means someone retains access to hardware-backed credentials they should no longer have.&lt;/p>
+&lt;p>SCIM (System for Cross-domain Identity Management) lets your identity provider &amp;ndash; Google Workspace, Okta, Azure AD, or OneLogin &amp;ndash; handle this automatically in real time. Vouch supports the &lt;strong>SCIM 2.0&lt;/strong> protocol (&lt;a href="https://datatracker.ietf.org/doc/html/rfc7644">RFC 7644&lt;/a>) for automated user provisioning and de-provisioning. When SCIM is configured, your identity provider (IdP) can automatically:&lt;/p></description></item><item><title>Connect to EC2 Instances without SSH Port 22</title><link>https://vouch.sh/docs/ssm/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/ssm/</guid><description>&lt;p>Managing SSH access to EC2 instances typically means opening port 22, distributing keys, and maintaining security groups. Every open port is an attack surface, and every key is a secret to manage.&lt;/p>
+&lt;p>AWS Systems Manager Session Manager eliminates all of this: connections go through the Systems Manager service, every session is logged in CloudTrail, and no inbound ports are required. With Vouch, the underlying AWS credentials are hardware-verified and short-lived &amp;ndash; after &lt;code>vouch login&lt;/code>, you can start sessions to any SSM-managed instance.&lt;/p></description></item><item><title>Connect to RDS and Aurora without Database Passwords</title><link>https://vouch.sh/docs/databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/databases/</guid><description>&lt;p>Static database passwords are shared across developers, stored in configuration files, and rarely rotated. When someone leaves the team, do you rotate every database password they had access to? Most teams don&amp;rsquo;t.&lt;/p>
+&lt;p>&lt;a href="https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html">IAM database authentication&lt;/a> replaces static passwords with 15-minute tokens generated from IAM credentials. With Vouch, those IAM credentials are themselves hardware-backed and short-lived &amp;ndash; every database connection traces back to a verified human identity.&lt;/p>
+&lt;h2 id="how-it-works">How it works&lt;/h2>
+&lt;ol>
+&lt;li>&lt;strong>&lt;code>vouch login&lt;/code>&lt;/strong> &amp;ndash; The developer authenticates with their YubiKey.&lt;/li>
+&lt;li>&lt;strong>&lt;code>vouch credential rds&lt;/code>&lt;/strong> or &lt;strong>&lt;code>vouch credential redshift&lt;/code>&lt;/strong> &amp;ndash; Vouch generates a short-lived database authentication token or temporary credentials directly.&lt;/li>
+&lt;li>&lt;strong>Database client&lt;/strong> &amp;ndash; The token is passed as the password to &lt;code>psql&lt;/code>, &lt;code>mysql&lt;/code>, or another database client.&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fallback" data-lang="fallback">&lt;span style="display:flex;">&lt;span>vouch login → vouch credential rds → database client
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>vouch login → vouch credential redshift → database client
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Or use &lt;code>vouch exec&lt;/code> to skip manual token handling entirely:&lt;/p></description></item><item><title>Use Terraform and CDK with Hardware-Verified Credentials</title><link>https://vouch.sh/docs/iac/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/iac/</guid><description>&lt;p>IaC tools like Terraform, CDK, and SAM need AWS credentials to provision infrastructure. If those credentials are long-lived access keys, a compromised dev machine could modify production infrastructure. If they&amp;rsquo;re shared across the team, there&amp;rsquo;s no audit trail showing who deployed what.&lt;/p>
+&lt;p>If a tool reads &lt;code>~/.aws/config&lt;/code>, it already works with Vouch. The &lt;code>credential_process&lt;/code> setting in your Vouch AWS profile is picked up by the AWS SDK, which means every IaC tool that uses the SDK gets hardware-verified credentials automatically. No plugins or wrappers needed.&lt;/p></description></item><item><title>Add Human Approval Gates to CI/CD Pipelines</title><link>https://vouch.sh/docs/cicd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/cicd/</guid><description>&lt;p>Most CI/CD pipelines use service account credentials or workflow-generated OIDC tokens to deploy. Neither proves that a specific person authorized the deployment. If a workflow runs automatically on merge, any merged PR can reach production with no human checkpoint.&lt;/p>
+&lt;p>Vouch&amp;rsquo;s OIDC attests &lt;em>human presence&lt;/em> &amp;ndash; &amp;ldquo;a verified human authorized this action with their YubiKey.&amp;rdquo; This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer&amp;rsquo;s identity embedded in the resulting AWS credentials via STS session tags.&lt;/p></description></item><item><title>Access Amazon Bedrock with Hardware-Verified Credentials</title><link>https://vouch.sh/docs/bedrock/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/bedrock/</guid><description>&lt;p>AI model access creates unique audit and cost challenges. Shared API keys make it impossible to attribute usage to individual developers, and a leaked key means unlimited access to expensive model invocations with no way to trace who&amp;rsquo;s responsible.&lt;/p>
+&lt;p>&lt;a href="https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html">Amazon Bedrock&lt;/a> uses standard AWS SigV4 authentication. Vouch&amp;rsquo;s &lt;code>credential_process&lt;/code> provides STS credentials backed by FIDO2 verification, which means every Amazon Bedrock API call is tied to a hardware-verified human identity.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fallback" data-lang="fallback">&lt;span style="display:flex;">&lt;span>YubiKey tap → FIDO2 → Vouch JWT → STS → Amazon Bedrock InvokeModel → CloudTrail
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="why-this-matters">Why this matters&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Every API call has a verified identity&lt;/strong> &amp;ndash; no shared API keys or service accounts for human users.&lt;/li>
+&lt;li>&lt;strong>CloudTrail captures the full chain&lt;/strong> &amp;ndash; from YubiKey tap to model invocation.&lt;/li>
+&lt;li>&lt;strong>Cost attribution per user&lt;/strong> &amp;ndash; with &lt;a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html">Amazon Bedrock model invocation logging&lt;/a> enabled, token counts and costs are tied to hardware-verified identities.&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="step-1----use-amazon-bedrock-with-vouch">Step 1 &amp;ndash; Use Amazon Bedrock with Vouch&lt;/h2>
+&lt;p>Any tool that uses the AWS SDK for Amazon Bedrock will pick up Vouch credentials automatically:&lt;/p></description></item><item><title>Vouch CLI Reference</title><link>https://vouch.sh/docs/cli-reference/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/cli-reference/</guid><description>&lt;p>This page documents all available Vouch CLI commands. For installation instructions, see &lt;a href="https://vouch.sh/docs/getting-started/">Getting Started&lt;/a>.&lt;/p>
+&lt;hr>
+&lt;h2 id="global-flags">Global flags&lt;/h2>
+&lt;p>These flags are available on all commands.&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Flag&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>--server &amp;lt;URL&amp;gt;&lt;/code>&lt;/td>
+ &lt;td>Vouch server URL (also settable via &lt;code>VOUCH_SERVER&lt;/code> environment variable). Saved locally after enrollment.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>-v&lt;/code>, &lt;code>--verbose&lt;/code>&lt;/td>
+ &lt;td>Enable debug logging&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>--color &amp;lt;MODE&amp;gt;&lt;/code>&lt;/td>
+ &lt;td>Control color output: &lt;code>auto&lt;/code> (default), &lt;code>always&lt;/code>, or &lt;code>never&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="authentication">Authentication&lt;/h2>
+&lt;h3 id="vouch-enroll">&lt;code>vouch enroll&lt;/code>&lt;/h3>
+&lt;p>Register your YubiKey with a Vouch server and link it to your identity.&lt;/p></description></item><item><title>Security Model</title><link>https://vouch.sh/docs/security/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/security/</guid><description>&lt;p>Vouch brokers the most sensitive credentials in a developer&amp;rsquo;s stack: SSH certificates, AWS STS tokens, GitHub installation tokens, and container registry passwords. This page explains exactly how those credentials are protected at every layer.&lt;/p>
+&lt;hr>
+&lt;h2 id="data-flow">Data flow&lt;/h2>
+&lt;p>Every Vouch credential follows the same path from hardware key to cloud service:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fallback" data-lang="fallback">&lt;span style="display:flex;">&lt;span>YubiKey (FIDO2)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> → Vouch CLI (local machine)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> → Vouch Server (validates assertion, issues session)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> → External service (AWS STS / GitHub / SSH CA)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> → Short-lived credential returned to CLI
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> → Tool uses credential (aws, ssh, git, docker)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol>
+&lt;li>&lt;strong>FIDO2 assertion&lt;/strong> &amp;ndash; The YubiKey signs a challenge using a private key that never leaves the hardware. The assertion includes origin binding (preventing phishing) and user verification (PIN + touch).&lt;/li>
+&lt;li>&lt;strong>Session issuance&lt;/strong> &amp;ndash; The Vouch server validates the signed assertion against the enrolled public key and issues a session token valid for 8 hours.&lt;/li>
+&lt;li>&lt;strong>Credential exchange&lt;/strong> &amp;ndash; When a tool needs a credential, the CLI exchanges the session token for a service-specific credential (STS &lt;code>AssumeRoleWithWebIdentity&lt;/code>, SSH certificate signing, GitHub App installation token, etc.).&lt;/li>
+&lt;li>&lt;strong>Tool consumption&lt;/strong> &amp;ndash; The tool receives the short-lived credential and uses it normally. The credential expires on its own &amp;ndash; there is nothing to revoke or rotate.&lt;/li>
+&lt;/ol>
+&lt;hr>
+&lt;h2 id="credential-lifecycle">Credential lifecycle&lt;/h2>
+&lt;p>All Vouch credentials share these properties:&lt;/p></description></item><item><title>Threat Model</title><link>https://vouch.sh/docs/threat-model/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/threat-model/</guid><description>&lt;p>This threat model documents the threats Vouch is designed to address, the assumptions the design relies on, and the mitigations in place. It follows the &lt;a href="https://en.wikipedia.org/wiki/STRIDE_(security)">STRIDE&lt;/a> framework and is structured after the &lt;a href="https://awslabs.github.io/threat-composer/">AWS Threat Composer&lt;/a> methodology.&lt;/p>
+&lt;p>For background on Vouch&amp;rsquo;s security controls, see the &lt;a href="https://vouch.sh/docs/security/">Security Model&lt;/a> page. For system design details, see the &lt;a href="https://vouch.sh/docs/architecture/">Architecture Overview&lt;/a> page.&lt;/p>
+&lt;hr>
+&lt;h2 id="system-description">System description&lt;/h2>
+&lt;p>Vouch is a credential broker that replaces long-lived developer secrets (AWS access keys, SSH private keys, GitHub PATs) with short-lived, hardware-backed credentials. The system has three components:&lt;/p></description></item><item><title>Architecture Overview</title><link>https://vouch.sh/docs/architecture/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/architecture/</guid><description>&lt;p>This page describes the components that make up Vouch, the protocols they use, and how they interact to turn a YubiKey tap into short-lived credentials for SSH, AWS, GitHub, Docker, and more.&lt;/p>
+&lt;hr>
+&lt;h2 id="components">Components&lt;/h2>
+&lt;h3 id="vouch-cli-vouch">Vouch CLI (&lt;code>vouch&lt;/code>)&lt;/h3>
+&lt;p>The command-line interface that developers interact with directly. It handles:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Enrollment&lt;/strong> &amp;ndash; Registers a FIDO2 key with the Vouch server.&lt;/li>
+&lt;li>&lt;strong>Login&lt;/strong> &amp;ndash; Performs a FIDO2 assertion and establishes a session.&lt;/li>
+&lt;li>&lt;strong>Credential helpers&lt;/strong> &amp;ndash; Provides credentials to tools like &lt;code>aws&lt;/code>, &lt;code>git&lt;/code>, &lt;code>ssh&lt;/code>, &lt;code>docker&lt;/code>, and &lt;code>cargo&lt;/code> on demand.&lt;/li>
+&lt;li>&lt;strong>Setup commands&lt;/strong> &amp;ndash; Configures local tool integrations (&lt;code>vouch setup aws&lt;/code>, &lt;code>vouch setup codecommit&lt;/code>, etc.).&lt;/li>
+&lt;/ul>
+&lt;p>The CLI communicates with the Vouch agent over a local Unix domain socket and with the Vouch server over HTTPS.&lt;/p></description></item><item><title>Availability and Failure Modes</title><link>https://vouch.sh/docs/availability/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/availability/</guid><description>&lt;p>Vouch sits in the critical path for developer credentials. Before adopting it, you should understand what happens when the server is unreachable, when a session expires, or when individual integrations fail.&lt;/p>
+&lt;hr>
+&lt;h2 id="normal-operation">Normal operation&lt;/h2>
+&lt;p>During normal operation with an active session (up to 8 hours after &lt;code>vouch login&lt;/code>):&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Integration&lt;/th>
+ &lt;th>Credential source&lt;/th>
+ &lt;th>Lifetime&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>SSH&lt;/td>
+ &lt;td>Certificate cached in agent memory&lt;/td>
+ &lt;td>8 hours&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>AWS (&lt;code>credential_process&lt;/code>)&lt;/td>
+ &lt;td>STS credentials fetched on demand, cached&lt;/td>
+ &lt;td>1 hour&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>GitHub&lt;/td>
+ &lt;td>Installation token fetched on demand&lt;/td>
+ &lt;td>1 hour&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Docker (ECR)&lt;/td>
+ &lt;td>Registry token fetched on demand&lt;/td>
+ &lt;td>12 hours&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Docker (GHCR)&lt;/td>
+ &lt;td>GitHub token fetched on demand&lt;/td>
+ &lt;td>1 hour&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>CodeCommit&lt;/td>
+ &lt;td>SigV4 signature computed on demand&lt;/td>
+ &lt;td>Per-request&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>CodeArtifact&lt;/td>
+ &lt;td>Authorization token fetched on demand&lt;/td>
+ &lt;td>12 hours&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Cargo&lt;/td>
+ &lt;td>Token fetched on demand&lt;/td>
+ &lt;td>Session lifetime&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="offline-behavior">Offline behavior&lt;/h2>
+&lt;h3 id="server-unreachable-during-active-session">Server unreachable during active session&lt;/h3>
+&lt;p>If the Vouch server becomes unreachable while you have an active session:&lt;/p></description></item><item><title>Migration Guide</title><link>https://vouch.sh/docs/migration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/migration/</guid><description>&lt;p>Migrating to Vouch does not have to be all-or-nothing. You can install Vouch alongside your existing credentials and migrate one integration at a time. This guide walks through a phased rollout, a per-integration checklist, and a rollback plan.&lt;/p>
+&lt;hr>
+&lt;h2 id="phase-1----install-and-enroll">Phase 1 &amp;ndash; Install and enroll&lt;/h2>
+&lt;p>Install the Vouch CLI alongside your existing credential setup. Nothing changes yet.&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Install the CLI&lt;/strong> on each developer&amp;rsquo;s machine. See &lt;a href="https://vouch.sh/docs/getting-started/">Getting Started&lt;/a>.&lt;/li>
+&lt;li>&lt;strong>Enroll YubiKeys&lt;/strong> with the Vouch server. Each developer runs &lt;code>vouch enroll&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Test login.&lt;/strong> Each developer runs &lt;code>vouch login&lt;/code> and verifies they can authenticate.&lt;/li>
+&lt;/ol>
+&lt;p>At this point, Vouch is installed but no integrations are active. Existing SSH keys, AWS access keys, and GitHub PATs continue to work as before.&lt;/p></description></item><item><title>Frequently Asked Questions</title><link>https://vouch.sh/docs/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/faq/</guid><description>&lt;h2 id="hardware-keys">Hardware keys&lt;/h2>
+&lt;h3 id="which-yubikeys-are-supported">Which YubiKeys are supported?&lt;/h3>
+&lt;p>Any &lt;strong>FIDO2-compatible&lt;/strong> security key works with Vouch. Recommended models:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>YubiKey 5 series&lt;/strong> (5 NFC, 5C, 5C NFC, 5Ci, 5C Nano, 5 Nano) &amp;ndash; Recommended. Supports FIDO2, USB-A or USB-C.&lt;/li>
+&lt;li>&lt;strong>YubiKey 5 FIPS series&lt;/strong> &amp;ndash; Same as above, with FIPS 140-2 validation.&lt;/li>
+&lt;li>&lt;strong>YubiKey Bio&lt;/strong> &amp;ndash; Supports FIDO2 with fingerprint biometrics instead of PIN.&lt;/li>
+&lt;li>&lt;strong>Security Key by Yubico&lt;/strong> (NFC or C NFC) &amp;ndash; Budget option. Supports FIDO2 but lacks other YubiKey features (PIV, OpenPGP).&lt;/li>
+&lt;/ul>
+&lt;p>Other FIDO2-compliant keys (e.g., Google Titan, Feitian, SoloKeys) may work but have not been tested. The key must support the &lt;code>hmac-secret&lt;/code> extension and resident credentials.&lt;/p></description></item><item><title>Vouch for Startups</title><link>https://vouch.sh/docs/startups/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/startups/</guid><description>&lt;p>You just created an AWS account. Every tutorial says &amp;ldquo;create an IAM user.&amp;rdquo; Don&amp;rsquo;t.&lt;/p>
+&lt;p>IAM users come with long-lived access keys that never expire, get committed to Git, leaked in logs, and compromised by malware. Rotating them is a manual chore. When someone leaves, you have to hunt down every key they ever created. And none of this is necessary &amp;ndash; AWS supports OIDC federation, which means you can authenticate with the identity system your team already uses.&lt;/p></description></item></channel></rss>

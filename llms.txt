@@ -1,0 +1,81 @@
+# Vouch
+
+> Vouch is an open-source credential broker that replaces long-lived secrets (AWS keys, SSH keys, GitHub PATs, registry tokens) with short-lived credentials after FIDO2 hardware verification. One YubiKey tap, up to 8 hours of access, full audit trail.
+
+Vouch eliminates static secrets across your development workflow. It federates identity through OIDC, so every credential is tied to a verified hardware key and expires automatically. No more key rotation scripts, no more offboarding checklists, no more secrets in config files.
+
+- [Source code](https://github.com/vouch-sh/vouch)
+- [Full documentation for LLMs](https://vouch.sh/llms-full.txt)
+
+## Documentation
+
+
+- [Getting Started](https://vouch.sh/docs/getting-started/): Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials in minutes.
+
+- [AWS](https://vouch.sh/docs/aws/): Stop distributing long-lived AWS access keys. Use OIDC federation to get temporary STS credentials backed by a YubiKey.
+
+- [AWS Multi-Account](https://vouch.sh/docs/aws-multi-account/): Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs.
+
+- [SSH Certificates](https://vouch.sh/docs/ssh/): Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist.
+
+- [Amazon EKS](https://vouch.sh/docs/eks/): Access EKS clusters using OIDC-federated IAM credentials instead of long-lived kubeconfig tokens.
+
+- [GitHub](https://vouch.sh/docs/github/): Replace GitHub PATs with short-lived tokens generated from your hardware-backed Vouch session.
+
+- [Docker Registries](https://vouch.sh/docs/docker/): Stop running docker login and storing plaintext credentials. Vouch generates registry tokens on demand for ECR and GHCR.
+
+- [AWS CodeArtifact](https://vouch.sh/docs/codeartifact/): Pull and publish packages from AWS CodeArtifact using hardware-backed credentials — no token files, no refresh scripts.
+
+- [AWS CodeCommit](https://vouch.sh/docs/codecommit/): Clone and push to AWS CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys.
+
+- [Cargo](https://vouch.sh/docs/cargo/): Use Vouch as a Cargo credential provider for private registries — no tokens in .cargo/config.toml.
+
+- [Applications (OIDC)](https://vouch.sh/docs/applications/): Integrate Vouch as an OIDC provider in your web, SPA, or native app for hardware-verified authentication.
+  - [Rails (OmniAuth)](https://vouch.sh/docs/applications/rails/): Integrate Vouch OIDC authentication into a Ruby on Rails application using OmniAuth.
+  - [Django (django-allauth)](https://vouch.sh/docs/applications/django/): Integrate Vouch OIDC authentication into a Django application using django-allauth.
+  - [Express.js (Passport)](https://vouch.sh/docs/applications/express/): Integrate Vouch OIDC authentication into an Express.js application using Passport.
+  - [Next.js (NextAuth.js)](https://vouch.sh/docs/applications/nextjs/): Integrate Vouch OIDC authentication into a Next.js application using NextAuth.js.
+  - [Laravel (Socialite)](https://vouch.sh/docs/applications/laravel/): Integrate Vouch OIDC authentication into a Laravel application using Socialite.
+  - [Flask (Authlib)](https://vouch.sh/docs/applications/flask/): Integrate Vouch OIDC authentication into a Flask application using Authlib.
+  - [FastAPI (Authlib)](https://vouch.sh/docs/applications/fastapi/): Integrate Vouch OIDC authentication into a FastAPI application using Authlib.
+  - [Spring Boot (Spring Security)](https://vouch.sh/docs/applications/spring-boot/): Integrate Vouch OIDC authentication into a Spring Boot application using Spring Security OAuth2.
+  - [Axum (openidconnect-rs)](https://vouch.sh/docs/applications/axum/): Integrate Vouch OIDC authentication into a Rust Axum application using openidconnect-rs.
+  - [React (react-oidc-context)](https://vouch.sh/docs/applications/react/): Integrate Vouch OIDC authentication into a React single-page application using react-oidc-context.
+  - [Vue (oidc-client-ts)](https://vouch.sh/docs/applications/vue/): Integrate Vouch OIDC authentication into a Vue single-page application using oidc-client-ts.
+  - [Vanilla JavaScript](https://vouch.sh/docs/applications/vanilla-js/): Integrate Vouch OIDC authentication into a plain JavaScript application using oidc-client-ts.
+  - [Device Authorization (CLI)](https://vouch.sh/docs/applications/device-authorization/): Integrate Vouch authentication into native desktop applications and CLI tools using the Device Authorization Grant.
+
+- [SCIM Provisioning](https://vouch.sh/docs/scim/): Sync users and groups from your identity provider to Vouch automatically using SCIM 2.0.
+
+- [AWS Systems Manager](https://vouch.sh/docs/ssm/): Use AWS Systems Manager Session Manager with Vouch credentials to reach EC2 instances without opening SSH ports.
+
+- [Databases](https://vouch.sh/docs/databases/): Replace static database passwords with 15-minute IAM auth tokens generated from hardware-backed credentials.
+
+- [Infrastructure as Code](https://vouch.sh/docs/iac/): Run CDK, Terraform, SAM, and other IaC tools using short-lived AWS credentials from Vouch.
+
+- [CI/CD](https://vouch.sh/docs/cicd/): Require a YubiKey tap before production deployments — hardware-verified identity embedded in every CI/CD credential.
+
+- [Amazon Bedrock](https://vouch.sh/docs/bedrock/): Connect to Amazon Bedrock foundation models using short-lived credentials with full audit trails.
+
+- [CLI Reference](https://vouch.sh/docs/cli-reference/): Complete command reference for the Vouch CLI — login, credentials, setup, and configuration.
+
+- [Security](https://vouch.sh/docs/security/): How Vouch protects credentials at every layer — data flow, threat model, credential lifecycle, and supply chain integrity.
+
+- [Threat Model](https://vouch.sh/docs/threat-model/): STRIDE-based threat analysis — threat actors, trust boundaries, assumptions, threats, and mitigations for the Vouch credential broker.
+
+- [Architecture](https://vouch.sh/docs/architecture/): System components, protocols, and trust boundaries — how the Vouch CLI, agent, and server work together.
+
+- [Availability](https://vouch.sh/docs/availability/): What happens when the Vouch server is unreachable — offline behavior, credential expiry, and blast radius.
+
+- [Migration](https://vouch.sh/docs/migration/): Migrate from static credentials to Vouch — phased rollout, integration-by-integration checklist, and rollback plan.
+
+- [FAQ](https://vouch.sh/docs/faq/): Common questions about Vouch — supported hardware, session behavior, platform support, and cost.
+
+- [Startups](https://vouch.sh/docs/startups/): Skip IAM users, access keys, and IAM Identity Center. Go from Google Workspace to AWS in minutes with OIDC federation.
+
+## Optional
+
+- [About](https://vouch.sh/about/): Learn about Vouch and Smoke Turner, LLC
+- [Blog](https://vouch.sh/blog/): Product updates and engineering insights
+- [Privacy Policy](https://vouch.sh/privacy/): Privacy policy for vouch.sh
+- [Terms of Service](https://vouch.sh/terms/): Terms of service for vouch.sh
