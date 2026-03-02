@@ -14,18 +14,17 @@ EKS Access Entries provide a cleaner model: IAM principals map directly to Kuber
 
 ## How it works
 
-The authentication flow chains four components:
+The authentication flow chains three components:
 
 ```
-vouch login --> vouch credential aws --> aws eks get-token --> kubectl
+vouch login --> vouch credential eks --> kubectl
 ```
 
 1. **`vouch login`** -- The developer authenticates with their YubiKey and receives an OIDC ID token from the Vouch server.
-2. **`vouch credential aws`** -- The CLI exchanges the OIDC token for temporary AWS STS credentials by calling `AssumeRoleWithWebIdentity`.
-3. **`aws eks get-token`** -- The AWS CLI (or SDK) uses the STS credentials to generate a short-lived Kubernetes authentication token for the target EKS cluster.
-4. **`kubectl`** -- The Kubernetes client sends the token to the EKS API server, which validates it against IAM and applies the permissions defined by Access Entries or RBAC.
+2. **`vouch credential eks`** -- The CLI exchanges the OIDC token for temporary AWS STS credentials, then builds a presigned STS `GetCallerIdentity` URL with the `x-k8s-aws-id` header, base64url-encodes it, and outputs a Kubernetes `ExecCredential` JSON.
+3. **`kubectl`** -- The Kubernetes client sends the token to the EKS API server, which validates it against IAM and applies the permissions defined by Access Entries or RBAC.
 
-Because every step uses short-lived credentials, there are no static kubeconfig tokens or long-lived AWS keys to manage.
+Because every step uses short-lived credentials, there are no static kubeconfig tokens or long-lived AWS keys to manage. No AWS CLI installation is required -- Vouch handles STS and EKS API calls natively.
 
 ---
 
@@ -35,7 +34,6 @@ Before setting up EKS authentication with Vouch, ensure you have:
 
 - **Vouch CLI installed and enrolled** -- Complete the [Getting Started](/docs/getting-started/) guide.
 - **AWS integration configured** -- Complete the [AWS Integration](/docs/aws/) guide. You need a working `vouch credential aws` setup with an IAM role.
-- **AWS CLI v2** installed (`aws --version`).
 - **kubectl** installed (`kubectl version --client`).
 - **An EKS cluster** with the API server authentication mode set to include `API` (either `API` or `API_AND_CONFIG_MAP`). Clusters created with the default `CONFIG_MAP` mode must be updated.
 
@@ -45,26 +43,28 @@ Before setting up EKS authentication with Vouch, ensure you have:
 
 ## Setup
 
-Configure `kubectl` to use your Vouch-backed AWS credentials for cluster authentication:
+Configure `kubectl` to use your Vouch-backed credentials for cluster authentication:
 
 ```bash
-aws eks update-kubeconfig \
-  --name YOUR_CLUSTER_NAME \
-  --region YOUR_REGION \
-  --profile vouch
+vouch setup eks --cluster YOUR_CLUSTER_NAME
 ```
 
-This writes or updates `~/.kube/config` with an `exec`-based user entry that calls `aws eks get-token`. Since the `vouch` AWS profile is configured with `credential_process`, the full chain from YubiKey to Kubernetes is automatic.
+Optional flags:
+
+- `--region` -- AWS region (auto-detected from your AWS profile or environment if not specified).
+- `--profile` -- AWS profile to use (defaults to the auto-detected Vouch profile).
+- `--kubeconfig` -- Path to kubeconfig file (defaults to `~/.kube/config`).
+
+This command fetches the cluster endpoint and CA certificate via a native SigV4-signed EKS `DescribeCluster` API call, then writes or updates your kubeconfig with an `exec`-based user entry that calls `vouch credential eks`. The context is named `YOUR_CLUSTER_NAME-vouch`.
 
 ### Verify the kubeconfig
 
-Check that the context is set correctly:
+Check that the context is set and working:
 
 ```bash
-kubectl config current-context
+kubectl config use-context YOUR_CLUSTER_NAME-vouch
+kubectl get pods
 ```
-
-The output should include the cluster name and region.
 
 ---
 
@@ -75,6 +75,9 @@ With everything configured, daily usage is straightforward:
 ```bash
 # Start your day
 vouch login
+
+# Switch to your Vouch EKS context
+kubectl config use-context YOUR_CLUSTER_NAME-vouch
 
 # Use kubectl as normal
 kubectl get pods
@@ -203,23 +206,23 @@ For per-user permissions using session tags from Vouch, you can create separate 
 ### "error: You must be logged in to the server (Unauthorized)"
 
 - Confirm you have an active Vouch session: `vouch status`.
-- Verify AWS credentials are working: `aws sts get-caller-identity --profile vouch`.
+- Verify AWS credentials are working: `vouch credential aws`.
 - Check that an EKS Access Entry exists for your IAM role: `aws eks list-access-entries --cluster-name YOUR_CLUSTER_NAME`.
 - Ensure the cluster's authentication mode includes `API`. Check with: `aws eks describe-cluster --name YOUR_CLUSTER_NAME --query "cluster.accessConfig.authenticationMode"`.
 
-### "error: exec plugin is configured to use API version client.authentication.k8s.io/v1alpha1"
+### "AWS not configured" error
 
-- Update your kubeconfig by re-running `aws eks update-kubeconfig`. Older versions of the AWS CLI may generate kubeconfig entries using a deprecated API version.
-- Ensure you are running AWS CLI v2.
+- Run `vouch setup aws --role <role-arn>` first to configure the AWS integration before setting up EKS. See the [AWS Integration](/docs/aws/) guide.
 
 ### Credentials expire during long operations
 
-- STS credentials obtained through Vouch last up to 1 hour. For long-running operations such as Helm deployments or large-scale rollouts, run `vouch login` beforehand to ensure a fresh 8-hour session.
+- STS credentials obtained through Vouch last up to 1 hour. The EKS token itself is valid for 45 seconds, but kubectl re-fetches it automatically via the exec plugin on each command.
+- For long-running operations such as Helm deployments or large-scale rollouts, run `vouch login` beforehand to ensure a fresh 8-hour session.
 - If a command fails mid-operation, run `vouch login` and retry. The kubeconfig exec plugin will automatically pick up the new credentials.
 
 ### "AccessDeniedException" when calling EKS APIs
 
-- The IAM role assumed by Vouch needs `eks:DescribeCluster` permission (at minimum) to run `aws eks update-kubeconfig`.
+- The IAM role assumed by Vouch needs `eks:DescribeCluster` permission (at minimum) to run `vouch setup eks`.
 - For Access Entry management, the administrator's IAM role needs `eks:CreateAccessEntry`, `eks:AssociateAccessPolicy`, and related permissions.
 
 ### Cannot see resources in a specific namespace
@@ -230,3 +233,7 @@ For per-user permissions using session tags from Vouch, you can create separate 
 ### kubectl works but Helm does not
 
 - Helm may require additional permissions beyond what `view` or `edit` policies provide (e.g., creating `ServiceAccount`, `Role`, or `RoleBinding` resources). Consider using `AmazonEKSAdminPolicy` or a custom RBAC role that grants the necessary permissions.
+
+### Diagnosing configuration issues
+
+- Run `vouch doctor` to detect Vouch-configured EKS contexts and check for common misconfigurations.

@@ -81,13 +81,14 @@ Setup commands configure credential helpers for each integration. Run these once
 Configure the AWS credential process for an IAM role.
 
 ```
-vouch setup aws --role <ROLE_ARN> [--profile <PROFILE>]
+vouch setup aws --role <ROLE_ARN> [--profile <PROFILE>] [--region <REGION>]
 ```
 
 | Flag | Description |
 |---|---|
 | `--role` | The IAM role ARN to assume (required) |
 | `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
+| `--region` | AWS region to set in the profile |
 
 See [AWS Integration](/docs/aws/) for full details.
 
@@ -230,13 +231,12 @@ Credential commands obtain service-specific credentials from your active session
 Obtain temporary AWS STS credentials.
 
 ```
-vouch credential aws --role <ROLE_ARN> [--session-name <NAME>]
+vouch credential aws --role <ROLE_ARN>
 ```
 
 | Flag | Description |
 |---|---|
 | `--role` | The IAM role ARN to assume (required) |
-| `--session-name` | Session name for the assumed role |
 
 ### `vouch credential ssh`
 
@@ -249,18 +249,6 @@ vouch credential ssh [--key <PATH>]
 | Flag | Description |
 |---|---|
 | `--key` | Path to SSH private key (default: `~/.ssh/id_ed25519_vouch`) |
-
-### `vouch credential github`
-
-Git credential helper for GitHub. This command is invoked automatically by Git when configured via `vouch setup github`. Users should not call it directly.
-
-### `vouch credential docker`
-
-Docker credential helper for container registries. This command is invoked automatically by Docker when configured via `vouch setup docker`. Users should not call it directly.
-
-### `vouch credential cargo`
-
-Cargo credential provider for private registries. This command is invoked automatically by Cargo when configured via `vouch setup cargo`. Users should not call it directly.
 
 ### `vouch credential codeartifact`
 
@@ -276,14 +264,6 @@ vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] 
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
 | `--region` | AWS region (optional if a profile is configured) |
 | `--profile` | Named AWS CodeArtifact profile to use |
-
-### `vouch credential codecommit`
-
-Git credential helper for AWS CodeCommit. This command is invoked automatically by Git when configured via `vouch setup codecommit`. Users should not call it directly.
-
-### `vouch credential pip`
-
-Credential helper for pip/PyPI. This command is invoked automatically by pip when configured via `vouch setup codeartifact --tool pip`. Users should not call it directly.
 
 ### `vouch credential rds`
 
@@ -419,25 +399,26 @@ vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
 |---|---|
 | `--type` | Credential type to inject: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
-| `--session-name` | Session name for the assumed role (when `--type aws`) |
-| `--ca-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
+| `--codeartifact-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
 | `--rds-hostname` | RDS instance hostname (required when `--type rds`) |
 | `--rds-username` | Database username (required when `--type rds`) |
 | `--rds-port` | Database port (when `--type rds`, default: `5432`) |
+| `--rds-region` | AWS region (when `--type rds`; auto-detected if not specified) |
 | `--redshift-cluster-id` | Redshift provisioned cluster identifier (when `--type redshift`; mutually exclusive with `--redshift-workgroup`) |
 | `--redshift-workgroup` | Redshift Serverless workgroup name (when `--type redshift`; mutually exclusive with `--redshift-cluster-id`) |
 | `--redshift-db-name` | Database name (when `--type redshift`) |
 | `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
+| `--redshift-region` | AWS region (when `--type redshift`; auto-detected if not specified) |
 
 Environment variables injected by type:
 
 | Type | Variables |
 |---|---|
 | `aws` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` |
-| `github` | `GITHUB_TOKEN` |
+| `github` | `GITHUB_TOKEN`, `GH_TOKEN` |
 | `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
 | `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
 | `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
@@ -482,25 +463,26 @@ eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 | `--type` | Credential type: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--shell` | Shell syntax: `bash` or `fish` (default: `bash`). The `bash` syntax also works for zsh. |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
-| `--session-name` | Session name for the assumed role (when `--type aws`) |
-| `--ca-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
-| `--ca-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
+| `--codeartifact-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
+| `--codeartifact-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
 | `--rds-hostname` | RDS instance hostname (required when `--type rds`) |
 | `--rds-username` | Database username (required when `--type rds`) |
 | `--rds-port` | Database port (when `--type rds`, default: `5432`) |
+| `--rds-region` | AWS region (when `--type rds`; auto-detected if not specified) |
 | `--redshift-cluster-id` | Redshift provisioned cluster identifier (when `--type redshift`; mutually exclusive with `--redshift-workgroup`) |
 | `--redshift-workgroup` | Redshift Serverless workgroup name (when `--type redshift`; mutually exclusive with `--redshift-cluster-id`) |
 | `--redshift-db-name` | Database name (when `--type redshift`) |
 | `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
+| `--redshift-region` | AWS region (when `--type redshift`; auto-detected if not specified) |
 
 Environment variables set by type:
 
 | Type | Variables |
 |---|---|
 | `aws` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` |
-| `github` | `GITHUB_TOKEN` |
+| `github` | `GITHUB_TOKEN`, `GH_TOKEN` |
 | `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
 | `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
 | `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
@@ -553,7 +535,7 @@ This checks:
 - CLI version and updates
 - Agent connectivity
 - Server reachability
-- Integration configurations (SSH, AWS, SSM, Git, Docker, Cargo)
+- Integration configurations (SSH, AWS, SSM, EKS, Git, Docker, Cargo)
 
 ### `vouch completions`
 
@@ -585,7 +567,6 @@ eval "$(vouch completions zsh)"
 | `4` | Network or server unreachable |
 | `5` | Permission denied |
 | `6` | Configuration error |
-| `7` | Step-up authentication required |
 
 ---
 
