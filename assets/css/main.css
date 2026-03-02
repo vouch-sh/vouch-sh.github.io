@@ -158,6 +158,10 @@ tr:hover td {
   background: var(--bg-surface);
 }
 
+.threat-table td:first-child {
+  white-space: nowrap;
+}
+
 /* ===== Navigation ===== */
 .nav {
   position: sticky;
