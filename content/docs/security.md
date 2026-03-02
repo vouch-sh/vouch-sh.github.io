@@ -67,8 +67,9 @@ Vouch operates across three trust boundaries:
 ### 3. Vouch server
 
 - The server validates FIDO2 assertions and issues signed OIDC tokens (ES256 over P-256).
+- Signing keys (OIDC ES256 and SSH CA Ed25519) are managed by AWS KMS — the server delegates signing operations and never holds private key material.
 - The server does not store AWS credentials, SSH private keys, or GitHub tokens. It acts as an identity broker, not a secrets vault.
-- Communication between CLI and server uses TLS 1.2+.
+- Communication between CLI and server uses TLS 1.3.
 
 ---
 
@@ -82,7 +83,7 @@ For the complete STRIDE-based threat analysis — including threat actors, trust
 
 ### In transit
 
-All communication between the Vouch CLI and server uses **TLS 1.2+**. The FIDO2 assertion is transmitted over this encrypted channel.
+All communication between the Vouch CLI and server uses **TLS 1.3**. The FIDO2 assertion is transmitted over this encrypted channel.
 
 ### At rest
 
@@ -92,7 +93,11 @@ Vouch does not store credentials at rest. The server stores:
 - **User metadata** -- Email address, organization membership, and enrollment status.
 - **Audit logs** -- Records of authentication events and credential issuance.
 
-No private keys, AWS credentials, SSH keys, or tokens are stored on the server.
+No AWS credentials, SSH keys, or GitHub tokens are stored on the server.
+
+User data and metadata are protected with **document-level encryption** using HPKE ([RFC 9180](https://datatracker.ietf.org/doc/html/rfc9180)) with DHKEM(P-384), HKDF-SHA384, and AES-256-GCM. Each document is encrypted individually with its own encapsulated key — the encryption is bound to the document type and ID, preventing ciphertext relocation. The document encryption key pair is generated via AWS KMS (`GenerateDataKeyPairWithoutPlaintext`), and the private key is only decrypted at server startup using a KMS key with NitroTPM attestation (when available), ensuring the plaintext private key is only recoverable on attested EC2 instances.
+
+Blind equality indexes (for lookups by email, etc.) use HMAC-SHA256 with a KMS-managed key, so the database never contains plaintext identifiers.
 
 ---
 

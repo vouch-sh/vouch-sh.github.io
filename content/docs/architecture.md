@@ -41,8 +41,8 @@ On macOS, the agent runs as a Homebrew service (`brew services start vouch`). On
 The server is the identity broker. It:
 
 - **Validates FIDO2 assertions** against enrolled public keys.
-- **Issues OIDC ID tokens** (signed with ES256) that AWS and other services consume via standard OIDC federation.
-- **Signs SSH certificates** using an Ed25519 certificate authority key.
+- **Issues OIDC ID tokens** (signed with ES256 via AWS KMS) that AWS and other services consume via standard OIDC federation.
+- **Signs SSH certificates** using an Ed25519 certificate authority key managed by AWS KMS.
 - **Exchanges tokens** with GitHub Apps, AWS STS, and other external services on behalf of authenticated users.
 - **Manages the user directory** via SCIM 2.0 integration with identity providers.
 - **Publishes OIDC metadata** at `/.well-known/openid-configuration` and JWKS at `/.well-known/jwks.json` for external services to verify tokens.
@@ -80,11 +80,11 @@ External services (AWS, custom OIDC applications) validate these tokens using th
 
 ### ES256 (ECDSA over P-256)
 
-Used to sign OIDC ID tokens. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures.
+Used to sign OIDC ID tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures.
 
 ### Ed25519
 
-Used for SSH certificate signing. The Vouch server holds an Ed25519 CA key and signs SSH certificates that include the user's identity as a principal.
+Used for SSH certificate signing. The Ed25519 CA key is managed by AWS KMS. The Vouch server delegates each signing operation to KMS and returns the signed certificate. The CA private key never leaves KMS.
 
 ### SSH Agent Protocol
 

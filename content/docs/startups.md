@@ -12,7 +12,7 @@ You just created an AWS account. Every tutorial says "create an IAM user." Don't
 
 IAM users come with long-lived access keys that never expire, get committed to Git, leaked in logs, and compromised by malware. Rotating them is a manual chore. When someone leaves, you have to hunt down every key they ever created. And none of this is necessary -- AWS supports OIDC federation, which means you can authenticate with the identity system your team already uses.
 
-If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
+If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, databases, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
 
 ---
 
@@ -139,7 +139,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
-> **Note:** This template uses `PowerUserAccess` as a starting point. Adjust the managed policy to match your team's needs. See the [AWS documentation](/docs/aws/#tips-for-restricting-access) for examples of restricting access by email address or domain.
+> **Note:** This template uses `PowerUserAccess` as a starting point. Adjust the managed policy to match your team's needs. See the [AWS integration guide](/docs/aws/#tips-for-restricting-access) for examples of restricting access by email address or domain.
 
 ---
 
@@ -213,4 +213,6 @@ As your team grows:
 - **5--15 people:** Manual user management works fine. SCIM is optional.
 - **15--50 people:** Set up [SCIM provisioning](/docs/scim/) to automate onboarding and offboarding with Google Workspace.
 - **Multiple AWS accounts:** See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for deploying the OIDC provider across dev/staging/prod accounts.
-- **Compliance requirements:** See [Security](/docs/security/) for the full threat model and AWS Well-Architected alignment.
+- **Database access:** Replace static RDS/Aurora passwords with [IAM database authentication](/docs/databases/) backed by hardware keys.
+- **CI/CD gates:** Add [human approval gates](/docs/cicd/) to production deployments.
+- **Compliance requirements:** See [Security](/docs/security/) and the [Threat Model](/docs/threat-model/) for details on how Vouch protects credentials.

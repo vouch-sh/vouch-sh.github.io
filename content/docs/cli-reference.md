@@ -22,6 +22,19 @@ These flags are available on all commands.
 | `-v`, `--verbose` | Enable debug logging |
 | `--color <MODE>` | Control color output: `auto` (default), `always`, or `never` |
 
+### Configuration file
+
+The Vouch CLI stores its configuration at `~/.vouch/config.json`. This file is created automatically during enrollment and contains the server URL and session state.
+
+| Field | Description |
+|---|---|
+| `server_url` | Vouch server URL |
+| `token` | Current session token (set by `vouch login`) |
+
+**Precedence:** CLI flags (`--server`) override the `VOUCH_SERVER` environment variable, which overrides the config file value.
+
+On Unix, the config file must have restrictive permissions (`0600`). The CLI rejects files that are group- or world-readable.
+
 ---
 
 ## Authentication

@@ -152,7 +152,7 @@ An attacker with server access could issue sessions for any enrolled user, which
 
 ### Are credentials encrypted in transit?
 
-Yes. All communication between the CLI and server uses TLS 1.2+. See [Security](/docs/security/#encryption) for details.
+Yes. All communication between the CLI and server uses TLS 1.3. See [Security](/docs/security/#encryption) for details.
 
 ---
 
