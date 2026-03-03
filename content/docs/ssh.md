@@ -70,7 +70,7 @@ To accept Vouch certificates, each server must trust the Vouch CA public key. Be
 First, retrieve your organization's CA public key from the Vouch server:
 
 ```bash
-curl -s https://{{< instance-url >}}/ssh/ca.pub
+curl -s https://{{< instance-url >}}/v1/credentials/ssh/ca | jq -r '.public_key'
 ```
 
 Save the output -- you will need it for each method below.
@@ -110,7 +110,7 @@ sudo systemctl restart sshd
   hosts: all
   become: true
   vars:
-    vouch_ca_pub: "{{ lookup('url', 'https://{{< instance-url >}}/ssh/ca.pub') }}"
+    vouch_ca_pub: "{{ (lookup('url', 'https://{{< instance-url >}}/v1/credentials/ssh/ca') | from_json).public_key }}"
 
   tasks:
     - name: Write Vouch CA public key
@@ -164,8 +164,8 @@ resource "aws_instance" "example" {
     set -e
 
     # Fetch and install the Vouch CA public key
-    curl -s https://{{< instance-url >}}/ssh/ca.pub \
-      | tee /etc/ssh/vouch_ca.pub
+    curl -s https://{{< instance-url >}}/v1/credentials/ssh/ca \
+      | jq -r '.public_key' | tee /etc/ssh/vouch_ca.pub
 
     # Configure sshd to trust the CA
     echo "TrustedUserCAKeys /etc/ssh/vouch_ca.pub" >> /etc/ssh/sshd_config
