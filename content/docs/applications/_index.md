@@ -55,6 +55,60 @@ scope=openid email
 
 ---
 
+## Rich Authorization Requests
+
+For fine-grained access control beyond what scopes can express, Vouch supports Rich Authorization Requests ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)). Instead of flat scope strings, your application can pass structured `authorization_details` objects that describe the type, actions, and resources being requested.
+
+### Format
+
+The `authorization_details` parameter is a JSON array of objects. Each object must include a `type` field; all other fields are defined by your application:
+
+```json
+[
+  {
+    "type": "account_access",
+    "actions": ["read", "transfer"],
+    "locations": ["https://api.example.com/accounts"]
+  }
+]
+```
+
+### Using with PAR
+
+Since Vouch uses Pushed Authorization Requests ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)), include `authorization_details` in the PAR request body alongside your other parameters:
+
+```bash
+curl -X POST https://{{< instance-url >}}/oauth/par \
+  -d "client_id=your-client-id" \
+  -d "client_secret=your-client-secret" \
+  -d "response_type=code" \
+  -d "redirect_uri=https://your-app.example.com/auth/callback" \
+  -d "scope=openid email" \
+  -d 'authorization_details=[{"type":"account_access","actions":["read","transfer"]}]'
+```
+
+### Token response
+
+The granted `authorization_details` are returned in the token response, so your application can confirm exactly what was authorized:
+
+```json
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIs...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "authorization_details": [
+    {
+      "type": "account_access",
+      "actions": ["read", "transfer"]
+    }
+  ]
+}
+```
+
+Rich Authorization Requests can be used alongside scopes — they are complementary, not mutually exclusive.
+
+---
+
 ## Configuration Reference
 
 Use the following endpoints and values to configure your OIDC client library. All URLs are relative to your Vouch server instance.
@@ -69,6 +123,7 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **JWKS URI** | `https://{{< instance-url >}}/.well-known/jwks.json` |
 | **Signing Algorithm** | `ES256` |
 | **Supported Scopes** | `openid`, `email` |
+| **Authorization Details** | Supported via `authorization_details` parameter ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) |
 | **Device Authorization Endpoint** | `https://{{< instance-url >}}/oauth/device/code` |
 | **Device Verification URL** | `https://{{< instance-url >}}/oauth/device` |
 | **PAR Endpoint** | `https://{{< instance-url >}}/oauth/par` |

@@ -65,3 +65,23 @@ Route::get('/auth/vouch/callback', function () {
     return redirect('/dashboard');
 });
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra parameter using the `with()` method:
+
+```php
+Route::get('/auth/vouch', function () {
+    return Socialite::driver('openid-connect')
+        ->setConfig(config('services.vouch'))
+        ->scopes(['openid', 'email'])
+        ->with([
+            'authorization_details' => json_encode([
+                ['type' => 'account_access', 'actions' => ['read', 'transfer']]
+            ])
+        ])
+        ->redirect();
+});
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

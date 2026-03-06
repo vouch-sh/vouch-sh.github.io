@@ -124,6 +124,8 @@ FIDO2 proves the human is present. The OAuth 2.0 layer protects everything after
 
 **Audience-restricted tokens.** Each token includes a resource indicator ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) restricting it to a specific service. A token issued for AWS cannot be presented to GitHub.
 
+**Fine-grained authorization requests.** Applications can request structured permissions using Rich Authorization Requests ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)). Instead of flat scope strings, `authorization_details` objects describe the type, actions, and resources being requested — enabling precise, machine-readable authorization that goes beyond what scopes can express.
+
 ---
 
 ## Supply chain security

@@ -89,3 +89,20 @@ For applications without a framework, use [`oidc-client-ts`](https://github.com/
 </body>
 </html>
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra parameter in the UserManager configuration:
+
+```javascript
+const config = {
+  // ... other config
+  extraQueryParams: {
+    authorization_details: JSON.stringify([
+      { type: "account_access", actions: ["read", "transfer"] },
+    ]),
+  },
+};
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

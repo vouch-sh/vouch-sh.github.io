@@ -96,7 +96,7 @@ The Vouch CLI calls [AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/
 
 ### FAPI 2.0
 
-The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server.
+The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server.
 
 ### SCIM 2.0
 

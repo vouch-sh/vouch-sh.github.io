@@ -86,3 +86,24 @@ public class DashboardController {
     }
 }
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, customize the authorization request by adding `authorization_details` as an additional parameter. Register a custom `OAuth2AuthorizationRequestResolver`:
+
+```java
+@Bean
+public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+        ClientRegistrationRepository registrations) {
+    DefaultOAuth2AuthorizationRequestResolver resolver =
+        new DefaultOAuth2AuthorizationRequestResolver(
+            registrations, "/oauth2/authorization");
+    resolver.setAuthorizationRequestCustomizer(customizer ->
+        customizer.additionalParameters(params ->
+            params.put("authorization_details",
+                "[{\"type\":\"account_access\",\"actions\":[\"read\",\"transfer\"]}]")));
+    return resolver;
+}
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

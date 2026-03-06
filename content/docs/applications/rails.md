@@ -58,3 +58,24 @@ class SessionsController < ApplicationController
   end
 end
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra authorization parameter in the OmniAuth configuration:
+
+```ruby
+Rails.application.config.middleware.use OmniAuth::Builder do
+  provider :openid_connect, {
+    name: :vouch,
+    scope: [:openid, :email],
+    extra_authorize_params: {
+      authorization_details: [
+        { type: "account_access", actions: ["read", "transfer"] }
+      ].to_json
+    },
+    # ... other configuration
+  }
+end
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

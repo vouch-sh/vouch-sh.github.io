@@ -176,3 +176,25 @@ async fn main() {
     axum::serve(listener, app).await.expect("Server error");
 }
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra query parameter on the authorization URL. The `openidconnect` crate supports this via `set_extra_param`:
+
+```rust
+let (auth_url, csrf_token, nonce) = state
+    .oidc_client
+    .authorize_url(
+        AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
+        CsrfToken::new_random,
+        Nonce::new_random,
+    )
+    .add_scope(Scope::new("email".to_string()))
+    .set_extra_param(
+        "authorization_details",
+        r#"[{"type":"account_access","actions":["read","transfer"]}]"#,
+    )
+    .url();
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

@@ -71,3 +71,24 @@ app.get(
 
 app.listen(3000);
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra authorization parameter. Passport's OpenID Connect strategy does not support extra parameters directly, so include them in the authorization URL via a custom redirect:
+
+```javascript
+app.get("/auth/vouch", (req, res) => {
+  const authorizationDetails = JSON.stringify([
+    { type: "account_access", actions: ["read", "transfer"] },
+  ]);
+  const params = new URLSearchParams({
+    authorization_details: authorizationDetails,
+  });
+  passport.authenticate("vouch", {
+    state: req.query.state,
+    additionalParams: { authorization_details: authorizationDetails },
+  })(req, res);
+});
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.

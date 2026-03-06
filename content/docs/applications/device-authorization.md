@@ -388,3 +388,18 @@ When polling the token endpoint during the device authorization flow, the server
 | `slow_down` | Your application is polling too frequently. | Increase the polling interval by 5 seconds and continue. |
 | `expired_token` | The `device_code` has expired. | Stop polling. Restart the flow by requesting a new device code. |
 | `access_denied` | The user denied the authorization request. | Stop polling. Inform the user that authentication was denied. |
+
+---
+
+## Rich Authorization Requests
+
+To request structured permissions beyond scopes, include `authorization_details` in the device code request alongside `scope`:
+
+```bash
+curl -X POST https://{{< instance-url >}}/oauth/device/code \
+  -d "client_id=your-client-id" \
+  -d "scope=openid email" \
+  -d 'authorization_details=[{"type":"account_access","actions":["read","transfer"]}]'
+```
+
+The granted `authorization_details` will be included in the token response. See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full format.

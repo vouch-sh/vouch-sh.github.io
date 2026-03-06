@@ -59,3 +59,22 @@ def index():
         return f"Hello, {user['name']}!"
     return '<a href="/login">Sign in with Vouch</a>'
 ```
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra parameter in the authorization redirect:
+
+```python
+@app.route("/login")
+def login():
+    redirect_uri = url_for("callback", _external=True)
+    authorization_details = json.dumps([
+        {"type": "account_access", "actions": ["read", "transfer"]}
+    ])
+    return vouch.authorize_redirect(
+        redirect_uri,
+        authorization_details=authorization_details,
+    )
+```
+
+See the [Rich Authorization Requests]({{< ref "/docs/applications#rich-authorization-requests" >}}) section for the full `authorization_details` format.
