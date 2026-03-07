@@ -61,7 +61,7 @@
         {{ range .Site.Menus.main }}
         <li>
           <a href="{{ .URL }}"
-             {{ if .Params.external }}target="_blank" rel="noopener"{{ end }}
+             {{ if .Params.external }}target="_blank" rel="noopener noreferrer"{{ end }}
              {{ if and (not .Params.external) ($.HasMenuCurrent "main" .) }}class="active"{{ end }}>
             {{ if .Params.external }}
               {{ .Name }}
@@ -98,8 +98,8 @@
         <a href="/docs/security/">Security</a>
         <a href="/privacy/">Privacy</a>
         <a href="/terms/">Terms</a>
-        <a href="{{ .Site.Params.githubRepo }}" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://vouch-sh.statuspage.io/" target="_blank" rel="noopener">Status</a>
+        <a href="{{ .Site.Params.githubRepo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://vouch-sh.statuspage.io/" target="_blank" rel="noopener noreferrer">Status</a>
       </div>
     </div>
   </footer>
