@@ -91,7 +91,9 @@ Vouch does not store credentials at rest. The server stores:
 
 - **Enrolled public keys** -- The FIDO2 public key registered during enrollment. This is not sensitive (it cannot be used to impersonate the user).
 - **User metadata** -- Email address, organization membership, and enrollment status.
-- **Audit logs** -- Records of authentication events and credential issuance.
+- **Audit logs** -- Records of authentication events and credential issuance. Organization administrators can view and filter audit events from the admin dashboard.
+
+![Audit Log page showing authentication events with type filters](/images/admin/admin-audit-log.png)
 
 No AWS credentials, SSH keys, or GitHub tokens are stored on the server.
 

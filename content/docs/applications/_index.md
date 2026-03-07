@@ -34,7 +34,27 @@ Before integrating Vouch into your application, you need:
 - Your application's **client secret** (`client_secret`)
 - A configured **redirect URI** (e.g., `https://your-app.example.com/auth/callback`)
 
-To register an application, ask your Vouch organization administrator to create one at https://{{< instance-url >}}/applications, or use the API if you have admin access.
+To register an application, navigate to https://{{< instance-url >}}/applications and click **New Application**:
+
+![Register New Application form with application type, redirect URIs, and security profile options](/images/admin/applications-new.png)
+
+After creating the application, you will see your client ID and client secret. The client secret is only shown once — store it securely.
+
+![Application Created page showing client ID and client secret](/images/admin/application-created.png)
+
+You can view and manage all your applications from the applications list:
+
+![My Applications page showing registered applications with type, scope, and status](/images/admin/applications-list.png)
+
+---
+
+## Managing Applications
+
+After creating an application, you can view its full configuration — including client ID, type, access scope, redirect URIs, and client secrets — from the application detail page:
+
+![Application detail page showing configuration, redirect URIs, and client secret management](/images/admin/application-detail.png)
+
+From this page you can edit settings, rotate client secrets, or delete the application.
 
 ---
 

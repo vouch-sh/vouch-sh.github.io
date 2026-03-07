@@ -272,7 +272,9 @@ disk_encryption_enabled && firewall_enabled && edr.size() > 0 && uptime_secs < 6
 
 ### Validating expressions
 
-The admin dashboard includes a **Validate** button that checks CEL syntax and lets you dry-run the expression against sample posture data before activating it. Always validate custom policies before enabling them — a syntax error in an active policy will deny all logins (fail-closed).
+The admin dashboard validates CEL syntax in real time and dry-runs the expression against your device's posture data. The field reference table on the policies page lists all available fields and their current values from your device. Always validate custom policies before enabling them — a syntax error in an active policy will deny all logins (fail-closed).
+
+![Policies page with field reference table expanded showing all posture fields](/images/admin/admin-policies-expanded.png)
 
 ---
 
@@ -283,17 +285,25 @@ Policies are managed from the **Vouch admin dashboard** by organization administ
 ### Activating a pre-configured policy
 
 1. Open the Vouch admin dashboard and navigate to **Policies**.
-2. You will see the six pre-configured policies listed.
+2. You will see the six pre-configured policies listed with toggle controls.
 3. Toggle a policy to **Active** to begin enforcement.
 4. The policy takes effect immediately for all subsequent logins.
 
+![Device Posture Policies page showing built-in policies and custom policy controls](/images/admin/admin-policies.png)
+
 ### Creating a custom policy
 
-1. In the Policies page, click **Create Custom Policy**.
+1. In the Policies page, click **+ New** under Custom Policies.
 2. Enter a name and description for the policy.
-3. Write a CEL expression in the expression editor.
-4. Click **Validate** to check syntax and optionally dry-run against sample posture data.
+3. Write a CEL expression in the rule editor.
+4. The editor validates your expression in real time and tests it against your device's posture data.
 5. Save and activate the policy.
+
+![Custom policy form with a validated CEL expression](/images/admin/admin-policies-custom-new.png)
+
+Once saved, custom policies appear alongside the built-in policies with controls to toggle, edit, or delete them:
+
+![Policies page showing a saved custom policy with toggle, edit, and delete controls](/images/admin/admin-policies-custom-saved.png)
 
 ### Policy limits
 

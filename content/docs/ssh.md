@@ -65,9 +65,13 @@ This obtains a certificate from the server and displays the certificate's princi
 
 To accept Vouch certificates, each server must trust the Vouch CA public key. Below are three approaches for deploying this configuration.
 
+You can find the CA public key on the Integrations page of the Vouch dashboard:
+
+![Integrations page showing SSH Certificates with CA public key](/images/admin/integrations.png)
+
 ### Fetch the CA public key
 
-First, retrieve your organization's CA public key from the Vouch server:
+You can also retrieve your organization's CA public key programmatically from the Vouch server:
 
 ```bash
 curl -s https://{{< instance-url >}}/v1/credentials/ssh/ca | jq -r '.public_key'
