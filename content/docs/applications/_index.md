@@ -207,12 +207,12 @@ if (!hardwareVerified) {
 
 ---
 
-## Token Lifetime and Refresh
+## Token Lifetime
 
-Vouch access tokens are short-lived. Your application should handle token expiry gracefully:
+Vouch access tokens are short-lived and Vouch does not issue refresh tokens (by design -- every session requires hardware key interaction). Your application should handle token expiry gracefully:
 
-- **Server-side applications** -- Check token expiry before using it. If expired, redirect the user through the authorization flow again. Vouch does not issue refresh tokens.
-- **Single-page applications** -- Use `automaticSilentRenew` (available in `oidc-client-ts`) to transparently renew tokens before they expire. See the [React]({{< ref "/docs/applications/react" >}}), [Vue]({{< ref "/docs/applications/vue" >}}), and [Vanilla JS]({{< ref "/docs/applications/vanilla-js" >}}) guides for configuration details.
+- **Server-side applications** -- Check token expiry before using it. If expired, redirect the user through the authorization flow again.
+- **Single-page applications** -- Check `user.expired` before making API calls. If the token has expired, redirect the user through the authorization flow again using `signinRedirect()`.
 - **Native CLI applications** -- Use the device authorization flow (RFC 8628) and prompt the user to re-authenticate when the token expires.
 
 ---
