@@ -231,7 +231,7 @@ Custom CEL expressions can reference any posture field:
 **Require CrowdStrike specifically:**
 
 ```cel
-edr.exists(agent, agent == "CrowdStrike")
+"CrowdStrike" in edr
 ```
 
 **Require any EDR on macOS, but not on Linux (where agents may not be available):**
@@ -262,12 +262,6 @@ mdm.size() > 0
 
 ```cel
 !elevated
-```
-
-**Require a minimum CLI version:**
-
-```cel
-cli_version >= "0.28.0"
 ```
 
 **Combine multiple conditions in a single policy:**
