@@ -417,7 +417,7 @@ No. Posture data is evaluated server-side. The CLI cannot skip collection (the s
 
 ### Do I need to update the CLI?
 
-Yes. Developers must be running a version of the Vouch CLI that supports posture collection (v0.28.0 or later). Older CLI versions do not send posture data, and active policies will deny access due to fail-closed enforcement.
+Yes. Developers must be running a version of the Vouch CLI that supports posture collection (v2026.3.11 or later). Older CLI versions do not send posture data, and active policies will deny access due to fail-closed enforcement.
 
 ### What if a developer runs Linux without a desktop environment?
 

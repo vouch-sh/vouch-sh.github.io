@@ -60,6 +60,11 @@ img {
   height: auto;
 }
 
+.docs-content img {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+}
+
 /* ===== Typography ===== */
 h1, h2, h3, h4, h5, h6 {
   color: #fff;
