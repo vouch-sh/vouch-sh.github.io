@@ -130,6 +130,33 @@ FIDO2 proves the human is present. The OAuth 2.0 layer protects everything after
 
 ---
 
+## Why request forgery is infeasible
+
+The sections above describe individual security layers. Here is how they combine to make forging a CLI authentication request infeasible without physical possession of the user's enrolled YubiKey and knowledge of its PIN.
+
+A successful login requires producing **all** of the following, and each is independently verified:
+
+1. **FIDO2 assertion** -- A COSE signature that can only be produced by the YubiKey's private key, which never leaves the hardware secure element. The server verifies this signature against the public key registered during enrollment. Both the user presence (physical touch) and user verification (PIN) flags are checked server-side.
+2. **Single-use challenge** -- The server generates 32 random bytes embedded in a signed state JWT with a 5-minute expiry. The challenge is atomically consumed on first use and bound into the `client_data_json` that the YubiKey signs — an old assertion cannot be paired with a new challenge.
+3. **DPoP proof** -- The client proves possession of the same ES256 private key used during registration. Each proof carries a unique `jti` tracked in the database to prevent replay. The server can require a nonce for additional resistance to precomputation.
+4. **Client assertion** -- OAuth client authentication uses a `private_key_jwt` (RFC 7523) signed with the device's ES256 key, with a 60-second lifetime and unique `jti`.
+5. **Counter validation** -- The YubiKey's monotonic signature counter must strictly increase on each assertion. A cloned authenticator would have a stale counter, which the server detects and rejects.
+
+### Attack scenarios
+
+| Attack | Why it fails |
+|---|---|
+| **Replay a captured login** | Challenge is single-use (atomic DB check); DPoP `jti` is single-use |
+| **Forge a FIDO2 assertion** | Requires the YubiKey's private key, which never leaves the hardware |
+| **Steal an access token from the network** | Token is DPoP-bound — unusable without the device's private key |
+| **Man-in-the-middle the challenge** | Challenge is signed in a state JWT with a server-only key; tampering is detected |
+| **Reuse an old assertion with a new challenge** | Challenge is embedded in `client_data_json`, which is signed by the YubiKey; mismatch is detected |
+| **Clone the YubiKey** | Counter validation detects cloned authenticators |
+| **Brute-force the PIN remotely** | PIN is verified locally by YubiKey hardware, which locks after 8 failed attempts |
+| **Access the agent socket from another process** | Socket permissions (0600) restrict access; the agent verifies the connecting process has the same UID and PID |
+
+---
+
 ## Supply chain security
 
 ### SLSA provenance
