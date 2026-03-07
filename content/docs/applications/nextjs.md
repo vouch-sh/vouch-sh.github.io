@@ -30,6 +30,7 @@ const handler = NextAuth({
       clientId: process.env.VOUCH_CLIENT_ID,
       clientSecret: process.env.VOUCH_CLIENT_SECRET,
       authorization: { params: { scope: "openid email" } },
+      checks: ["pkce", "state"],
       profile(profile) {
         return {
           id: profile.sub,

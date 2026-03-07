@@ -25,6 +25,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     name: :vouch,
     scope: [:openid, :email],
     response_type: :code,
+    pkce: true,
     issuer: "https://{{< instance-url >}}",
     discovery: true,
     client_options: {

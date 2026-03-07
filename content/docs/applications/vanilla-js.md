@@ -1,7 +1,7 @@
 ---
 title: "Vanilla JavaScript"
 description: "Integrate Vouch OIDC authentication into a plain JavaScript application using oidc-client-ts."
-weight: 12
+weight: 24
 params:
   category: "spa"
   language: "JavaScript"

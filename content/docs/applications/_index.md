@@ -21,7 +21,7 @@ By following this guide, you will integrate Vouch as an OIDC identity provider i
 - Hardware attestation claims proving the authentication was performed with a verified security key
 - Organization membership information
 
-This works with any framework or library that supports OpenID Connect or OAuth 2.0 authorization code flow.
+This works with any framework or library that supports OpenID Connect or OAuth 2.0 authorization code flow. Beyond web applications, Vouch secures **MCP tool servers** with bearer token authentication and enables **agent-to-agent (A2A)** communication backed by hardware-verified identity.
 
 ---
 

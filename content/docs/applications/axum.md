@@ -38,7 +38,8 @@ use openidconnect::{
     core::{CoreClient, CoreProviderMetadata, CoreResponseType},
     reqwest::async_http_client,
     AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret,
-    CsrfToken, IssuerUrl, Nonce, RedirectUrl, Scope, TokenResponse,
+    CsrfToken, IssuerUrl, Nonce, PkceCodeChallenge, PkceCodeVerifier,
+    RedirectUrl, Scope, TokenResponse,
 };
 use serde::Deserialize;
 use std::sync::Arc;
@@ -46,6 +47,7 @@ use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
 
 const CSRF_TOKEN_KEY: &str = "csrf_token";
 const NONCE_KEY: &str = "nonce";
+const PKCE_VERIFIER_KEY: &str = "pkce_verifier";
 
 struct AppState {
     oidc_client: CoreClient,
@@ -61,6 +63,8 @@ async fn login(
     State(state): State<Arc<AppState>>,
     session: Session,
 ) -> impl IntoResponse {
+    let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
+
     let (auth_url, csrf_token, nonce) = state
         .oidc_client
         .authorize_url(
@@ -69,10 +73,11 @@ async fn login(
             Nonce::new_random,
         )
         .add_scope(Scope::new("email".to_string()))
+        .set_pkce_challenge(pkce_challenge)
         .url();
 
-    // Store the CSRF token and nonce in the session so we can verify them
-    // when the provider redirects back to the callback endpoint.
+    // Store the CSRF token, nonce, and PKCE verifier in the session so we
+    // can verify them when the provider redirects back to the callback endpoint.
     session
         .insert(CSRF_TOKEN_KEY, csrf_token.secret().clone())
         .await
@@ -81,6 +86,10 @@ async fn login(
         .insert(NONCE_KEY, nonce.secret().clone())
         .await
         .expect("Failed to store nonce");
+    session
+        .insert(PKCE_VERIFIER_KEY, pkce_verifier.secret().clone())
+        .await
+        .expect("Failed to store PKCE verifier");
 
     Redirect::to(auth_url.as_str())
 }
@@ -110,9 +119,18 @@ async fn callback(
         .expect("Missing nonce in session");
     let nonce = Nonce::new(stored_nonce);
 
+    // Retrieve and remove the PKCE verifier from the session.
+    let stored_pkce: String = session
+        .remove(PKCE_VERIFIER_KEY)
+        .await
+        .expect("Session error")
+        .expect("Missing PKCE verifier in session");
+    let pkce_verifier = PkceCodeVerifier::new(stored_pkce);
+
     let token_response = state
         .oidc_client
         .exchange_code(AuthorizationCode::new(params.code))
+        .set_pkce_verifier(pkce_verifier)
         .request_async(async_http_client)
         .await
         .expect("Failed to exchange code");
@@ -182,6 +200,8 @@ async fn main() {
 To request structured permissions beyond scopes, pass `authorization_details` as an extra query parameter on the authorization URL. The `openidconnect` crate supports this via `set_extra_param`:
 
 ```rust
+let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
+
 let (auth_url, csrf_token, nonce) = state
     .oidc_client
     .authorize_url(
@@ -190,6 +210,7 @@ let (auth_url, csrf_token, nonce) = state
         Nonce::new_random,
     )
     .add_scope(Scope::new("email".to_string()))
+    .set_pkce_challenge(pkce_challenge)
     .set_extra_param(
         "authorization_details",
         r#"[{"type":"account_access","actions":["read","transfer"]}]"#,

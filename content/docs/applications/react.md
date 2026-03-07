@@ -1,7 +1,7 @@
 ---
 title: "React (react-oidc-context)"
 description: "Integrate Vouch OIDC authentication into a React single-page application using react-oidc-context."
-weight: 10
+weight: 20
 params:
   category: "spa"
   language: "JavaScript"

@@ -1,6 +1,6 @@
 ---
-title: "Express.js (Passport)"
-description: "Integrate Vouch OIDC authentication into an Express.js application using Passport."
+title: "Express.js (openid-client)"
+description: "Integrate Vouch OIDC authentication into an Express.js application using openid-client."
 weight: 3
 params:
   category: "server"
@@ -12,82 +12,127 @@ params:
 Install the required packages:
 
 ```bash
-npm install passport passport-openidconnect express-session
+npm install openid-client express-session
 ```
 
-Configure [Passport](https://www.passportjs.org/) in your Express application:
+Configure [openid-client](https://github.com/panva/openid-client) in your Express application:
 
 ```javascript
-const express = require("express");
-const session = require("express-session");
-const passport = require("passport");
-const OpenIDConnectStrategy = require("passport-openidconnect");
+import express from 'express';
+import session from 'express-session';
+import * as client from 'openid-client';
+
+const clientId = process.env.VOUCH_CLIENT_ID;
+const clientSecret = process.env.VOUCH_CLIENT_SECRET;
+const callbackUrl = 'https://your-app.example.com/auth/vouch/callback';
+
+const config = await client.discovery(
+  new URL('https://{{< instance-url >}}'),
+  clientId,
+  clientSecret
+);
 
 const app = express();
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+}));
+```
 
-app.use(passport.initialize());
-app.use(passport.session());
+### Login route
 
-passport.use(
-  "vouch",
-  new OpenIDConnectStrategy(
+Generate a PKCE code verifier and challenge, then redirect the user to the Vouch authorization endpoint:
+
+```javascript
+app.get('/auth/vouch', async (req, res) => {
+  const codeVerifier = client.randomPKCECodeVerifier();
+  const codeChallenge =
+    await client.calculatePKCECodeChallenge(codeVerifier);
+  const state = client.randomState();
+  const nonce = client.randomNonce();
+
+  req.session.oidc = { codeVerifier, state, nonce };
+
+  const redirectTo = client.buildAuthorizationUrl(config, {
+    redirect_uri: callbackUrl,
+    scope: 'openid email',
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    state,
+    nonce,
+  });
+
+  res.redirect(redirectTo.href);
+});
+```
+
+### Callback route
+
+Exchange the authorization code for tokens and extract claims from the ID token:
+
+```javascript
+app.get('/auth/vouch/callback', async (req, res) => {
+  const { codeVerifier, state, nonce } = req.session.oidc || {};
+  delete req.session.oidc;
+
+  const currentUrl = new URL(req.url, `http://${req.headers.host}`);
+  const tokens = await client.authorizationCodeGrant(
+    config,
+    currentUrl,
     {
-      issuer: "https://{{< instance-url >}}",
-      authorizationURL: "https://{{< instance-url >}}/oauth/authorize",
-      tokenURL: "https://{{< instance-url >}}/oauth/token",
-      userInfoURL: "https://{{< instance-url >}}/oauth/userinfo",
-      clientID: process.env.VOUCH_CLIENT_ID,
-      clientSecret: process.env.VOUCH_CLIENT_SECRET,
-      callbackURL: "https://your-app.example.com/auth/vouch/callback",
-      scope: "openid email",
-    },
-    (issuer, profile, done) => {
-      // Find or create user based on profile
-      return done(null, profile);
+      pkceCodeVerifier: codeVerifier,
+      expectedState: state,
+      expectedNonce: nonce,
     }
-  )
-);
+  );
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user, done) => done(null, user));
+  const claims = tokens.claims();
+  req.session.user = {
+    id: claims.sub,
+    email: claims.email,
+    hardwareVerified: claims.hardware_verified || false,
+    hardwareAaguid: claims.hardware_aaguid || null,
+  };
 
-app.get("/auth/vouch", passport.authenticate("vouch"));
-
-app.get(
-  "/auth/vouch/callback",
-  passport.authenticate("vouch", {
-    successRedirect: "/",
-    failureRedirect: "/login",
-  })
-);
+  res.redirect('/');
+});
 
 app.listen(3000);
 ```
 
+The `hardware_verified` claim indicates whether the user authenticated with a hardware security key. When `true`, `hardware_aaguid` contains the [AAGUID](https://fidoalliance.org/metadata/) of the authenticator device.
+
 ### Rich Authorization Requests
 
-To request structured permissions beyond scopes, pass `authorization_details` as an extra authorization parameter. Passport's OpenID Connect strategy does not support extra parameters directly, so include them in the authorization URL via a custom redirect:
+To request structured permissions beyond scopes, pass `authorization_details` when building the authorization URL:
 
 ```javascript
-app.get("/auth/vouch", (req, res) => {
+app.get('/auth/vouch', async (req, res) => {
+  const codeVerifier = client.randomPKCECodeVerifier();
+  const codeChallenge =
+    await client.calculatePKCECodeChallenge(codeVerifier);
+  const state = client.randomState();
+  const nonce = client.randomNonce();
+
+  req.session.oidc = { codeVerifier, state, nonce };
+
   const authorizationDetails = JSON.stringify([
-    { type: "account_access", actions: ["read", "transfer"] },
+    { type: 'account_access', actions: ['read', 'transfer'] },
   ]);
-  const params = new URLSearchParams({
+
+  const redirectTo = client.buildAuthorizationUrl(config, {
+    redirect_uri: callbackUrl,
+    scope: 'openid email',
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    state,
+    nonce,
     authorization_details: authorizationDetails,
   });
-  passport.authenticate("vouch", {
-    state: req.query.state,
-    additionalParams: { authorization_details: authorizationDetails },
-  })(req, res);
+
+  res.redirect(redirectTo.href);
 });
 ```
 

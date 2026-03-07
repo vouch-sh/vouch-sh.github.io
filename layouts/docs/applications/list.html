@@ -52,6 +52,36 @@
       </a>
       {{ end }}
     </div>
+
+    {{ $mcpPages := where .Pages.ByWeight ".Params.category" "mcp" }}
+    {{ if $mcpPages }}
+    <h2>MCP Servers</h2>
+    <p>Protect MCP tool servers with Vouch OIDC bearer token authentication.</p>
+    <div class="framework-grid">
+      {{ range $mcpPages }}
+      <a href="{{ .Permalink }}" class="framework-card">
+        <span class="framework-card-language">{{ .Params.language }}</span>
+        <h3>{{ .Title }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    {{ $agentPages := where .Pages.ByWeight ".Params.category" "agent" }}
+    {{ if $agentPages }}
+    <h2>Agent-to-Agent (A2A)</h2>
+    <p>Secure agent-to-agent communication with hardware-backed OIDC tokens.</p>
+    <div class="framework-grid">
+      {{ range $agentPages }}
+      <a href="{{ .Permalink }}" class="framework-card">
+        <span class="framework-card-language">{{ .Params.language }}</span>
+        <h3>{{ .Title }}</h3>
+        {{ with .Description }}<p>{{ . }}</p>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+    {{ end }}
   </article>
 </div>
 

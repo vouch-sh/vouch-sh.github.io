@@ -36,6 +36,8 @@ SOCIALACCOUNT_PROVIDERS = {
                 "secret": os.environ["VOUCH_CLIENT_SECRET"],
                 "settings": {
                     "server_url": "https://{{< instance-url >}}",
+                    "oauth_pkce_enabled": True,
+                    "fetch_userinfo": True,
                 },
             },
         ],

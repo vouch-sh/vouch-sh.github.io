@@ -1,7 +1,7 @@
 ---
 title: "Device Authorization (CLI)"
 description: "Integrate Vouch authentication into native desktop applications and CLI tools using the Device Authorization Grant."
-weight: 13
+weight: 30
 params:
   category: "native"
   language: "CLI"

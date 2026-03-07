@@ -1,7 +1,7 @@
 ---
-title: "Vue (oidc-client-ts)"
-description: "Integrate Vouch OIDC authentication into a Vue single-page application using oidc-client-ts."
-weight: 21
+title: "SvelteKit (oidc-client-ts)"
+description: "Integrate Vouch OIDC authentication into a SvelteKit single-page application using oidc-client-ts."
+weight: 22
 params:
   category: "spa"
   language: "JavaScript"
@@ -21,7 +21,7 @@ Install the library:
 npm install oidc-client-ts
 ```
 
-Create an auth service in `src/auth.js`:
+Create an auth service in `src/lib/auth.js`:
 
 ```javascript
 import { UserManager, WebStorageStateStore } from "oidc-client-ts";
@@ -30,103 +30,75 @@ const userManager = new UserManager({
   authority: "https://{{< instance-url >}}",
   client_id: "your-client-id",
   redirect_uri: "https://your-app.example.com/callback",
+  post_logout_redirect_uri: window.location.origin,
   scope: "openid email",
   response_type: "code",
   automaticSilentRenew: true,
-  userStore: new WebStorageStateStore({ store: window.localStorage }),
+  userStore: new WebStorageStateStore({ store: window.sessionStorage }),
 });
-
-export async function login() {
-  await userManager.signinRedirect();
-}
-
-export async function handleCallback() {
-  return await userManager.signinRedirectCallback();
-}
 
 export async function getUser() {
   return await userManager.getUser();
 }
 
-export async function logout() {
-  await userManager.removeUser();
+export async function login() {
+  await userManager.signinRedirect();
 }
 
-export default userManager;
+export async function logout() {
+  await userManager.removeUser();
+  window.location.href = "/";
+}
+
+export async function handleCallback() {
+  return await userManager.signinRedirectCallback();
+}
 ```
 
-Use it in a Vue component (`src/App.vue`):
+Use it in a page component (`src/routes/+page.svelte`):
 
-```vue
-<template>
-  <div>
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="user">
-      <h1>Welcome, {{ user.profile.name }}</h1>
-      <p>Email: {{ user.profile.email }}</p>
-      <button @click="handleLogout">Sign out</button>
-    </div>
-    <div v-else>
-      <h1>My Application</h1>
-      <button @click="handleLogin">Sign in with Vouch</button>
-    </div>
-  </div>
-</template>
-
+```svelte
 <script>
-import { login, getUser, logout } from "./auth";
+  import { onMount } from "svelte";
+  import { getUser, login, logout } from "$lib/auth";
 
-export default {
-  data() {
-    return {
-      user: null,
-      loading: true,
-    };
-  },
-  async mounted() {
-    try {
-      this.user = await getUser();
-    } catch (e) {
-      console.error("Failed to get user:", e);
-    } finally {
-      this.loading = false;
-    }
-  },
-  methods: {
-    handleLogin() {
-      login();
-    },
-    async handleLogout() {
-      await logout();
-      this.user = null;
-    },
-  },
-};
+  let user = $state(null);
+  let loading = $state(true);
+
+  onMount(async () => {
+    user = await getUser();
+    loading = false;
+  });
 </script>
+
+{#if loading}
+  <p>Loading...</p>
+{:else if user}
+  <p>Signed in as {user.profile.email}</p>
+  {#if user.profile.hardware_verified}
+    <p><strong>Hardware Verified</strong></p>
+  {/if}
+  <button onclick={logout}>Sign out</button>
+{:else}
+  <button onclick={login}>Sign in with Vouch</button>
+{/if}
 ```
 
-Create a callback page (`src/Callback.vue`):
+Create a callback page (`src/routes/callback/+page.svelte`):
 
-```vue
-<template>
-  <div>Processing login...</div>
-</template>
-
+```svelte
 <script>
-import { handleCallback } from "./auth";
+  import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { handleCallback } from "$lib/auth";
 
-export default {
-  async mounted() {
-    try {
-      await handleCallback();
-      this.$router.push("/");
-    } catch (e) {
-      console.error("Callback error:", e);
-      this.$router.push("/login");
-    }
-  },
-};
+  onMount(async () => {
+    await handleCallback();
+    goto("/");
+  });
 </script>
+
+<p>Processing login...</p>
 ```
 
 ### Rich Authorization Requests
