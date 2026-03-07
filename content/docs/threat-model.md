@@ -158,7 +158,7 @@ These assumptions underpin the threat model. If an assumption is violated, the c
 | ID | Assumption | Linked threats | Linked mitigations |
 |---|---|---|---|
 | **A1** | The YubiKey secure element correctly implements FIDO2 and does not leak private key material. | T-S1, T-S2 | FIDO2 origin binding, FIDO2 user verification (PIN + touch) |
-| **A2** | The operating system enforces Unix socket file permissions, preventing other users from accessing the agent socket. | T-I1, T-E1 | Unix socket permissions (T-E1 mitigation) |
+| **A2** | The operating system enforces Unix socket file permissions and peer credential APIs (`SO_PEERCRED` / `getpeereid`), preventing other users from accessing the agent socket. | T-I1, T-E1 | Unix socket permissions, peer credential verification (T-E1 mitigation) |
 | **A3** | TLS 1.3 is not broken — an attacker cannot decrypt or tamper with data in transit. | T-T1, T-I2 | TLS 1.3 transport encryption |
 | **A4** | AWS STS, GitHub, and other external services correctly validate OIDC tokens and enforce their own access controls. | T-E2 | OIDC audience restriction |
 | **A5** | The developer's workstation has not been fully compromised at the kernel level (no rootkit). User-space isolation is intact. | T-I1, T-E1 | In-memory only credentials, Unix socket permissions |
@@ -283,7 +283,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 
 **Mitigations:**
 
-- **T-E1**: The Unix socket is restricted to the owning user by filesystem permissions. DPoP prevents extracted tokens from being used on a different machine. Credential scope is limited to the user's authorized roles — the attacker cannot escalate beyond what the user could already access. This threat is bounded by session lifetime (8 hours) and credential lifetime (≤1 hour).
+- **T-E1**: The Unix socket is restricted to the owning user by filesystem permissions. Additionally, the agent verifies peer credentials (`SO_PEERCRED` / `getpeereid`) on every connection to confirm the connecting process has the same UID — rejected connections are audit-logged for forensic visibility. On startup, the agent validates that `~/.vouch/` is not a symlink and is owned by the current user, preventing directory hijacking. DPoP prevents extracted tokens from being used on a different machine. Credential scope is limited to the user's authorized roles — the attacker cannot escalate beyond what the user could already access. This threat is bounded by session lifetime (8 hours) and credential lifetime (≤1 hour).
 - **T-E2**: IAM roles should follow least-privilege principles. Vouch enables fine-grained role mapping per user via OIDC claims. CloudTrail provides full attribution of which user assumed which role. → [Shared responsibility](/docs/security/#shared-responsibility)
 - **T-E3**: Signing keys are in AWS KMS (non-extractable). The document encryption private key requires NitroTPM attestation for decryption — an attacker with disk or database access alone cannot decrypt user data. Server infrastructure is hardened with network isolation, encrypted storage, audited access, and minimal attack surface. The server does not store external credentials — it brokers them — so compromise enables credential issuance (while the attacker maintains access) but not extraction of stored secrets.
 
@@ -305,6 +305,8 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **SLSA Level 3 provenance** | T-T3 (supply chain) | Build |
 | **Audit logging + CloudTrail** | T-R1, T-R2 (repudiation) | Operational |
 | **Rate limiting + DDoS protection** | T-D1 (server flood) | Infrastructure |
+| **IPC peer credential verification** | T-E1, T-I1 (cross-user socket access) | Application |
+| **Directory symlink and ownership validation** | T-E1 (directory hijacking) | Application |
 | **Credential caching** | T-D2 (outage resilience) | Application |
 | **KMS-managed signing keys** | T-T2, T-E3 (key extraction) | Cryptographic |
 | **NitroTPM attestation** | T-T2, T-E3 (runtime key protection) | Infrastructure |

@@ -153,7 +153,11 @@ The Vouch agent is a long-running process that provides two services:
 
 ### Unix domain socket
 
-The CLI communicates with the agent over a Unix domain socket at a well-known path. The socket file has restrictive permissions (owner-only) to prevent other users on the system from accessing session material.
+The CLI communicates with the agent over a Unix domain socket at a well-known path. The socket is protected by multiple layers:
+
+- **Filesystem permissions** — The socket file has restrictive permissions (owner-only) to prevent other users on the system from accessing session material.
+- **Peer credential verification** — Every incoming connection is checked using OS-level peer credentials (`SO_PEERCRED` on Linux, `getpeereid` on macOS) to verify the connecting process has the same UID as the agent. Connections from a different UID are rejected and audit-logged, following the same approach used by `gpg-agent`.
+- **Directory safety** — On startup, the agent validates that `~/.vouch/` is not a symlink and is owned by the current user, preventing symlink-based directory hijacking where an attacker pre-creates the directory pointing to an attacker-controlled location.
 
 ### In-memory credential cache
 
