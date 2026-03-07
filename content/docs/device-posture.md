@@ -182,7 +182,7 @@ Requires platform-specific integrity protections to be active: System Integrity 
 - **macOS:** Reboot into Recovery Mode and run `csrutil enable` to re-enable SIP. Ensure Gatekeeper is enabled via `spctl --master-enable`.
 - **Linux:** Set SELinux to enforcing (`sudo setenforce 1` and update `/etc/selinux/config`), or ensure AppArmor profiles are loaded and enforcing.
 
-### OS currency
+### OS recency
 
 Requires the operating system to have automatic updates enabled.
 
@@ -334,7 +334,7 @@ For teams subject to SOC 2, HIPAA, or similar compliance frameworks, activate al
 3. Screen lock
 4. Endpoint protection (EDR)
 5. Platform integrity
-6. OS currency
+6. OS recency
 
 This ensures every developer machine meets a comprehensive security baseline before it can obtain credentials for production infrastructure.
 
