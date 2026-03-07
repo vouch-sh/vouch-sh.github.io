@@ -24,6 +24,7 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 | **Database auth (RDS)** | Yes (IAM auth) | No | Yes (database engines) | No | Yes | No |
 | **OIDC application SSO** | Yes (13+ frameworks) | Yes | Yes (OIDC provider) | No | Yes | Yes |
 | **Session lifetime** | 8 hours | Configurable | Configurable | N/A | Configurable | Configurable |
+| **Device posture policies** | Yes (CEL-based) | No | No | No | No | Yes |
 | **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes |
 | **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) |
 | **Open source** | Yes (CLI) | No | Yes (core) | No | Yes | No |
@@ -83,7 +84,7 @@ Choose Teleport when:
 Choose Beyond Identity when:
 
 - You need **passwordless authentication** for workforce identity across SaaS applications.
-- You need device trust and posture checks as part of authentication.
+- You need device trust and posture checks deeply integrated into SaaS application authentication (Vouch now supports [device posture policies](/docs/device-posture/) for developer credential issuance, but Beyond Identity focuses on broader workforce SSO).
 - Developer credentials (AWS, SSH, GitHub) are not a primary concern.
 
 ---

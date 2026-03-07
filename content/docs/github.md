@@ -35,6 +35,8 @@ An organization administrator must connect at least one GitHub organization to t
 
 1. Navigate to https://{{< instance-url >}}/github/connect and follow the prompts to install the GitHub App in your GitHub organization. You can choose to grant access to all repositories or select specific ones.
 
+![Connect GitHub page showing installation flow and connected accounts](/images/admin/github-connect.png)
+
 2. After installing the app, confirm the organization connection on the GitHub connect page. The server will verify it can issue tokens for the connected organization.
 
 3. Optionally, adjust which repositories the GitHub App has access to at any time through your GitHub organization settings under **Settings > GitHub Apps > Vouch**.

@@ -61,7 +61,7 @@ vouch login [--timeout <SECONDS>]
 |---|---|
 | `--timeout` | Timeout in seconds for YubiKey detection (default: `60`, use `0` for no timeout) |
 
-After login, all credential helpers use the session automatically. Run this once at the start of each workday.
+During login, the CLI automatically collects [device posture signals](/docs/device-posture/) and sends them to the server for policy evaluation. After login, all credential helpers use the session automatically. Run this once at the start of each workday.
 
 ### `vouch logout`
 
@@ -525,6 +525,26 @@ eval "$(vouch init <SHELL>)"
 ```
 
 Supported shells: `bash`, `zsh`, `fish`.
+
+---
+
+## Device posture
+
+### `vouch posture`
+
+Display the security posture signals detected on the current machine. This shows the same data that is sent to the server during `vouch login` for policy evaluation.
+
+```
+vouch posture [--format <FORMAT>]
+```
+
+| Flag | Description |
+|---|---|
+| `--format` | Output format: `text` (default) or `json`. The `json` format outputs the exact `authorization_details` payload sent during login. |
+
+This command does not require an active session — use it to verify device posture at any time.
+
+See [Device Posture Policies](/docs/device-posture/) for full details.
 
 ---
 

@@ -103,6 +103,10 @@ This command will:
 
 Once enrollment completes, the CLI prints a confirmation and you are ready to log in.
 
+You can manage your enrolled security keys at any time from the Vouch dashboard:
+
+![Security Keys page showing an enrolled YubiKey](/images/admin/security-keys.png)
+
 ---
 
 ## Step 3 -- Daily login
@@ -192,7 +196,11 @@ No invite codes or admin approval are needed for enrollment. The first person to
 
 ### Manual user management
 
-For small teams (under 15 people), manual management works well. As organization owner, you can view and manage team members through the Vouch server. When someone leaves, remove them manually to revoke their access.
+For small teams (under 15 people), manual management works well. As organization owner, you can view and manage team members through the admin dashboard:
+
+![Organization Members page showing team members, roles, and status](/images/admin/admin-members.png)
+
+When someone leaves, remove them manually to revoke their access.
 
 ### When to adopt SCIM
 
