@@ -85,19 +85,19 @@ Save the output -- you will need it for each method below.
 
 ### CLI (manual)
 
-On each server, add the CA public key and configure `sshd`:
+On each server, add the CA public key and create a drop-in `sshd` configuration file:
 
 ```bash
 # Write the CA public key
 echo "CONTENTS_OF_CA_PUB" | sudo tee /etc/ssh/vouch_ca.pub
 
-# Tell sshd to trust certificates signed by this CA
+# Configure sshd to trust the CA (drop-in config)
 # See: https://man.openbsd.org/sshd_config#TrustedUserCAKeys
-echo "TrustedUserCAKeys /etc/ssh/vouch_ca.pub" | sudo tee -a /etc/ssh/sshd_config
-
-# Optionally set AuthorizedPrincipalsFile to control which principals are allowed
 # See: https://man.openbsd.org/sshd_config#AuthorizedPrincipalsFile
-echo "AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u" | sudo tee -a /etc/ssh/sshd_config
+sudo tee /etc/ssh/sshd_config.d/vouch.conf <<'SSHD'
+TrustedUserCAKeys /etc/ssh/vouch_ca.pub
+AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
+SSHD
 
 # Create a principals file for a specific user
 sudo mkdir -p /etc/ssh/auth_principals
@@ -127,18 +127,15 @@ sudo systemctl restart sshd
         group: root
         mode: "0644"
 
-    - name: Trust Vouch CA for user certificates
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: "^TrustedUserCAKeys"
-        line: "TrustedUserCAKeys /etc/ssh/vouch_ca.pub"
-      notify: restart sshd
-
-    - name: Set AuthorizedPrincipalsFile
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: "^AuthorizedPrincipalsFile"
-        line: "AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u"
+    - name: Configure sshd to trust Vouch CA
+      copy:
+        content: |
+          TrustedUserCAKeys /etc/ssh/vouch_ca.pub
+          AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
+        dest: /etc/ssh/sshd_config.d/vouch.conf
+        owner: root
+        group: root
+        mode: "0644"
       notify: restart sshd
 
     - name: Create auth_principals directory
@@ -173,9 +170,11 @@ resource "aws_instance" "example" {
     curl -s https://{{< instance-url >}}/v1/credentials/ssh/ca \
       | jq -r '.public_key' | tee /etc/ssh/vouch_ca.pub
 
-    # Configure sshd to trust the CA
-    echo "TrustedUserCAKeys /etc/ssh/vouch_ca.pub" >> /etc/ssh/sshd_config
-    echo "AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u" >> /etc/ssh/sshd_config
+    # Configure sshd to trust the CA (drop-in config)
+    cat > /etc/ssh/sshd_config.d/vouch.conf <<'SSHD'
+    TrustedUserCAKeys /etc/ssh/vouch_ca.pub
+    AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
+    SSHD
 
     mkdir -p /etc/ssh/auth_principals
 
