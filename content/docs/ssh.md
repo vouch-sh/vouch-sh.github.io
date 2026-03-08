@@ -94,7 +94,7 @@ echo "CONTENTS_OF_CA_PUB" | sudo tee /etc/ssh/vouch_ca.pub
 # Configure sshd to trust the CA (drop-in config)
 # See: https://man.openbsd.org/sshd_config#TrustedUserCAKeys
 # See: https://man.openbsd.org/sshd_config#AuthorizedPrincipalsFile
-sudo tee /etc/ssh/sshd_config.d/vouch.conf <<'SSHD'
+sudo tee /etc/ssh/sshd_config.d/99-vouch.conf <<'SSHD'
 TrustedUserCAKeys /etc/ssh/vouch_ca.pub
 AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
 SSHD
@@ -132,7 +132,7 @@ sudo systemctl restart sshd
         content: |
           TrustedUserCAKeys /etc/ssh/vouch_ca.pub
           AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
-        dest: /etc/ssh/sshd_config.d/vouch.conf
+        dest: /etc/ssh/sshd_config.d/99-vouch.conf
         owner: root
         group: root
         mode: "0644"
@@ -171,7 +171,7 @@ resource "aws_instance" "example" {
       | jq -r '.public_key' | tee /etc/ssh/vouch_ca.pub
 
     # Configure sshd to trust the CA (drop-in config)
-    cat > /etc/ssh/sshd_config.d/vouch.conf <<'SSHD'
+    cat > /etc/ssh/sshd_config.d/99-vouch.conf <<'SSHD'
     TrustedUserCAKeys /etc/ssh/vouch_ca.pub
     AuthorizedPrincipalsFile /etc/ssh/auth_principals/%u
     SSHD
