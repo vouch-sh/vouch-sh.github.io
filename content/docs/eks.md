@@ -27,7 +27,7 @@ EKS supports three ways to manage cluster authentication. The table below summar
 | **Risk** | Misconfigured ConfigMap can lock out all users, including admins. Shared tokens hard to revoke per-user. | No cluster lockout risk -- cluster creator always retains access. Per-principal entries are independent. | Same safety as Access Entries, with the added benefit of no static credentials on developer machines. |
 | **EKS auth mode** | `CONFIG_MAP` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` |
 
-> **Recommendation:** Use **EKS Access Entries** with the `API` or `API_AND_CONFIG_MAP` authentication mode. The `aws-auth` ConfigMap is considered legacy -- AWS recommends Access Entries for all new clusters. Adding Vouch removes the need for static AWS credentials entirely.
+> **Recommendation:** Use **EKS Access Entries with Vouch** for the strongest security posture -- every `kubectl` command ties back to a hardware-verified identity with no static credentials on developer machines. The `aws-auth` ConfigMap is considered legacy; AWS recommends Access Entries for all new clusters.
 
 ## How it works
 
