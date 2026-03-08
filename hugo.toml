@@ -1,6 +1,7 @@
 baseURL = "https://vouch.sh/"
 languageCode = "en-us"
 title = "Vouch — Hardware-Backed Developer Credentials"
+enableGitInfo = true
 
 [params]
   description = "Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access."
@@ -34,6 +35,9 @@ title = "Vouch — Hardware-Backed Developer Credentials"
 [sitemap]
   changeFreq = "weekly"
   priority = 0.5
+
+[frontmatter]
+  lastmod = [":git", "lastmod", "date"]
 
 [[params.sidebarGroups]]
   key = "infra"

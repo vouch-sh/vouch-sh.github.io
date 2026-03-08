@@ -4,6 +4,8 @@ linkTitle: "Getting Started"
 description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials in minutes."
 weight: 1
 subtitle: "Start using Vouch in under 5 minutes"
+sitemap:
+  priority: 0.9
 params:
   docsGroup: featured
 ---
@@ -226,4 +228,12 @@ When you run `vouch login`, the following takes place behind the scenes:
 
 Because every credential is short-lived and bound to a hardware key, there are no long-lived secrets on disk that can be stolen or leaked.
 
+---
 
+## Related guides
+
+- [AWS Integration](/docs/aws/) -- Federate into AWS with OIDC for temporary STS credentials.
+- [SSH Certificates](/docs/ssh/) -- Connect to servers using short-lived SSH certificates.
+- [GitHub Integration](/docs/github/) -- Access private repositories with short-lived tokens.
+- [Security Model](/docs/security/) -- How Vouch protects credentials at every layer.
+- [FAQ](/docs/faq/) -- Common questions about supported hardware, session behavior, and platform support.

@@ -161,3 +161,12 @@ If another credential helper (such as `osxkeychain` or `manager`) is taking prio
    ```
 2. Remove or reorder conflicting entries so that `vouch` appears first.
 3. Re-run `vouch setup github --configure` to ensure the configuration is correct.
+
+---
+
+## Related guides
+
+- [Getting Started](/docs/getting-started/) -- Install the CLI and enroll your YubiKey.
+- [AWS Integration](/docs/aws/) -- Federate into AWS with OIDC for temporary STS credentials.
+- [Docker Registries](/docs/docker/) -- Authenticate to container registries like ECR and GHCR.
+- [AWS CodeCommit](/docs/codecommit/) -- Authenticate to AWS CodeCommit Git repositories.

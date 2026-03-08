@@ -179,8 +179,9 @@ The Vouch CLI and agent need to reach the following endpoints:
 |---|---|---|---|
 | Vouch server (e.g., `us.vouch.sh`) | 443 | HTTPS | Authentication, credential exchange, OIDC |
 | AWS STS (`sts.amazonaws.com`) | 443 | HTTPS | `AssumeRoleWithWebIdentity` |
-| GitHub API (`api.github.com`) | 443 | HTTPS | Installation token exchange (if GitHub integration is used) |
 | Target SSH hosts | 22 | SSH | SSH connections (if SSH integration is used) |
+
+The Vouch server additionally requires outbound access to GitHub (`api.github.com`, port 443, HTTPS) for installation token exchange when the GitHub integration is enabled.
 
 The Vouch server must be reachable from the internet so that AWS can fetch the JWKS endpoint for token validation. If your organization uses a firewall or proxy, ensure these destinations are allowed.
 

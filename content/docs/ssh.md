@@ -4,6 +4,8 @@ linkTitle: "SSH Certificates"
 description: "Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist."
 weight: 3
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
+sitemap:
+  priority: 0.8
 params:
   docsGroup: infra
 ---
@@ -293,3 +295,12 @@ Because Vouch configures `~/.ssh/config` with its agent, tools that build on top
 - **scp / rsync / sftp** -- File transfers use the Vouch SSH agent transparently.
 
 As long as the Vouch agent is running and you have an active session, any tool that uses the system SSH client will authenticate with your Vouch certificate.
+
+---
+
+## Related guides
+
+- [Getting Started](/docs/getting-started/) -- Install the CLI and enroll your YubiKey.
+- [AWS Integration](/docs/aws/) -- Federate into AWS with OIDC for temporary STS credentials.
+- [Amazon EKS](/docs/eks/) -- Authenticate to Kubernetes clusters running on EKS.
+- [Security Model](/docs/security/) -- How Vouch protects credentials at every layer.

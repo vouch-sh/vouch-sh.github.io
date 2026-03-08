@@ -4,6 +4,8 @@ linkTitle: "AWS"
 description: "Stop distributing long-lived AWS access keys. Use OIDC federation to get temporary STS credentials backed by a YubiKey."
 weight: 2
 subtitle: "Configure AWS IAM to trust Vouch as an OIDC identity provider"
+sitemap:
+  priority: 0.8
 params:
   docsGroup: infra
 ---
@@ -316,3 +318,14 @@ aws s3 ls --profile vouch
 ### Permission errors after assuming the role
 
 - The trust policy controls who can assume the role; the permissions policy controls what they can do. Verify the correct permissions policies are attached to the IAM role.
+
+---
+
+## Related guides
+
+- [Multi-Account AWS Strategy](/docs/aws-multi-account/) -- Deploy Vouch across multiple AWS accounts with CloudFormation StackSets or Terraform modules.
+- [Amazon EKS](/docs/eks/) -- Use your Vouch-backed AWS credentials to authenticate to Kubernetes clusters.
+- [AWS Systems Manager](/docs/ssm/) -- Connect to EC2 instances through Session Manager using Vouch credentials.
+- [Database Authentication](/docs/databases/) -- Connect to RDS, Aurora, and Redshift with IAM authentication.
+- [AWS CodeArtifact](/docs/codeartifact/) -- Authenticate to package repositories using Vouch.
+- [Infrastructure as Code](/docs/iac/) -- Use CDK, Terraform, SAM, and other IaC tools with Vouch credentials.
