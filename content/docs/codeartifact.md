@@ -189,6 +189,7 @@ Vouch supports AWS CodeArtifact across all AWS partitions:
 | **Standard** (`aws`) | `us-east-1`, `eu-west-1`, `ap-southeast-1` |
 | **China** (`aws-cn`) | `cn-north-1`, `cn-northwest-1` |
 | **GovCloud** (`aws-us-gov`) | `us-gov-west-1`, `us-gov-east-1` |
+| **European Sovereign Cloud** (`aws-eusc`) | `eusc-de-east-1` |
 
 Use the `--region` flag during setup to configure the appropriate partition.
 
