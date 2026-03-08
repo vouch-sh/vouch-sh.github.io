@@ -111,6 +111,9 @@ cat > /tmp/vouch-trust-policy.json << EOF
       "Condition": {
         "StringEquals": {
           "{{< instance-url >}}:aud": "{{< instance-url >}}"
+        },
+        "StringLike": {
+          "{{< instance-url >}}:sub": "*@example.com"
         }
       }
     }
@@ -146,6 +149,8 @@ Resources:
             Condition:
               StringEquals:
                 "{{< instance-url >}}:aud": "{{< instance-url >}}"
+              StringLike:
+                "{{< instance-url >}}:sub": "*@example.com"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/ReadOnlyAccess
 ```
@@ -170,6 +175,9 @@ resource "aws_iam_role" "vouch_developer" {
         Condition = {
           StringEquals = {
             "{{< instance-url >}}:aud" = "{{< instance-url >}}"
+          }
+          StringLike = {
+            "{{< instance-url >}}:sub" = "*@example.com"
           }
         }
       }
