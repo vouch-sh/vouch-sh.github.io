@@ -78,6 +78,8 @@ Resources:
             Condition:
               StringEquals:
                 !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"
+              StringLike:
+                !Sub "${VouchServerUrl}:sub": "*@example.com"
       ManagedPolicyArns:
         - !Ref ManagedPolicyArn
 
@@ -174,6 +176,9 @@ resource "aws_iam_role" "vouch" {
         Condition = {
           StringEquals = {
             "${var.vouch_server_url}:aud" = "https://${var.vouch_server_url}"
+          }
+          StringLike = {
+            "${var.vouch_server_url}:sub" = "*@example.com"
           }
         }
       }
