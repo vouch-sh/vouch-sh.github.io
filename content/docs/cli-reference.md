@@ -216,6 +216,24 @@ vouch setup eks --cluster <CLUSTER_NAME> [--region <REGION>] [--profile <PROFILE
 
 See [Amazon EKS](/docs/eks/) for full details.
 
+### `vouch setup k8s`
+
+Configure kubectl to use Vouch for Kubernetes OIDC authentication. This works with any Kubernetes distribution that supports OIDC (self-hosted, GKE, AKS, k3s, etc.).
+
+```
+vouch setup k8s --cluster <NAME> --server <URL> [--certificate-authority <PATH>] [--audience <AUDIENCE>] [--kubeconfig <PATH>]
+```
+
+| Flag | Description |
+|---|---|
+| `--cluster` | Kubernetes cluster name (required) |
+| `--server` | Kubernetes API server URL, e.g., `https://k8s.example.com:6443` (required) |
+| `--certificate-authority` | Path to the cluster's CA certificate file (PEM format) |
+| `--audience` | OIDC audience — must match `--oidc-client-id` on the API server (default: `kubernetes`) |
+| `--kubeconfig` | Path to kubeconfig file (defaults to `~/.kube/config`) |
+
+See [Kubernetes](/docs/kubernetes/) for full details.
+
 ### `vouch setup ssm`
 
 Configure SSH to use AWS Systems Manager Session Manager as a proxy for connections to EC2 and managed instances.
@@ -330,6 +348,19 @@ vouch credential redshift --cluster-id my-cluster --db-name mydb
 # Serverless workgroup
 vouch credential redshift --workgroup my-workgroup --db-name mydb
 ```
+
+### `vouch credential k8s`
+
+Obtain an OIDC token for Kubernetes authentication. Outputs an [`ExecCredential`](https://kubernetes.io/docs/reference/config-api/client-authentication.v1/) JSON object for use as a kubectl exec-based credential plugin.
+
+```
+vouch credential k8s --cluster <NAME> [--audience <AUDIENCE>]
+```
+
+| Flag | Description |
+|---|---|
+| `--cluster` | Kubernetes cluster name — used as cache key (required) |
+| `--audience` | OIDC audience — must match `--oidc-client-id` on the API server (default: `kubernetes`) |
 
 ### `vouch credential token`
 

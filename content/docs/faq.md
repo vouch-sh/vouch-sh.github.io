@@ -32,6 +32,17 @@ Other FIDO2-compliant keys (e.g., Google Titan, Feitian, SoloKeys) may work but 
 
 Yes. Run `vouch enroll` with each key. This is recommended so you have a backup in case one key is lost or damaged. All enrolled keys can be used interchangeably for `vouch login`.
 
+### Can I restrict which YubiKey models are accepted?
+
+Yes. The Vouch server supports AAGUID-based policies that control which authenticator models are accepted during enrollment and login. Set the `VOUCH_ALLOWED_AAGUIDS` environment variable on the server:
+
+- **`fips-only`** — Only FIPS-certified YubiKey models are accepted.
+- **`yubikey-5`** — Any YubiKey 5 series model is accepted.
+- **Comma-separated UUIDs** — An explicit allowlist of authenticator AAGUIDs (e.g., `cb69481e-8ff7-4039-93ec-0a2729a154a8,ee882879-721c-4913-9775-3dfcce97072a`).
+- **Unset or empty** — Any FIDO2 hardware key is accepted (default).
+
+Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys typically do not.
+
 ### Can I use the same YubiKey across multiple Vouch organizations?
 
 Yes. A single YubiKey can hold multiple FIDO2 credentials. Enroll the key with each organization's Vouch server and it will work with all of them.

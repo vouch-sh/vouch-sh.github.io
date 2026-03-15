@@ -8,6 +8,8 @@ params:
   docsGroup: infra
 ---
 
+> **Not using EKS?** For standard Kubernetes clusters (self-hosted, GKE, AKS, k3s, etc.) that use OIDC authentication, see [Kubernetes](/docs/kubernetes/).
+
 Managing Kubernetes access with ConfigMap-based `aws-auth` entries is error-prone and hard to audit. Who has access? When was it granted? Long-lived kubeconfig tokens get shared across machines, and revoking access means editing a ConfigMap by hand.
 
 [EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) provide a cleaner model: IAM principals map directly to Kubernetes permissions, and every authentication event is recorded in CloudTrail. Combined with Vouch, every `kubectl` command traces back to a hardware-verified human identity -- no static tokens, no shared kubeconfigs.

@@ -76,7 +76,7 @@ The Vouch server acts as an OIDC identity provider. After FIDO2 authentication, 
 | `acr` | Authentication context class (NIST AAL3) |
 | `cnf` | DPoP key thumbprint for sender-constrained tokens |
 
-External services (AWS, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint.
+External services (AWS, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint. For [Kubernetes OIDC authentication](/docs/kubernetes/), the server issues tokens with a configurable `aud` claim (default: `kubernetes`) that matches the API server's `--oidc-client-id` flag.
 
 ### ES256 (ECDSA over P-256)
 
