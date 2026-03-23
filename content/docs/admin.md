@@ -14,7 +14,9 @@ The Vouch admin dashboard provides a browser-based interface for organization ad
 
 ## Member management
 
-The **Members** page lists all users in your organization with their current status, role, and last login time.
+The **Members** page lists all users in your organization with their current status, role, and registered security keys.
+
+![Organization Members page showing a table of members with email, role, status, key count, and actions columns](/images/admin/admin-members.png)
 
 ### Actions
 
@@ -41,9 +43,11 @@ The **Audit** page (`/admin/audit`) displays a chronological record of security-
 - **Location** -- Approximate geographic location based on the client IP address (city, country).
 - **Details** -- Additional context such as credential type, target resource, or policy name.
 
+![Audit Log page showing security events with timestamps, event types, domain, and details](/images/admin/admin-audit-log.png)
+
 ### Filtering
 
-Use the domain and event type filters to narrow the audit log. For example, filter to "credential" events to see all credential issuance activity, or filter to "member" events to review user lifecycle changes.
+Use the event type filter buttons to narrow the audit log to specific categories: Logins, Promotions, Demotions, Deactivations, Removals, or Revocations.
 
 ### Geographic data
 
@@ -66,7 +70,11 @@ For full SCIM setup instructions including identity provider configuration, see 
 
 ## Device posture policies
 
-The admin dashboard includes a **Policies** page for managing device posture requirements. This is documented separately -- see [Device Posture Policies](/docs/device-posture/) for details on pre-configured policies, custom CEL expressions, and enforcement behavior.
+The **Policies** page lets administrators enforce device security requirements. Built-in policies cover disk encryption, firewall, screen lock, endpoint protection, platform integrity, and OS recency. Custom policies can be written using CEL (Common Expression Language) expressions.
+
+![Device Posture Policies page showing built-in policies with toggle controls and a custom policies section](/images/admin/admin-policies.png)
+
+For full details on available signals, CEL expressions, and enforcement behavior, see [Device Posture Policies](/docs/device-posture/).
 
 ---
 
