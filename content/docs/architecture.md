@@ -23,7 +23,7 @@ The command-line interface that developers interact with directly. It handles:
 - **Credential helpers** -- Provides credentials to tools like `aws`, `git`, `ssh`, `docker`, and `cargo` on demand.
 - **Setup commands** -- Configures local tool integrations (`vouch setup aws`, `vouch setup codecommit`, etc.).
 
-The CLI communicates with the Vouch agent over a local Unix domain socket and with the Vouch server over HTTPS.
+The CLI communicates with the Vouch agent over a local Unix domain socket and with the Vouch server over HTTPS. All requests to the server are authenticated using [HTTP Message Signatures (RFC 9421)](https://datatracker.ietf.org/doc/html/rfc9421) for cryptographic proof of request authenticity.
 
 ### Vouch Agent
 
@@ -40,12 +40,13 @@ On macOS, the agent runs as a Homebrew service (`brew services start vouch`). On
 
 The server is the identity broker. It:
 
-- **Validates FIDO2 assertions** against enrolled public keys.
+- **Authenticates users** via FIDO2/WebAuthn assertions, with identity federation through your organization's OIDC or [SAML 2.0](/docs/saml/) identity provider.
 - **Issues OIDC ID tokens** (signed with ES256 via AWS KMS) that AWS and other services consume via standard OIDC federation.
 - **Signs SSH certificates** using an Ed25519 certificate authority key managed by AWS KMS.
 - **Exchanges tokens** with GitHub Apps, AWS STS, and other external services on behalf of authenticated users.
 - **Manages the user directory** via SCIM 2.0 integration with identity providers.
 - **Publishes OIDC metadata** at `/.well-known/openid-configuration` and JWKS at `/.well-known/jwks.json` for external services to verify tokens.
+- **Provides OIDC discovery** for automatic identity provider detection during enrollment.
 
 The server does not store AWS credentials, SSH private keys, or GitHub tokens. It brokers short-lived credentials from external services.
 
@@ -97,6 +98,16 @@ The Vouch CLI calls [AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/
 ### FAPI 2.0
 
 The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server.
+
+### HTTP Message Signatures (RFC 9421)
+
+All authenticated requests from the CLI to the Vouch server include [HTTP Message Signatures](https://datatracker.ietf.org/doc/html/rfc9421). The CLI signs each request using the FAPI key pair stored in the OS keychain. The server verifies the signature before processing the request, providing cryptographic proof that the request was not tampered with in transit and originated from the registered client.
+
+Supported algorithms: ECDSA P-256/P-384, EdDSA, and RSA-PSS-SHA512.
+
+### SAML 2.0
+
+For organizations using SAML-based identity providers, the Vouch server acts as a SAML Service Provider. It publishes SP metadata at `/saml/metadata` and accepts assertions at the Assertion Consumer Service endpoint (`/saml/acs`). Both HTTP-POST and HTTP-Redirect bindings are supported. See [SAML Identity Providers](/docs/saml/) for configuration details.
 
 ### SCIM 2.0
 

@@ -12,6 +12,8 @@ Most CI/CD pipelines use service account credentials or workflow-generated OIDC 
 
 Vouch's OIDC attests *human presence* -- "a verified human authorized this action with their YubiKey." This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
 
+> **Fully automated pipelines:** If your pipeline does not need a human approval gate and should run unattended, use the [client credentials grant](/docs/applications/#client-credentials-machine-to-machine) instead. This lets CI/CD systems authenticate with a client ID and secret without requiring a YubiKey tap.
+
 ## How it works
 
 1. A deployer authenticates with Vouch on their local machine (`vouch login`).

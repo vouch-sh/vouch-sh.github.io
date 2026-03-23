@@ -46,7 +46,7 @@ Vouch provides native credential helpers for:
 
 ## Open source
 
-The Vouch CLI and agent are open source under the **Apache-2.0 / MIT** dual license. The server source is available under the **BSL 1.1** license, which converts to Apache-2.0 after 2 years. Security tools should be auditable.
+Vouch is fully open source under the **Apache-2.0 / MIT** dual license. Security tools should be auditable.
 
 - [GitHub Repository](https://github.com/vouch-sh/vouch)
 

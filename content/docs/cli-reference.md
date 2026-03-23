@@ -174,7 +174,7 @@ vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [
 
 | Flag | Description |
 |---|---|
-| `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
+| `--tool` | Package manager to configure: `cargo`, `pip`, `npm`, `pnpm`, or `uv` (required) |
 | `--repository` | The AWS CodeArtifact repository name (required) |
 | `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |

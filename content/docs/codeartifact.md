@@ -10,7 +10,7 @@ params:
 
 Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. Keeping them all current across a growing team is a constant chore.
 
-With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, and npm can pull and publish packages from your AWS CodeArtifact repositories without manual token management.
+With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, npm, pnpm, and uv can pull and publish packages from your AWS CodeArtifact repositories without manual token management.
 
 ## How it works
 
@@ -42,7 +42,7 @@ vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] 
 
 | Flag | Description |
 |---|---|
-| `--tool` | Package manager to configure: `cargo`, `pip`, or `npm` (required) |
+| `--tool` | Package manager to configure: `cargo`, `pip`, `npm`, `pnpm`, or `uv` (required) |
 | `--repository` | The AWS CodeArtifact repository name (required) |
 | `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
 | `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
@@ -90,10 +90,12 @@ Named profiles are referenced by other commands using the `--profile` flag.
 | Package Manager | Protocol | Authentication Method | Token Model |
 |---|---|---|---|
 | **Cargo** | `sparse+https` | Bearer token via credential provider | Dynamic (fetched on demand) |
-| **pip** | HTTPS | Token embedded in index URL | Dynamic (fetched on demand) |
-| **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, ~12h expiry) |
+| **pip** | HTTPS | Token embedded in index URL via keyring | Dynamic (fetched on demand) |
+| **uv** | HTTPS | Token via keyring subprocess | Dynamic (fetched on demand) |
+| **pnpm** | HTTPS | Token via `tokenHelper` | Dynamic (fetched on demand) |
+| **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, auto-refreshed on login) |
 
-**Dynamic tokens** (Cargo, pip) are fetched transparently on each operation and do not expire during normal use. **Static tokens** (npm) are written to `.npmrc` during setup and expire after approximately 12 hours. When an npm token expires, re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh it.
+**Dynamic tokens** (Cargo, pip, uv, pnpm) are fetched transparently on each operation and do not expire during normal use. **npm** uses a static token written to `.npmrc`, but it is automatically refreshed each time you run `vouch login` -- no manual token rotation needed.
 
 ---
 
@@ -145,7 +147,41 @@ npm install
 npm publish
 ```
 
-npm uses a static token written to `.npmrc`. If you see authentication errors after ~12 hours, re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh the token.
+npm uses a static token written to `.npmrc`. The token is automatically refreshed each time you run `vouch login`, so you do not need to re-run setup commands.
+
+### pnpm
+
+```bash
+vouch setup codeartifact --tool pnpm --repository my-repo
+```
+
+pnpm supports [tokenHelper](https://pnpm.io/npmrc#tokenhelper), which lets an external program supply authentication tokens dynamically. Vouch installs a `vouch-pnpm-tokenhelper` symlink in `~/.local/bin/` and configures `.npmrc` to use it. Tokens are fetched on demand -- no expiry, no manual refresh.
+
+```bash
+# Install packages
+pnpm install
+
+# Publish a package
+pnpm publish
+```
+
+### uv
+
+```bash
+vouch setup codeartifact --tool uv --repository my-repo
+```
+
+[uv](https://docs.astral.sh/uv/) supports the keyring subprocess protocol for dynamic credential fetching. Vouch installs a `keyring` symlink in `~/.local/bin/` and configures `~/.config/uv/uv.toml` with `keyring-provider = "subprocess"` and a CodeArtifact index entry.
+
+```bash
+# Install packages
+uv pip install my-package
+
+# Sync a project
+uv sync
+```
+
+uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact --tool pip` separately.
 
 ---
 
@@ -209,8 +245,8 @@ Use the `--region` flag during setup to configure the appropriate partition.
 
 ### "Token is expired"
 
-- For **npm**: Re-run `vouch setup codeartifact --tool npm --repository <REPO>` to refresh the static token in `.npmrc`.
-- For **Cargo/pip**: Run `vouch login` to refresh your session. Dynamic tokens are fetched on demand, so expiry usually indicates the Vouch session itself has ended.
+- Run `vouch login` to refresh your session. For npm, this also automatically refreshes the static token in `.npmrc`.
+- For **Cargo/pip/pnpm/uv**: Dynamic tokens are fetched on demand, so expiry usually indicates the Vouch session itself has ended.
 
 ### Wrong domain or repository
 
@@ -281,4 +317,4 @@ vouch credential codeartifact --profile artifacts
 
 ## Token Lifetime
 
-AWS CodeArtifact authorization tokens are valid for up to **12 hours** by default. For Cargo and pip, Vouch fetches tokens dynamically on each operation, so expiry is transparent. For npm, the token is embedded in `.npmrc` and must be refreshed by re-running `vouch setup codeartifact --tool npm` when it expires. If your Vouch session (8 hours) has expired, run `vouch login` first.
+AWS CodeArtifact authorization tokens are valid for up to **12 hours** by default. For Cargo, pip, pnpm, and uv, Vouch fetches tokens dynamically on each operation, so expiry is transparent. For npm, the static token in `.npmrc` is automatically refreshed each time you run `vouch login`. If your Vouch session (8 hours) has expired, run `vouch login` first -- this refreshes both your session and any npm tokens.

@@ -80,11 +80,13 @@ No cron jobs. No wrapper scripts. No stale tokens. The token is fetched on deman
 | Package manager | Token model | Developer experience |
 |---|---|---|
 | **Cargo** | Dynamic (fetched on demand via credential provider) | Fully transparent. `cargo build` just works. |
-| **pip** | Dynamic (embedded in index URL via credential helper) | Fully transparent. `pip install` just works. |
-| **npm** | Static (written to `.npmrc`, 12h expiry) | Re-run `vouch setup codeartifact --tool npm` when token expires. |
+| **pip** | Dynamic (embedded in index URL via keyring) | Fully transparent. `pip install` just works. |
+| **uv** | Dynamic (fetched via keyring subprocess) | Fully transparent. `uv sync` just works. |
+| **pnpm** | Dynamic (fetched via tokenHelper) | Fully transparent. `pnpm install` just works. |
+| **npm** | Static (written to `.npmrc`, auto-refreshed on login) | Fully transparent. `npm install` just works. |
 | **Maven** | Environment variable (`CODEARTIFACT_AUTH_TOKEN`) | Use `vouch exec --type codeartifact -- mvn deploy`. |
 
-Cargo and pip get the best experience because their credential systems support dynamic token fetching. npm's `.npmrc` format requires a static token, but even there, refreshing is a single command instead of a manual multi-step process.
+Cargo, pip, uv, and pnpm use dynamic token fetching -- tokens are obtained on demand and never expire during normal use. npm uses a static token in `.npmrc`, but Vouch automatically refreshes it each time you run `vouch login`.
 
 ## The broader picture
 

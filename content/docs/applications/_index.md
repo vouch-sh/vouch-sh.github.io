@@ -254,6 +254,51 @@ The new token is scoped to Service B's audience and inherits the user's identity
 
 ---
 
+## Client Credentials (Machine-to-Machine)
+
+For automated systems that need to authenticate without any human interaction -- CI/CD pipelines, background services, or daemon processes -- Vouch supports the OAuth **client credentials** grant ([RFC 6749 Section 4.4](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4)).
+
+Unlike the authorization code flow (which requires a browser and a YubiKey tap), the client credentials flow lets a service authenticate directly using its client ID and client secret.
+
+### When to use client credentials
+
+- **CI/CD pipelines** that need Vouch tokens without a human in the loop
+- **Background services** or **daemon processes** that run unattended
+- **Automated tooling** that needs to call Vouch-protected APIs
+
+For deployments where you want a human to explicitly authorize each action (e.g., production deploys), use the [CI/CD human approval gate](/docs/cicd/) pattern instead.
+
+### Request
+
+```bash
+curl -X POST https://{{< instance-url >}}/oauth/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=your-client-id" \
+  -d "client_secret=your-client-secret" \
+  -d "scope=openid email"
+```
+
+### Response
+
+```json
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIs...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+The access token can be used as a Bearer token in API requests to any service that validates tokens against the Vouch JWKS endpoint.
+
+### Setup
+
+1. Register an application at `https://{{< instance-url >}}/applications` (or via the [Admin Dashboard](/docs/admin/)).
+2. Note the **client ID** and **client secret**.
+3. Store the client secret securely (e.g., as a CI/CD secret, not in source code).
+4. Use the token endpoint with `grant_type=client_credentials` to obtain tokens.
+
+---
+
 ## Troubleshooting
 
 ### Discovery endpoint not reachable
