@@ -14,7 +14,7 @@ params:
 Install the required packages:
 
 ```bash
-pip install authlib httpx fastapi uvicorn itsdangerous
+pip install authlib httpx fastapi uvicorn itsdangerous starlette
 ```
 
 Configure the OIDC client in your FastAPI application:
@@ -22,46 +22,59 @@ Configure the OIDC client in your FastAPI application:
 ```python
 import os
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
-from authlib.integrations.starlette_client import OAuth
+from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
+from authlib.integrations.starlette_client import OAuth
 
 app = FastAPI()
-app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.environ.get('SECRET_KEY', 'dev-secret-change-in-production'),
+)
 
 oauth = OAuth()
 oauth.register(
-    name="vouch",
-    client_id=os.environ["VOUCH_CLIENT_ID"],
-    client_secret=os.environ["VOUCH_CLIENT_SECRET"],
-    server_metadata_url="https://{{< instance-url >}}/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email"},
-    code_challenge_method="S256",
+    name='vouch',
+    client_id=os.environ.get('VOUCH_CLIENT_ID'),
+    client_secret=os.environ.get('VOUCH_CLIENT_SECRET'),
+    server_metadata_url=f"{os.environ.get('VOUCH_ISSUER', 'https://{{< instance-url >}}')}/.well-known/openid-configuration",
+    client_kwargs={'scope': 'openid email'},
+    code_challenge_method='S256',
 )
 
 
-@app.get("/login")
+@app.get('/login')
 async def login(request: Request):
-    redirect_uri = request.url_for("callback")
+    redirect_uri = os.environ.get('VOUCH_REDIRECT_URI') or str(request.url_for('callback'))
     return await oauth.vouch.authorize_redirect(request, redirect_uri)
 
 
-@app.get("/auth/callback")
+@app.get('/callback')
 async def callback(request: Request):
     token = await oauth.vouch.authorize_access_token(request)
-    userinfo = token["userinfo"]
-    request.session["user"] = {
-        "sub": userinfo["sub"],
-        "name": userinfo.get("name"),
-        "email": userinfo.get("email"),
+    userinfo = token.get('userinfo')
+    request.session['user'] = {
+        'email': userinfo.get('email'),
+        'hardware_verified': userinfo.get('hardware_verified', False),
     }
-    return RedirectResponse(url="/")
+    return RedirectResponse(url='/')
 
 
-@app.get("/")
-async def index(request: Request):
-    user = request.session.get("user")
+@app.get('/logout')
+async def logout(request: Request):
+    request.session.pop('user', None)
+    return RedirectResponse(url='/')
+
+
+@app.get('/', response_class=HTMLResponse)
+async def home(request: Request):
+    user = request.session.get('user')
     if user:
-        return {"message": f"Hello, {user['name']}!"}
-    return {"message": "Not authenticated. Visit /login to sign in."}
+        verified = '<p><strong>Hardware Verified</strong></p>' if user.get('hardware_verified') else ''
+        return f"<p>Signed in as {user['email']}</p>{verified}<a href='/logout'>Sign out</a>"
+    return "<a href='/login'>Sign in with Vouch</a>"
 ```
+
+The callback route is `/callback`. The `hardware_verified` claim is extracted from the userinfo response and stored in the session.
+
+**Callback URL:** Register `http://localhost:3000/callback` as a redirect URI for your application.

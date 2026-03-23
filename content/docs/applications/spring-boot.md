@@ -31,10 +31,10 @@ spring:
             client-secret: ${VOUCH_CLIENT_SECRET}
             scope: openid, email
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/vouch"
+            redirect-uri: ${VOUCH_REDIRECT_URI:http://localhost:3000/login/oauth2/code/vouch}
         provider:
           vouch:
-            issuer-uri: "https://{{< instance-url >}}"
+            issuer-uri: ${VOUCH_ISSUER:https://{{< instance-url >}}}
 ```
 
 Configure Spring Security in your application:

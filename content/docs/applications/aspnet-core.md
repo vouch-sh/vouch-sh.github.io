@@ -29,6 +29,13 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var vouchIssuer = Environment.GetEnvironmentVariable("VOUCH_ISSUER") ?? "https://{{< instance-url >}}";
+var clientId = Environment.GetEnvironmentVariable("VOUCH_CLIENT_ID")
+    ?? throw new InvalidOperationException("VOUCH_CLIENT_ID is required");
+var clientSecret = Environment.GetEnvironmentVariable("VOUCH_CLIENT_SECRET")
+    ?? throw new InvalidOperationException("VOUCH_CLIENT_SECRET is required");
+var redirectUri = Environment.GetEnvironmentVariable("VOUCH_REDIRECT_URI") ?? "http://localhost:3000/callback";
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -37,9 +44,9 @@ builder.Services.AddAuthentication(options =>
 .AddCookie()
 .AddOpenIdConnect(options =>
 {
-    options.Authority = "https://{{< instance-url >}}";
-    options.ClientId = Environment.GetEnvironmentVariable("VOUCH_CLIENT_ID");
-    options.ClientSecret = Environment.GetEnvironmentVariable("VOUCH_CLIENT_SECRET");
+    options.Authority = vouchIssuer;
+    options.ClientId = clientId;
+    options.ClientSecret = clientSecret;
     options.ResponseType = OpenIdConnectResponseType.Code;
     options.UsePkce = true;
     options.Scope.Clear();
@@ -47,6 +54,15 @@ builder.Services.AddAuthentication(options =>
     options.Scope.Add("email");
     options.SaveTokens = true;
     options.GetClaimsFromUserInfoEndpoint = true;
+    options.CallbackPath = new PathString(new Uri(redirectUri).AbsolutePath);
+    options.Events = new OpenIdConnectEvents
+    {
+        OnRedirectToIdentityProvider = context =>
+        {
+            context.ProtocolMessage.RedirectUri = redirectUri;
+            return Task.CompletedTask;
+        },
+    };
 
     options.ClaimActions.MapJsonKey("hardware_verified", "hardware_verified");
     options.ClaimActions.MapJsonKey("hardware_aaguid", "hardware_aaguid");

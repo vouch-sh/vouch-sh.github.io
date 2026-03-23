@@ -11,29 +11,30 @@ params:
 
 [OmniAuth OpenID Connect](https://github.com/omniauth/omniauth_openid_connect) provides a standard OIDC strategy for Rails applications.
 
-Add the `omniauth_openid_connect` gem to your `Gemfile`:
+Add the required gems to your `Gemfile`:
 
 ```ruby
-gem 'omniauth_openid_connect'
+gem 'omniauth_openid_connect', '~> 0.8'
+gem 'omniauth-rails_csrf_protection', '~> 2.0'
 ```
+
+The `omniauth-rails_csrf_protection` gem is required to protect against CSRF attacks on the OmniAuth request phase.
 
 Configure the provider in `config/initializers/omniauth.rb`:
 
 ```ruby
 Rails.application.config.middleware.use OmniAuth::Builder do
-  provider :openid_connect, {
+  provider :openid_connect,
     name: :vouch,
-    scope: [:openid, :email],
-    response_type: :code,
-    pkce: true,
-    issuer: "https://{{< instance-url >}}",
+    issuer: ENV['VOUCH_ISSUER'] || 'https://{{< instance-url >}}',
     discovery: true,
     client_options: {
-      identifier: ENV["VOUCH_CLIENT_ID"],
-      secret: ENV["VOUCH_CLIENT_SECRET"],
-      redirect_uri: "https://your-app.example.com/auth/vouch/callback"
-    }
-  }
+      identifier: ENV['VOUCH_CLIENT_ID'],
+      secret: ENV['VOUCH_CLIENT_SECRET'],
+      redirect_uri: ENV['VOUCH_REDIRECT_URI'] || 'http://localhost:3000/auth/vouch/callback'
+    },
+    scope: [:openid, :email],
+    pkce: true
 end
 ```
 

@@ -18,55 +18,110 @@ Add the required dependencies to your `Cargo.toml`:
 axum = "0.7"
 axum-extra = { version = "0.9", features = ["cookie"] }
 openidconnect = "3"
-reqwest = { version = "0.12", features = ["rustls-tls"] }
+reqwest = { version = "0.12", features = ["rustls-tls"], default-features = false }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-tower-sessions = "0.13"
-url = "2"
+tower-sessions = "0.12"
 ```
+
+Define custom claims to capture Vouch-specific fields from the ID token:
+
+```rust
+use openidconnect::AdditionalClaims;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct VouchClaims {
+    #[serde(default)]
+    hardware_verified: Option<bool>,
+    #[serde(default)]
+    hardware_aaguid: Option<String>,
+}
+
+impl AdditionalClaims for VouchClaims {}
+```
+
+This requires defining custom type aliases for the client and token types. See the [full example](https://github.com/vouch-sh/examples/tree/main/web/axum-openidconnect) for the complete type definitions.
 
 Implement the OIDC integration:
 
 ```rust
 use axum::{
     extract::{Query, State},
-    response::{IntoResponse, Redirect},
+    response::{Html, IntoResponse, Redirect},
     routing::get,
     Router,
 };
 use openidconnect::{
-    core::{CoreClient, CoreProviderMetadata, CoreResponseType},
-    reqwest::async_http_client,
+    core::{CoreProviderMetadata, CoreResponseType},
     AuthenticationFlow, AuthorizationCode, ClientId, ClientSecret,
     CsrfToken, IssuerUrl, Nonce, PkceCodeChallenge, PkceCodeVerifier,
     RedirectUrl, Scope, TokenResponse,
+    reqwest::async_http_client,
 };
-use serde::Deserialize;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::RwLock;
 use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
 
-const CSRF_TOKEN_KEY: &str = "csrf_token";
-const NONCE_KEY: &str = "nonce";
-const PKCE_VERIFIER_KEY: &str = "pkce_verifier";
-
+#[derive(Clone)]
 struct AppState {
-    oidc_client: CoreClient,
+    client: VouchClient,
+    pkce_verifiers: Arc<RwLock<HashMap<String, (PkceCodeVerifier, Nonce)>>>,
 }
 
-#[derive(Deserialize)]
-struct CallbackParams {
-    code: String,
-    state: String,
-}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let issuer_url = IssuerUrl::new(
+        std::env::var("VOUCH_ISSUER").unwrap_or_else(|_| "https://{{< instance-url >}}".to_string()),
+    )?;
 
-async fn login(
-    State(state): State<Arc<AppState>>,
-    session: Session,
-) -> impl IntoResponse {
+    let provider_metadata =
+        CoreProviderMetadata::discover_async(issuer_url, async_http_client).await?;
+
+    let redirect_uri = std::env::var("VOUCH_REDIRECT_URI")
+        .unwrap_or_else(|_| "http://localhost:3000/callback".to_string());
+
+    let client = VouchClient::from_provider_metadata(
+        provider_metadata,
+        ClientId::new(std::env::var("VOUCH_CLIENT_ID").expect("VOUCH_CLIENT_ID must be set")),
+        Some(ClientSecret::new(
+            std::env::var("VOUCH_CLIENT_SECRET").expect("VOUCH_CLIENT_SECRET must be set"),
+        )),
+    )
+    .set_redirect_uri(RedirectUrl::new(redirect_uri)?);
+
+    let state = AppState {
+        client,
+        pkce_verifiers: Arc::new(RwLock::new(HashMap::new())),
+    };
+
+    let session_store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(session_store);
+
+    let app = Router::new()
+        .route("/", get(home))
+        .route("/login", get(login))
+        .route("/callback", get(callback))
+        .route("/logout", get(logout))
+        .layer(session_layer)
+        .with_state(state);
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    axum::serve(listener, app).await?;
+
+    Ok(())
+}
+```
+
+The login handler generates a PKCE challenge and redirects to the authorization endpoint:
+
+```rust
+async fn login(State(state): State<AppState>) -> Redirect {
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     let (auth_url, csrf_token, nonce) = state
-        .oidc_client
+        .client
         .authorize_url(
             AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
             CsrfToken::new_random,
@@ -76,134 +131,93 @@ async fn login(
         .set_pkce_challenge(pkce_challenge)
         .url();
 
-    // Store the CSRF token, nonce, and PKCE verifier in the session so we
-    // can verify them when the provider redirects back to the callback endpoint.
-    session
-        .insert(CSRF_TOKEN_KEY, csrf_token.secret().clone())
-        .await
-        .expect("Failed to store CSRF token");
-    session
-        .insert(NONCE_KEY, nonce.secret().clone())
-        .await
-        .expect("Failed to store nonce");
-    session
-        .insert(PKCE_VERIFIER_KEY, pkce_verifier.secret().clone())
-        .await
-        .expect("Failed to store PKCE verifier");
+    state.pkce_verifiers.write().await.insert(
+        csrf_token.secret().clone(),
+        (pkce_verifier, nonce),
+    );
 
     Redirect::to(auth_url.as_str())
 }
+```
+
+The callback handler exchanges the authorization code for tokens and extracts claims:
+
+```rust
+#[derive(Deserialize)]
+struct CallbackParams {
+    code: String,
+    state: String,
+}
 
 async fn callback(
-    State(state): State<Arc<AppState>>,
-    session: Session,
     Query(params): Query<CallbackParams>,
+    State(state): State<AppState>,
+    session: Session,
 ) -> impl IntoResponse {
-    // Retrieve and remove the CSRF token from the session.
-    let stored_csrf: String = session
-        .remove(CSRF_TOKEN_KEY)
-        .await
-        .expect("Session error")
-        .expect("Missing CSRF token in session -- login flow was not initiated");
+    let (pkce_verifier, nonce) = match state.pkce_verifiers.write().await.remove(&params.state) {
+        Some(v) => v,
+        None => return Redirect::to("/").into_response(),
+    };
 
-    // Verify the state parameter matches the CSRF token we stored.
-    if params.state != stored_csrf {
-        panic!("CSRF token mismatch -- possible CSRF attack");
-    }
-
-    // Retrieve and remove the nonce from the session.
-    let stored_nonce: String = session
-        .remove(NONCE_KEY)
-        .await
-        .expect("Session error")
-        .expect("Missing nonce in session");
-    let nonce = Nonce::new(stored_nonce);
-
-    // Retrieve and remove the PKCE verifier from the session.
-    let stored_pkce: String = session
-        .remove(PKCE_VERIFIER_KEY)
-        .await
-        .expect("Session error")
-        .expect("Missing PKCE verifier in session");
-    let pkce_verifier = PkceCodeVerifier::new(stored_pkce);
-
-    let token_response = state
-        .oidc_client
+    let token_response = match state
+        .client
         .exchange_code(AuthorizationCode::new(params.code))
         .set_pkce_verifier(pkce_verifier)
         .request_async(async_http_client)
         .await
-        .expect("Failed to exchange code");
+    {
+        Ok(t) => t,
+        Err(_) => return Redirect::to("/").into_response(),
+    };
 
-    let id_token = token_response
-        .id_token()
-        .expect("Server did not return an ID token");
+    let id_token = match token_response.id_token() {
+        Some(t) => t,
+        None => return Redirect::to("/").into_response(),
+    };
 
-    // Verify the ID token using the nonce from the original authorization request.
-    let claims = id_token
-        .claims(&state.oidc_client.id_token_verifier(), &nonce)
-        .expect("Failed to verify ID token");
+    let claims = match id_token.claims(&state.client.id_token_verifier(), &nonce) {
+        Ok(c) => c,
+        Err(_) => return Redirect::to("/").into_response(),
+    };
 
-    format!(
-        "Welcome! Subject: {}, Email: {:?}",
-        claims.subject(),
-        claims.email()
-    )
-}
+    let email = claims
+        .email()
+        .map(|e| e.as_str().to_string())
+        .unwrap_or_default();
+    let hardware_verified = claims
+        .additional_claims()
+        .hardware_verified
+        .unwrap_or(false);
 
-#[tokio::main]
-async fn main() {
-    let issuer_url =
-        IssuerUrl::new("https://{{< instance-url >}}".to_string()).expect("Invalid issuer URL");
-
-    let provider_metadata =
-        CoreProviderMetadata::discover_async(issuer_url, async_http_client)
-            .await
-            .expect("Failed to discover provider");
-
-    let client = CoreClient::from_provider_metadata(
-        provider_metadata,
-        ClientId::new(std::env::var("VOUCH_CLIENT_ID").expect("VOUCH_CLIENT_ID not set")),
-        Some(ClientSecret::new(
-            std::env::var("VOUCH_CLIENT_SECRET").expect("VOUCH_CLIENT_SECRET not set"),
-        )),
-    )
-    .set_redirect_uri(
-        RedirectUrl::new("https://your-app.example.com/auth/callback".to_string())
-            .expect("Invalid redirect URL"),
-    );
-
-    let state = Arc::new(AppState {
-        oidc_client: client,
+    let user = serde_json::json!({
+        "email": email,
+        "hardware_verified": hardware_verified,
     });
 
-    // Use an in-memory session store. In production, replace with a
-    // persistent store (e.g., Redis) for multi-instance deployments.
-    let session_store = MemoryStore::default();
-    let session_layer = SessionManagerLayer::new(session_store);
+    let _ = session.insert("user", user).await;
 
-    let app = Router::new()
-        .route("/login", get(login))
-        .route("/auth/callback", get(callback))
-        .layer(session_layer)
-        .with_state(state);
-
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
-        .await
-        .expect("Failed to bind");
-    axum::serve(listener, app).await.expect("Server error");
+    Redirect::to("/").into_response()
 }
 ```
 
-### Rich Authorization Requests
-
-To request structured permissions beyond scopes, pass `authorization_details` as an extra query parameter on the authorization URL. The `openidconnect` crate supports this via `set_extra_param`:
+The `additional_claims()` method returns the `VouchClaims` struct with `hardware_verified` and `hardware_aaguid` fields.
 
 ```rust
-let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
+async fn logout(session: Session) -> Redirect {
+    let _ = session.remove::<serde_json::Value>("user").await;
+    Redirect::to("/")
+}
+```
 
+**Callback URL:** Register `http://localhost:3000/callback` as a redirect URI for your application.
+
+### Rich Authorization Requests
+
+To request structured permissions beyond scopes, pass `authorization_details` as an extra query parameter on the authorization URL:
+
+```rust
 let (auth_url, csrf_token, nonce) = state
-    .oidc_client
+    .client
     .authorize_url(
         AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
         CsrfToken::new_random,

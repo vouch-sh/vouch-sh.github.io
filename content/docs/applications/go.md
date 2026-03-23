@@ -28,17 +28,27 @@ import (
     "golang.org/x/oauth2"
 )
 
-provider, err := oidc.NewProvider(ctx, "https://{{< instance-url >}}")
+issuer := os.Getenv("VOUCH_ISSUER")
+if issuer == "" {
+    issuer = "https://{{< instance-url >}}"
+}
+
+provider, err := oidc.NewProvider(ctx, issuer)
 if err != nil {
     log.Fatalf("Failed to create OIDC provider: %v", err)
 }
 
-verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
+redirectURL := os.Getenv("VOUCH_REDIRECT_URI")
+if redirectURL == "" {
+    redirectURL = "http://localhost:3000/callback"
+}
+
+verifier := provider.Verifier(&oidc.Config{ClientID: os.Getenv("VOUCH_CLIENT_ID")})
 
 oauth2Config := &oauth2.Config{
-    ClientID:     clientID,
-    ClientSecret: clientSecret,
-    RedirectURL:  "http://localhost:3000/callback",
+    ClientID:     os.Getenv("VOUCH_CLIENT_ID"),
+    ClientSecret: os.Getenv("VOUCH_CLIENT_SECRET"),
+    RedirectURL:  redirectURL,
     Endpoint:     provider.Endpoint(),
     Scopes:       []string{oidc.ScopeOpenID, "email"},
 }

@@ -22,15 +22,12 @@ import express from 'express';
 import session from 'express-session';
 import * as client from 'openid-client';
 
+const issuer = process.env.VOUCH_ISSUER || 'https://{{< instance-url >}}';
 const clientId = process.env.VOUCH_CLIENT_ID;
 const clientSecret = process.env.VOUCH_CLIENT_SECRET;
-const callbackUrl = 'https://your-app.example.com/auth/vouch/callback';
+const callbackUrl = process.env.VOUCH_REDIRECT_URI || 'http://localhost:3000/auth/vouch/callback';
 
-const config = await client.discovery(
-  new URL('https://{{< instance-url >}}'),
-  clientId,
-  clientSecret
-);
+const config = await client.discovery(new URL(issuer), clientId, clientSecret);
 
 const app = express();
 
