@@ -19,16 +19,17 @@ Every Vouch credential follows the same path from hardware key to cloud service:
 ```
 YubiKey (FIDO2)
   → Vouch CLI (local machine)
-    → Vouch Server (validates assertion, issues session)
+    → Vouch Server (validates assertion, evaluates device posture, issues session)
       → External service (AWS STS / GitHub / SSH CA)
         → Short-lived credential returned to CLI
           → Tool uses credential (aws, ssh, git, docker)
 ```
 
 1. **FIDO2 assertion** -- The YubiKey signs a challenge using a private key that never leaves the hardware. The assertion includes origin binding (preventing phishing) and user verification (PIN + touch).
-2. **Session issuance** -- The Vouch server validates the signed assertion against the enrolled public key and issues a session token valid for 8 hours.
-3. **Credential exchange** -- When a tool needs a credential, the CLI exchanges the session token for a service-specific credential (STS `AssumeRoleWithWebIdentity`, SSH certificate signing, GitHub App installation token, etc.).
-4. **Tool consumption** -- The tool receives the short-lived credential and uses it normally. The credential expires on its own -- there is nothing to revoke or rotate.
+2. **Device posture evaluation** -- If active [posture policies](/docs/device-posture/) exist, the server evaluates the device's security state (disk encryption, firewall, EDR, screen lock, etc.) against configured policies. If any policy fails, access is denied with OS-specific remediation guidance.
+3. **Session issuance** -- The Vouch server validates the signed assertion against the enrolled public key and issues a session token valid for 8 hours.
+4. **Credential exchange** -- When a tool needs a credential, the CLI exchanges the session token for a service-specific credential (STS `AssumeRoleWithWebIdentity`, SSH certificate signing, GitHub App installation token, etc.). All requests include [HTTP Message Signatures (RFC 9421)](https://datatracker.ietf.org/doc/html/rfc9421) for request-level integrity.
+5. **Tool consumption** -- The tool receives the short-lived credential and uses it normally. The credential expires on its own -- there is nothing to revoke or rotate.
 
 ---
 
@@ -67,10 +68,10 @@ Vouch operates across three trust boundaries:
 
 ### 3. Vouch server
 
-- The server validates FIDO2 assertions and issues signed OIDC tokens (ES256 over P-256).
+- The server validates FIDO2 assertions (with identity federation through OIDC or [SAML 2.0](/docs/saml/) identity providers) and issues signed OIDC tokens (ES256 over P-256).
 - Signing keys (OIDC ES256 and SSH CA Ed25519) are managed by AWS KMS — the server delegates signing operations and never holds private key material.
 - The server does not store AWS credentials, SSH private keys, or GitHub tokens. It acts as an identity broker, not a secrets vault.
-- Communication between CLI and server uses TLS 1.3.
+- Communication between CLI and server uses TLS 1.3. Authenticated requests include HTTP Message Signatures ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)) for request-level integrity verification.
 
 ---
 
@@ -127,6 +128,8 @@ FIDO2 proves the human is present. The OAuth 2.0 layer protects everything after
 
 **Audience-restricted tokens.** Each token includes a resource indicator ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) restricting it to a specific service. A token issued for AWS cannot be presented to GitHub.
 
+**Request-level integrity.** Every authenticated request includes an HTTP Message Signature ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)). The CLI signs each request using the FAPI key pair stored in the OS keychain. The server verifies the signature before processing, providing cryptographic proof that the request was not tampered with and originated from the registered client.
+
 **Fine-grained authorization requests.** Applications can request structured permissions using Rich Authorization Requests ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)). Instead of flat scope strings, `authorization_details` objects describe the type, actions, and resources being requested — enabling precise, machine-readable authorization that goes beyond what scopes can express.
 
 ---
@@ -142,6 +145,7 @@ A successful login requires producing **all** of the following, and each is inde
 3. **DPoP proof** -- The client proves possession of the same ES256 private key used during registration. Each proof carries a unique `jti` tracked in the database to prevent replay. The server can require a nonce for additional resistance to precomputation.
 4. **Client assertion** -- OAuth client authentication uses a `private_key_jwt` (RFC 7523) signed with the device's ES256 key, with a 60-second lifetime and unique `jti`.
 5. **Counter validation** -- The YubiKey's monotonic signature counter must strictly increase on each assertion. A cloned authenticator would have a stale counter, which the server detects and rejects.
+6. **HTTP Message Signature** -- Every authenticated request is signed using the client's FAPI key pair ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)). The server verifies the signature covers the request method, path, and body, preventing request tampering even if TLS termination occurs at an intermediary.
 
 ### Attack scenarios
 
@@ -151,6 +155,7 @@ A successful login requires producing **all** of the following, and each is inde
 | **Forge a FIDO2 assertion** | Requires the YubiKey's private key, which never leaves the hardware |
 | **Steal an access token from the network** | Token is DPoP-bound — unusable without the device's private key |
 | **Man-in-the-middle the challenge** | Challenge is signed in a state JWT with a server-only key; tampering is detected |
+| **Tamper with a request in transit** | HTTP Message Signature verification fails — the signature covers the request method, path, and body |
 | **Reuse an old assertion with a new challenge** | Challenge is embedded in `client_data_json`, which is signed by the YubiKey; mismatch is detected |
 | **Clone the YubiKey** | Counter validation detects cloned authenticators |
 | **Brute-force the PIN remotely** | PIN is verified locally by YubiKey hardware, which locks after 8 failed attempts |

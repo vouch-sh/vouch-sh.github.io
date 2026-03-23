@@ -57,12 +57,12 @@ Vouch is a credential broker that replaces long-lived developer secrets (AWS acc
 
 Data flows:
 
-1. **Login** — YubiKey signs FIDO2 assertion → CLI sends to server over TLS 1.3 → server validates against enrolled public key → returns DPoP-bound session token to agent (held in memory).
+1. **Login** — YubiKey signs FIDO2 assertion → CLI sends to server over TLS 1.3 → server validates against enrolled public key → server evaluates [device posture policies](/docs/device-posture/) (if active) → returns DPoP-bound session token to agent (held in memory).
 2. **AWS credential** — CLI presents session token + DPoP proof → server issues OIDC ID token (signed via KMS ES256) → CLI calls AWS STS `AssumeRoleWithWebIdentity` → STS returns temporary credentials.
 3. **SSH certificate** — CLI sends signing request with session token → server delegates to KMS Ed25519 CA → returns signed SSH certificate → agent serves via SSH agent protocol.
 4. **GitHub token** — CLI requests token with session token → server exchanges GitHub App credentials for installation access token → returns short-lived token to CLI.
 
-All CLI ↔ server traffic uses TLS 1.3. No credentials are written to disk at any point.
+All CLI ↔ server traffic uses TLS 1.3 with HTTP Message Signatures ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)) for request-level integrity. No credentials are written to disk at any point.
 
 ---
 
@@ -207,7 +207,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 
 **Mitigations:**
 
-- **T-T1**: All CLI-to-server communication uses TLS 1.3. DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) binds tokens to the client's key pair — intercepted tokens cannot be used from a different machine. PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) transmits authorization parameters server-side, keeping sensitive data out of URLs and browser history.
+- **T-T1**: All CLI-to-server communication uses TLS 1.3. HTTP Message Signatures ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)) provide request-level integrity — the CLI signs every authenticated request using the FAPI key pair, and the server rejects any request with an invalid or missing signature. DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) binds tokens to the client's key pair — intercepted tokens cannot be used from a different machine. PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) transmits authorization parameters server-side, keeping sensitive data out of URLs and browser history.
 - **T-T2**: Signing keys (OIDC ES256 and SSH CA Ed25519) are managed by AWS KMS and cannot be extracted — server compromise does not expose signing key material. The document encryption private key is only decryptable on NitroTPM-attested EC2 instances, preventing extraction even with full server access. The server does not store external service credentials — it brokers them on demand. Infrastructure controls (network isolation, access auditing) provide defense in depth. → [Shared responsibility](/docs/security/#shared-responsibility)
 - **T-T3**: Release binaries include [SLSA Level 3](https://slsa.dev/) provenance attestations and SHA256 checksums. Package manager installs (Homebrew, APT, DNF) verify signatures automatically. → [Supply chain security](/docs/security/#supply-chain-security)
 
@@ -312,6 +312,8 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **NitroTPM attestation** | T-T2, T-E3 (runtime key protection) | Infrastructure |
 | **Document-level encryption (HPKE)** | T-E3, T-R2 (data-at-rest protection) | Application |
 | **HMAC blind indexes** | T-I3 (database-level identifier protection) | Application |
+| **HTTP message signatures (RFC 9421)** | T-T1 (request tampering) | Protocol |
+| **Device posture policies (CEL)** | T-E1, T-E2 (compromised endpoint, insider abuse) | Application |
 
 ---
 
@@ -346,5 +348,6 @@ This threat model is reviewed quarterly and after any significant architecture c
 
 | Date | Change |
 |---|---|
+| 2026-03-23 | Added HTTP Message Signatures (RFC 9421) as a mitigation for request tampering (T-T1). Added device posture policies (CEL) as a mitigation for compromised endpoints and insider abuse (T-E1, T-E2). Updated login dataflow to include device posture evaluation step. Updated mitigation summary table. |
 | 2026-03-02 | Updated TLS requirement to 1.3 (TLS 1.2 removed). Added KMS signing architecture, NitroTPM attestation, and document-level encryption. Added assets inventory, validation, and review schedule sections. Aligned to AWS Threat Composer methodology: added dataflow diagram, impacted assets to all threat statements, priority metadata, and assumption-to-mitigation links. Updated mitigation summary table. |
 | 2026-02-28 | Initial threat model published on vouch.sh, structured using STRIDE and the AWS Threat Composer methodology. |
