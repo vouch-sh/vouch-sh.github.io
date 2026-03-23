@@ -41,7 +41,7 @@ Yes. The Vouch server supports AAGUID-based policies that control which authenti
 - **Comma-separated UUIDs** — An explicit allowlist of authenticator AAGUIDs (e.g., `cb69481e-8ff7-4039-93ec-0a2729a154a8,ee882879-721c-4913-9775-3dfcce97072a`).
 - **Unset or empty** — Any FIDO2 hardware key is accepted (default).
 
-Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys typically do not.
+Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. The server validates the chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/), cryptographically proving the key is a genuine Yubico device. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys typically do not.
 
 ### Can I use the same YubiKey across multiple Vouch organizations?
 

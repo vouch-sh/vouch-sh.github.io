@@ -58,7 +58,7 @@ The server does not store AWS credentials, SSH private keys, or GitHub tokens. I
 
 Used for all user authentication. The FIDO2 exchange happens between the YubiKey (authenticator), the Vouch CLI (client), and the Vouch server (relying party).
 
-- **Registration** (enrollment): The YubiKey generates a key pair. The public key is sent to the server. The private key never leaves the hardware.
+- **Registration** (enrollment): The YubiKey generates a key pair. The public key is sent to the server along with an attestation certificate. The private key never leaves the hardware. When attestation verification is enabled, the server validates the certificate chain against pinned Yubico root CA certificates to confirm the key is a genuine hardware device.
 - **Authentication** (login): The server sends a challenge. The YubiKey signs it with the private key after PIN + touch verification. The server validates the signature against the stored public key.
 
 ### OIDC (OpenID Connect)
