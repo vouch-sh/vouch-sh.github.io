@@ -698,17 +698,11 @@ tr:hover td {
 .certification-badge {
   height: 60px;
   width: auto;
-  border-radius: 8px;
-  background: #fff;
-  padding: 6px 10px;
 }
 
 .certification-badge-inline {
   height: 48px;
   width: auto;
-  border-radius: 6px;
-  background: #fff;
-  padding: 4px 8px;
   vertical-align: middle;
 }
 
@@ -721,7 +715,6 @@ tr:hover td {
 
 .footer-badges .certification-badge {
   height: 48px;
-  padding: 4px 8px;
 }
 
 .footer-badges .certification-badge {
