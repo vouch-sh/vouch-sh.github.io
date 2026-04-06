@@ -83,7 +83,7 @@
   (dict "@type" "Question" "name" "Are credentials written to disk?" "acceptedAnswer" (dict "@type" "Answer" "text" "No. All credentials are held in the Vouch agent's process memory. The session token, SSH certificate, and cached STS credentials are never written to a file. If the agent process stops, all credentials are lost."))
   (dict "@type" "Question" "name" "Does Vouch work on Windows?" "acceptedAnswer" (dict "@type" "Answer" "text" "Windows support is limited. The SSH agent and SSH certificate integration are not available on Windows. Only basic authentication and credential exchange commands are supported: enroll, login, credential aws, and credential github."))
   (dict "@type" "Question" "name" "Does Vouch use AWS STS? Is there a cost?" "acceptedAnswer" (dict "@type" "Answer" "text" "Yes, Vouch calls AssumeRoleWithWebIdentity to obtain temporary credentials. AWS STS is free — there is no charge for STS API calls."))
-  (dict "@type" "Question" "name" "Is Vouch open source?" "acceptedAnswer" (dict "@type" "Answer" "text" "The Vouch CLI is open source. The server is operated as a managed service."))
+  (dict "@type" "Question" "name" "Is Vouch open source?" "acceptedAnswer" (dict "@type" "Answer" "text" "Yes. Vouch is fully open source under the Apache-2.0 / MIT dual license."))
   (dict "@type" "Question" "name" "Which identity providers does Vouch support?" "acceptedAnswer" (dict "@type" "Answer" "text" "Vouch currently supports Google Workspace as the primary identity provider for user authentication. For automated user provisioning (SCIM), Vouch works with Google Workspace, Okta, Azure AD (Entra ID), and OneLogin."))
 }}
 {{ $faq := dict

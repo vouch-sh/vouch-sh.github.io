@@ -25,6 +25,12 @@ After a single `vouch login`, credential helpers for SSH, AWS, GitHub, EKS, Dock
 - **Short-lived credentials** -- All issued credentials (SSH certificates, OIDC tokens, AWS STS sessions) expire after a maximum of 8 hours. There is nothing to revoke and nothing to rotate.
 - **Full audit trail** -- Every credential issuance is logged with the authenticated identity, hardware key attestation, and timestamp.
 
+## Certifications
+
+Vouch is an [OpenID Certified](https://openid.net/certification/) OpenID Connect provider.
+
+<a href="https://openid.net/certification/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
+
 ## Integrations
 
 Vouch provides native credential helpers for:

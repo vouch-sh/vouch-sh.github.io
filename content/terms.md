@@ -131,7 +131,7 @@ Nothing in this section shall prevent either party from seeking injunctive or ot
 
 ## Intellectual Property
 
-The Vouch service, including its software, documentation, logos, trademarks, and other materials, is the intellectual property of Smoke Turner, LLC. The Vouch CLI and agent are licensed under the Apache-2.0 / MIT dual license. The server source code is available under the Business Source License 1.1 (BSL 1.1), which converts to Apache-2.0 after 2 years.
+The Vouch service, including its software, documentation, logos, trademarks, and other materials, is the intellectual property of Smoke Turner, LLC. Vouch is licensed under the Apache-2.0 / MIT dual license.
 
 Your use of the Service does not grant you any ownership interest in the Service or its intellectual property. You may not copy, modify, distribute, sell, or lease any part of the Service except as expressly permitted by the applicable open-source licenses.
 

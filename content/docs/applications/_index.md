@@ -12,6 +12,8 @@ Building phishing-resistant authentication from scratch means implementing WebAu
 
 Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) provider. You add "Sign in with Vouch" to any web application, single-page app, or native CLI tool using standard OIDC libraries. Every login is backed by a hardware security key, giving your application phishing-resistant authentication without building it yourself.
 
+<a href="https://openid.net/certification/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
+
 ## What you'll build
 
 By following this guide, you will integrate Vouch as an OIDC identity provider into your application. Users will authenticate with their YubiKey through Vouch, and your application will receive verified identity information including:

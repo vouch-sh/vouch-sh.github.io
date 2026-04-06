@@ -151,7 +151,7 @@ Yes. Use IAM trust policy conditions to restrict role assumption by email addres
 
 ### Is Vouch open source?
 
-The Vouch CLI is open source. The server is operated as a managed service.
+Yes. Vouch is fully open source under the Apache-2.0 / MIT dual license.
 
 ### What data does the Vouch server store?
 

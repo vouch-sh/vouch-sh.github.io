@@ -690,8 +690,33 @@ tr:hover td {
   display: flex;
   gap: 1rem;
   justify-content: center;
+  align-items: center;
   margin-top: 1.5rem;
   flex-wrap: wrap;
+}
+
+.certification-badge {
+  height: 40px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.certification-badge-inline {
+  height: 32px;
+  width: auto;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.footer-badges {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.footer-badges .certification-badge {
+  height: 28px;
 }
 
 /* ===== Region Cards ===== */
