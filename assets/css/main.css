@@ -696,15 +696,19 @@ tr:hover td {
 }
 
 .certification-badge {
-  height: 40px;
+  height: 60px;
   width: auto;
-  border-radius: 6px;
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 10px;
 }
 
 .certification-badge-inline {
-  height: 32px;
+  height: 48px;
   width: auto;
-  border-radius: 4px;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px 8px;
   vertical-align: middle;
 }
 
@@ -713,6 +717,11 @@ tr:hover td {
   gap: 0.75rem;
   align-items: center;
   margin-top: 0.5rem;
+}
+
+.footer-badges .certification-badge {
+  height: 48px;
+  padding: 4px 8px;
 }
 
 .footer-badges .certification-badge {
