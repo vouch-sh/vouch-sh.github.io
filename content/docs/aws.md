@@ -165,7 +165,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
               - "sts:SetSourceIdentity"
@@ -176,13 +176,22 @@ Resources:
               StringLike:
                 "{{< instance-url >}}:sub": "*@example.com"
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/ReadOnlyAccess
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
 ```
 
 ### Terraform
 
 ```hcl
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_iam_policy" "readonly" {
+  name = "ReadOnlyAccess"
+}
+
+locals {
+  aws_partition  = data.aws_partition.current.partition
+  aws_account_id = data.aws_caller_identity.current.account_id
+}
 
 resource "aws_iam_role" "vouch_developer" {
   name = "VouchDeveloper"
@@ -193,7 +202,7 @@ resource "aws_iam_role" "vouch_developer" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/{{< instance-url >}}"
+          Federated = "arn:${local.aws_partition}:iam::${local.aws_account_id}:oidc-provider/{{< instance-url >}}"
         }
         Action = [
           "sts:AssumeRoleWithWebIdentity",
@@ -215,7 +224,7 @@ resource "aws_iam_role" "vouch_developer" {
 
 resource "aws_iam_role_policy_attachment" "vouch_developer_readonly" {
   role       = aws_iam_role.vouch_developer.name
-  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+  policy_arn = data.aws_iam_policy.readonly.arn
 }
 ```
 
@@ -231,7 +240,7 @@ Limit role assumption to specific users by adding an email condition to the trus
 "Condition": {
   "StringEquals": {
     "{{< instance-url >}}:aud": "{{< instance-url >}}",
-    "{{< instance-url >}}:sub": "user@example.com"
+    "{{< instance-url >}}:sub": ["user@example.com"]
   }
 }
 ```
@@ -271,6 +280,8 @@ You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
   }
 }
 ```
+
+Because Vouch marks both tags as [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), they automatically propagate through role chains. If a developer assumes a hub role via Vouch and then chains into a spoke role in another account, the spoke role's trust policy can still evaluate `aws:PrincipalTag/email` and `aws:PrincipalTag/domain` conditions.
 
 ---
 
