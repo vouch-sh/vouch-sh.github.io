@@ -130,6 +130,20 @@ vouch aws roles [--sso-session <NAME>] [--account <ACCOUNT_ID>] [--json]
 
 See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for full details.
 
+### `vouch aws console`
+
+Open the AWS Management Console in your browser.
+
+```
+vouch aws console [--role <ROLE_ARN>]
+```
+
+| Flag | Description |
+|---|---|
+| `--role` | AWS IAM role ARN to assume (auto-detected from `~/.aws/config` if not specified) |
+
+This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser.
+
 ---
 
 ## Setup

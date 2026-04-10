@@ -62,6 +62,16 @@ vouch aws roles --account 123456789012
 
 See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details on role chaining and auto-discovery across multiple accounts.
 
+### Console access
+
+Open the AWS Management Console directly from the CLI without entering credentials in a browser:
+
+```bash
+vouch aws console
+```
+
+This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile.
+
 ---
 
 ## Step 1 -- Create the OIDC Provider in AWS (admin)
