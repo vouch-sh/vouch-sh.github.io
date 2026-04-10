@@ -46,18 +46,9 @@ The integration points:
 
 This is the foundational integration. You configure SPIRE to validate Vouch OIDC tokens so that human identity can inform workload registration and authorization decisions.
 
-### Register Vouch as a federated trust bundle
+### Register Vouch as a federated trust domain
 
-SPIRE can consume OIDC discovery metadata from external issuers. Configure a federation relationship so SPIRE can verify Vouch-issued JWTs:
-
-```bash
-spire-server bundle set \
-  -id spiffe://vouch.sh \
-  -format spiffe \
-  -path /path/to/vouch-jwks-bundle.json
-```
-
-Alternatively, configure automatic OIDC discovery in the SPIRE Server config so SPIRE fetches Vouch's signing keys dynamically:
+Add a federation block to your SPIRE Server config so SPIRE automatically fetches and refreshes Vouch's signing keys:
 
 ```hcl
 # spire-server.conf
@@ -84,15 +75,26 @@ federation {
   }
 
   federates_with "vouch.sh" {
-    bundle_endpoint_url = "https://{{< instance-url >}}/.well-known/openid-configuration"
-    bundle_endpoint_profile "https_spiffe" {
-      endpoint_spiffe_id = "spiffe://vouch.sh/spire-server"
-    }
+    bundle_endpoint_url = "https://{{< instance-url >}}"
+    bundle_endpoint_profile "https_web" {}
   }
 }
 ```
 
-> **Note:** The Vouch server publishes its OIDC metadata at `https://{{< instance-url >}}/.well-known/openid-configuration` and signing keys at `https://{{< instance-url >}}/.well-known/jwks.json`. SPIRE uses these endpoints to verify token signatures without any shared secrets.
+The `https_web` profile tells SPIRE to authenticate the endpoint using its public TLS certificate (standard web PKI). SPIRE fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` and automatically refreshes it as keys rotate.
+
+**For air-gapped environments**, fetch the keys manually and import them:
+
+```bash
+curl -s https://{{< instance-url >}}/.well-known/jwks.json -o vouch-jwks.json
+
+spire-server bundle set \
+  -id spiffe://vouch.sh \
+  -format jwks \
+  -path vouch-jwks.json
+```
+
+> **Note:** The manual approach requires re-running these commands whenever Vouch rotates its signing keys. Prefer the automatic federation config above unless your SPIRE Server cannot reach `https://{{< instance-url >}}`.
 
 ### Create workload registration entries with deployer identity
 
