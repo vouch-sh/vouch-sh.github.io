@@ -282,7 +282,7 @@ Create a role in the management account that trusts Vouch as an OIDC provider. T
 
 ### Management account -- Identity policy
 
-Attach an identity policy to the management account role that allows it to assume roles in member accounts and propagate the source identity:
+Attach an identity policy to the management account role that allows it to assume roles in member accounts, propagate session tags, and propagate the source identity:
 
 ```json
 {
@@ -292,7 +292,8 @@ Attach an identity policy to the management account role that allows it to assum
       "Effect": "Allow",
       "Action": [
         "sts:AssumeRole",
-        "sts:SetSourceIdentity"
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
       ],
       "Resource": "arn:aws:iam::*:role/VouchAccess"
     }
@@ -317,7 +318,8 @@ Each member account has a `VouchAccess` role that trusts the management account 
       },
       "Action": [
         "sts:AssumeRole",
-        "sts:SetSourceIdentity"
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
       ],
       "Condition": {
         "StringLike": {
