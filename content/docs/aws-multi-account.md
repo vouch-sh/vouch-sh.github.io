@@ -74,7 +74,10 @@ Resources:
           - Effect: Allow
             Principal:
               Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/${VouchServerUrl}"
-            Action: "sts:AssumeRoleWithWebIdentity"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+              - "sts:SetSourceIdentity"
+              - "sts:TagSession"
             Condition:
               StringEquals:
                 !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"
@@ -172,7 +175,11 @@ resource "aws_iam_role" "vouch" {
         Principal = {
           Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.vouch_server_url}"
         }
-        Action = "sts:AssumeRoleWithWebIdentity"
+        Action = [
+          "sts:AssumeRoleWithWebIdentity",
+          "sts:SetSourceIdentity",
+          "sts:TagSession",
+        ]
         Condition = {
           StringEquals = {
             "${var.vouch_server_url}:aud" = "https://${var.vouch_server_url}"
@@ -214,6 +221,110 @@ module "vouch" {
   policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
 ```
+
+---
+
+## Option 3 -- IAM Role Chaining
+
+In Options 1 and 2, every AWS account has its own OIDC provider and directly trusts Vouch. Role chaining is an alternative where only the **management account** has an OIDC provider. Developers federate into a single management account role, which then assumes roles in member accounts using [`sts:AssumeRole`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html). The developer's verified email propagates through the chain via [`SourceIdentity`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html).
+
+```
+Vouch (OIDC) → Management Account Role → Member Account Role
+                 (AssumeRoleWithWebIdentity)   (AssumeRole + SourceIdentity)
+```
+
+This pattern reduces the number of OIDC providers to one, simplifies member account IAM, and still provides per-user attribution in CloudTrail across all accounts.
+
+### Management account -- Trust policy
+
+Create a role in the management account that trusts Vouch as an OIDC provider. The three actions allow federation, source identity propagation, and session tagging:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:oidc-provider/{{< instance-url >}}"
+      },
+      "Action": [
+        "sts:AssumeRoleWithWebIdentity",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
+        },
+        "StringLike": {
+          "{{< instance-url >}}:sub": "*@example.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+### Management account -- Identity policy
+
+Attach an identity policy to the management account role that allows it to assume roles in member accounts and propagate the source identity:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity"
+      ],
+      "Resource": "arn:aws:iam::*:role/VouchAccess"
+    }
+  ]
+}
+```
+
+> **Tip:** Replace the wildcard (`*`) in the resource ARN with specific account IDs to follow the principle of least privilege (e.g., `arn:aws:iam::111111111111:role/VouchAccess`).
+
+### Member account -- Trust policy
+
+Each member account has a `VouchAccess` role that trusts the management account role (not Vouch directly). The `aws:SourceIdentity` condition ensures that only requests originating from a verified Vouch user with a matching email domain can assume the role:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:role/VouchAccess"
+      },
+      "Action": [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity"
+      ],
+      "Condition": {
+        "StringLike": {
+          "aws:SourceIdentity": "*@example.com"
+        }
+      }
+    }
+  ]
+}
+```
+
+### How SourceIdentity works
+
+When a developer federates into the management account role, Vouch sets the `SourceIdentity` to their verified email address. This identity propagates through the role chain:
+
+1. `vouch login` -- authenticates with YubiKey.
+2. `AssumeRoleWithWebIdentity` -- federates into the management account role; `SourceIdentity` is set to `alice@example.com`.
+3. `AssumeRole` -- chains into a member account role; `SourceIdentity` is carried forward.
+4. CloudTrail in the member account records `alice@example.com` as the source identity.
+
+This gives you per-user attribution in every account without deploying OIDC providers everywhere.
 
 ---
 
@@ -296,6 +407,26 @@ Or set a default:
 ```bash
 export AWS_PROFILE=vouch-dev
 ```
+
+### Auto-discovery with SSO
+
+If your organization uses AWS IAM Identity Center, developers can skip the manual per-account configuration entirely:
+
+```bash
+# Authenticate with IAM Identity Center
+vouch aws login
+
+# See which accounts are available
+vouch aws accounts
+
+# See which roles are available in a specific account
+vouch aws roles --account 111111111111
+
+# Auto-discover all accounts and roles, configure all profiles at once
+vouch setup aws --discover --prefix vouch --region us-east-1
+```
+
+The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
 
 ---
 

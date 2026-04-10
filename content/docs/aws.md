@@ -45,6 +45,23 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 
 Because the ID token is scoped to the authenticated user and is short-lived, credentials cannot be shared or reused after expiry.
 
+### SSO-based authentication
+
+If your organization uses [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html), the Vouch CLI can authenticate through your existing SSO session and automatically discover available accounts and roles:
+
+```bash
+# Authenticate via IAM Identity Center SSO
+vouch aws login
+
+# List available accounts
+vouch aws accounts
+
+# List roles in a specific account
+vouch aws roles --account 123456789012
+```
+
+See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details on role chaining and auto-discovery across multiple accounts.
+
 ---
 
 ## Step 1 -- Create the OIDC Provider in AWS (admin)
@@ -107,7 +124,11 @@ cat > /tmp/vouch-trust-policy.json << EOF
       "Principal": {
         "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/{{< instance-url >}}"
       },
-      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Action": [
+        "sts:AssumeRoleWithWebIdentity",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
       "Condition": {
         "StringEquals": {
           "{{< instance-url >}}:aud": "{{< instance-url >}}"
@@ -145,7 +166,10 @@ Resources:
           - Effect: Allow
             Principal:
               Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
-            Action: "sts:AssumeRoleWithWebIdentity"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+              - "sts:SetSourceIdentity"
+              - "sts:TagSession"
             Condition:
               StringEquals:
                 "{{< instance-url >}}:aud": "{{< instance-url >}}"
@@ -171,7 +195,11 @@ resource "aws_iam_role" "vouch_developer" {
         Principal = {
           Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/{{< instance-url >}}"
         }
-        Action = "sts:AssumeRoleWithWebIdentity"
+        Action = [
+          "sts:AssumeRoleWithWebIdentity",
+          "sts:SetSourceIdentity",
+          "sts:TagSession",
+        ]
         Condition = {
           StringEquals = {
             "{{< instance-url >}}:aud" = "{{< instance-url >}}"
@@ -268,6 +296,26 @@ credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/
 
 > **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
 
+### Auto-discovery with SSO
+
+If your organization uses AWS IAM Identity Center, you can automatically discover all available accounts and roles instead of configuring each profile manually:
+
+```bash
+# Authenticate with IAM Identity Center
+vouch aws login
+
+# List available accounts
+vouch aws accounts
+
+# List roles in a specific account
+vouch aws roles --account 123456789012
+
+# Auto-discover all accounts and roles, and configure profiles
+vouch setup aws --discover --prefix vouch --region us-east-1
+```
+
+The `--discover` flag queries IAM Identity Center for every account and role your identity can access, then writes a `credential_process` profile for each one into `~/.aws/config`.
+
 After setup, any tool that reads AWS profiles will transparently use Vouch credentials.
 
 ---
@@ -308,6 +356,7 @@ aws s3 ls --profile vouch
 
 - Verify the OIDC provider URL in the IAM trust policy matches `https://{{< instance-url >}}` exactly (no trailing slash).
 - Confirm the `aud` condition matches the client ID registered with the OIDC provider.
+- Ensure the trust policy `Action` includes all three required actions: `sts:AssumeRoleWithWebIdentity`, `sts:SetSourceIdentity`, and `sts:TagSession`.
 
 ### "Token is expired"
 

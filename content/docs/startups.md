@@ -117,7 +117,10 @@ Resources:
           - Effect: Allow
             Principal:
               Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/${VouchServerUrl}"
-            Action: "sts:AssumeRoleWithWebIdentity"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+              - "sts:SetSourceIdentity"
+              - "sts:TagSession"
             Condition:
               StringEquals:
                 !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"

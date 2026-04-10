@@ -85,22 +85,71 @@ vouch status [--format <FORMAT>]
 
 ---
 
+## AWS
+
+Commands for authenticating with AWS IAM Identity Center and discovering available accounts and roles.
+
+### `vouch aws login`
+
+Authenticate with AWS IAM Identity Center SSO.
+
+```
+vouch aws login [--sso-session <NAME>]
+```
+
+| Flag | Description |
+|---|---|
+| `--sso-session` | Named SSO session from `~/.aws/config` (optional; uses default if not specified) |
+
+### `vouch aws accounts`
+
+List AWS accounts available through IAM Identity Center.
+
+```
+vouch aws accounts [--sso-session <NAME>] [--json]
+```
+
+| Flag | Description |
+|---|---|
+| `--sso-session` | Named SSO session (optional) |
+| `--json` | Output as JSON |
+
+### `vouch aws roles`
+
+List IAM roles available in an AWS account through IAM Identity Center.
+
+```
+vouch aws roles [--sso-session <NAME>] [--account <ACCOUNT_ID>] [--json]
+```
+
+| Flag | Description |
+|---|---|
+| `--sso-session` | Named SSO session (optional) |
+| `--account` | AWS account ID to query (optional; lists roles across all accounts if not specified) |
+| `--json` | Output as JSON |
+
+See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for full details.
+
+---
+
 ## Setup
 
 Setup commands configure credential helpers for each integration. Run these once per machine.
 
 ### `vouch setup aws`
 
-Configure the AWS credential process for an IAM role.
+Configure the AWS credential process for an IAM role, or auto-discover accounts and roles from IAM Identity Center.
 
 ```
-vouch setup aws --role <ROLE_ARN> [--profile <PROFILE>] [--region <REGION>]
+vouch setup aws (--role <ROLE_ARN> | --discover) [--profile <PROFILE>] [--prefix <PREFIX>] [--region <REGION>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume (required) |
+| `--role` | The IAM role ARN to assume (required unless `--discover` is used) |
+| `--discover` | Auto-discover accounts and roles from IAM Identity Center SSO (alternative to `--role`) |
 | `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
+| `--prefix` | Prefix for auto-generated profile names when using `--discover` |
 | `--region` | AWS region to set in the profile |
 
 See [AWS Integration](/docs/aws/) for full details.

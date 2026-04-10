@@ -64,7 +64,10 @@ Resources:
           - Effect: Allow
             Principal:
               Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/us.vouch.sh"
-            Action: "sts:AssumeRoleWithWebIdentity"
+            Action:
+              - "sts:AssumeRoleWithWebIdentity"
+              - "sts:SetSourceIdentity"
+              - "sts:TagSession"
             Condition:
               StringEquals:
                 "us.vouch.sh:aud": "https://us.vouch.sh"

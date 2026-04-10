@@ -43,7 +43,11 @@ Create an IAM role that trusts Vouch tokens and restricts access to authorized d
       "Principal": {
         "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/{{< instance-url >}}"
       },
-      "Action": ["sts:AssumeRoleWithWebIdentity", "sts:TagSession"],
+      "Action": [
+        "sts:AssumeRoleWithWebIdentity",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
       "Condition": {
         "StringEquals": {
           "{{< instance-url >}}:aud": "{{< instance-url >}}",
