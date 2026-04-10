@@ -9,8 +9,13 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-go-oidc and the standard oauth2 package provide OIDC discovery and PKCE support (`oauth2.GenerateVerifier()`).
+[go-oidc](https://github.com/coreos/go-oidc) and the standard [oauth2](https://pkg.go.dev/golang.org/x/oauth2) package provide OIDC support for Go. Key configuration:
+
+- Initialize the provider with `oidc.NewProvider()` for auto-discovery
+- Generate PKCE verifier with `oauth2.GenerateVerifier()` and `oauth2.S256ChallengeOption()`
+- Manual state, nonce, and PKCE verifier management required
+- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload into a struct after token exchange
 
 ## Example
 
-**[web/go-oidc](https://github.com/vouch-sh/examples/tree/main/web/go-oidc)** -- Complete working example with OIDC discovery, PKCE, and hardware attestation claim extraction from the access token.
+**[web/go-oidc](https://github.com/vouch-sh/examples/tree/main/web/go-oidc)** — Complete working example with OIDC discovery, PKCE, and hardware claim extraction.

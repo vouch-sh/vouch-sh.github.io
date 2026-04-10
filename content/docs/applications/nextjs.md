@@ -9,8 +9,14 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-NextAuth.js provides drop-in authentication for Next.js with OIDC auto-discovery. Configure the provider with `id_token_signed_response_alg: 'ES256'` to match Vouch's signing algorithm.
+[NextAuth.js](https://next-auth.js.org/) provides drop-in authentication for Next.js with OIDC auto-discovery. Key configuration:
+
+- Configure a custom OAuth provider with `wellKnown` discovery URL
+- Set `id_token_signed_response_alg: 'ES256'` to match Vouch's signing algorithm
+- Enable PKCE with `checks: ['pkce', 'state']` and set `idToken: true`
+- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode in the `jwt` callback and propagate through the session callback
+- Requires `NEXTAUTH_SECRET` environment variable (generate with `openssl rand -base64 32`)
 
 ## Example
 
-**[web/nextjs-nextauth](https://github.com/vouch-sh/examples/tree/main/web/nextjs-nextauth)** -- Complete working example with NextAuth.js provider, PKCE, and hardware attestation claims passed through JWT and session callbacks.
+**[web/nextjs-nextauth](https://github.com/vouch-sh/examples/tree/main/web/nextjs-nextauth)** — Complete working example with NextAuth.js provider, PKCE, and hardware claim propagation through JWT and session callbacks.

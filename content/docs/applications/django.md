@@ -9,8 +9,14 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-django-allauth provides OpenID Connect support for Django with automatic PKCE and userinfo fetching.
+[django-allauth](https://docs.allauth.org/) provides OpenID Connect support for Django. Key configuration:
+
+- Install [`django-allauth[openid_connect]`](https://docs.allauth.org/en/latest/socialaccount/providers/openid_connect.html)
+- Set `oauth_pkce_enabled: True` and `fetch_userinfo: True` in `SOCIALACCOUNT_PROVIDERS`
+- Use `server_url` (not `issuer`) in provider settings
+- Callback URL: `/accounts/oidc/vouch/login/callback/`
+- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload to read them
 
 ## Example
 
-**[web/django-allauth](https://github.com/vouch-sh/examples/tree/main/web/django-allauth)** -- Complete working example with django-allauth OIDC provider configuration.
+**[web/django-allauth](https://github.com/vouch-sh/examples/tree/main/web/django-allauth)** — Complete working example with django-allauth OIDC provider, PKCE, and hardware claim extraction.

@@ -12,7 +12,7 @@ Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens de
 
 ## How it works
 
-Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html) (RFC 2730 / RFC 3139). When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:
+Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html). When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:
 
 1. **Cargo requests a token** -- Cargo calls the Vouch credential provider binary when it needs to authenticate to a configured private registry.
 2. **Vouch exchanges your session** -- The credential provider contacts the Vouch server and exchanges your active hardware-backed session for a registry-scoped Bearer token.

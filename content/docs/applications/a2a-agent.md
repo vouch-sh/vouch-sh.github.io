@@ -9,7 +9,7 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-The [Agent-to-Agent (A2A)](https://google.github.io/A2A/) protocol defines how AI agents discover and communicate with each other. An A2A agent secured with Vouch requires bearer token authentication -- the Agent Card advertises the Vouch OIDC security scheme, and the agent validates access tokens against the Vouch JWKS endpoint.
+The [Agent-to-Agent (A2A)](https://a2a-protocol.org/) protocol defines how AI agents discover and communicate with each other. An A2A agent secured with Vouch requires bearer token authentication -- the Agent Card advertises the Vouch OIDC security scheme, and the agent validates access tokens against the Vouch JWKS endpoint.
 
 ## Example
 

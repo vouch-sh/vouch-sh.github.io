@@ -9,8 +9,14 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-For browser-based applications, use the authorization code flow with PKCE. No client secret is needed. Vouch does not issue refresh tokens -- when the token expires, redirect the user to sign in again.
+[angular-auth-oidc-client](https://github.com/damienbod/angular-auth-oidc-client) is a certified OpenID Connect library for Angular. Key configuration:
+
+- No client secret needed (public client with PKCE, enabled by default)
+- Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires
+- Set `autoUserInfo: true` for automatic userinfo fetching
+- Use `OidcSecurityService.checkAuth()` to get `{ isAuthenticated, userData, accessToken }`
+- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode with `atob(token.split('.')[1])` after base64url character replacement
 
 ## Example
 
-**[spa/angular](https://github.com/vouch-sh/examples/tree/main/spa/angular)** -- Complete working example with angular-auth-oidc-client, PKCE, and automatic userinfo fetching.
+**[spa/angular](https://github.com/vouch-sh/examples/tree/main/spa/angular)** — Complete working example with angular-auth-oidc-client, PKCE, and hardware claim extraction.
