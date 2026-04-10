@@ -47,7 +47,7 @@ arn:aws:sts::123456789012:assumed-role/VouchDeveloper/alice@example.com
 
 ## Setup
 
-If you already have the [AWS integration](https://vouch.sh/docs/aws/) configured, Bedrock works with no additional setup. Any tool that uses the AWS SDK picks up Vouch credentials automatically:
+If you already have the [AWS integration](/docs/aws/) configured, Bedrock works with no additional setup. Any tool that uses the AWS SDK picks up Vouch credentials automatically:
 
 ```python
 import boto3
@@ -118,4 +118,4 @@ For teams building with foundation models, per-user identity is not just a secur
 
 ## Getting started
 
-See the [Amazon Bedrock integration guide](https://vouch.sh/docs/bedrock/) for the full setup, including IAM permissions and SDK configuration.
+See the [Amazon Bedrock integration guide](/docs/bedrock/) for the full setup, including IAM permissions and SDK configuration.

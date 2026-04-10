@@ -2,13 +2,15 @@
 title: "Replace SSH Keys with Short-Lived Certificates"
 linkTitle: "SSH Certificates"
 description: "Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist."
-weight: 3
+weight: 4
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
 sitemap:
   priority: 0.8
 params:
   docsGroup: infra
 ---
+
+> **Windows:** SSH certificate integration is not available on Windows. See the [FAQ](/docs/faq/#does-vouch-work-on-windows) for details on Windows platform support.
 
 Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. Keys never expire, and there is no way to know who used them.
 

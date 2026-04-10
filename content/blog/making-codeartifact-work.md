@@ -106,4 +106,4 @@ One authentication event, one tool, every credential handled.
 
 ## Getting started
 
-See the [CodeArtifact integration guide](https://vouch.sh/docs/codeartifact/) for setup instructions covering Cargo, pip, npm, and Maven.
+See the [CodeArtifact integration guide](/docs/codeartifact/) for setup instructions covering Cargo, pip, npm, and Maven.

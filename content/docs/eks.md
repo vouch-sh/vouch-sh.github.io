@@ -2,7 +2,7 @@
 title: "Authenticate to Amazon EKS without Static Credentials"
 linkTitle: "Amazon EKS"
 description: "Access EKS clusters using OIDC-federated IAM credentials instead of long-lived kubeconfig tokens."
-weight: 4
+weight: 5
 subtitle: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries"
 params:
   docsGroup: infra

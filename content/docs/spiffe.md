@@ -2,7 +2,7 @@
 title: "Bridge Human Identity with SPIFFE Workload Identity"
 linkTitle: "SPIFFE"
 description: "Connect hardware-verified developer identity to SPIFFE workload identity — federate Vouch OIDC tokens with SPIRE for zero-trust infrastructure."
-weight: 5
+weight: 7
 subtitle: "Federate Vouch with SPIRE to bridge human and workload identity"
 sitemap:
   priority: 0.8

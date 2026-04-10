@@ -2,7 +2,7 @@
 title: "SAML Identity Providers"
 linkTitle: "SAML"
 description: "Use SAML 2.0 identity providers with Vouch — Okta, Microsoft Entra ID, Google Workspace, and more."
-weight: 21
+weight: 22
 subtitle: "Connect your SAML identity provider to Vouch"
 params:
   docsGroup: manage

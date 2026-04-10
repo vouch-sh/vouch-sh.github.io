@@ -2,7 +2,7 @@
 title: "Multi-Account AWS Strategy"
 linkTitle: "AWS Multi-Account"
 description: "Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs."
-weight: 2
+weight: 3
 subtitle: "Federate Vouch into dev, staging, and production AWS accounts"
 params:
   docsGroup: infra
@@ -157,7 +157,19 @@ variable "policy_arns" {
   default = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
 
+variable "allowed_email_pattern" {
+  type        = string
+  default     = "*@example.com"
+  description = "Email pattern to restrict who can assume this role"
+}
+
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+locals {
+  aws_account_id = data.aws_caller_identity.current.account_id
+  aws_partition  = data.aws_partition.current.partition
+}
 
 resource "aws_iam_openid_connect_provider" "vouch" {
   url            = "https://${var.vouch_server_url}"
@@ -173,7 +185,7 @@ resource "aws_iam_role" "vouch" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.vouch_server_url}"
+          Federated = "arn:${local.aws_partition}:iam::${local.aws_account_id}:oidc-provider/${var.vouch_server_url}"
         }
         Action = [
           "sts:AssumeRoleWithWebIdentity",
@@ -185,7 +197,7 @@ resource "aws_iam_role" "vouch" {
             "${var.vouch_server_url}:aud" = "https://${var.vouch_server_url}"
           }
           StringLike = {
-            "${var.vouch_server_url}:sub" = "*@example.com"
+            "${var.vouch_server_url}:sub" = var.allowed_email_pattern
           }
         }
       }
@@ -209,16 +221,18 @@ output "role_arn" {
 ```hcl
 # environments/dev/main.tf
 module "vouch" {
-  source      = "../../modules/vouch-federation"
-  role_name   = "VouchDeveloper"
-  policy_arns = ["arn:aws:iam::aws:policy/PowerUserAccess"]
+  source                = "../../modules/vouch-federation"
+  role_name             = "VouchDeveloper"
+  policy_arns           = ["arn:aws:iam::aws:policy/PowerUserAccess"]
+  allowed_email_pattern = "*@example.com"
 }
 
 # environments/prod/main.tf
 module "vouch" {
-  source      = "../../modules/vouch-federation"
-  role_name   = "VouchReadOnly"
-  policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  source                = "../../modules/vouch-federation"
+  role_name             = "VouchReadOnly"
+  policy_arns           = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  allowed_email_pattern = "*@example.com"
 }
 ```
 

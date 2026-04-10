@@ -73,18 +73,21 @@
 <script type="application/ld+json">{{ $article | jsonify | safeJS }}</script>
 {{ end }}
 
-{{/* FAQ page — FAQPage */}}
+{{/* FAQ page — FAQPage
+     NOTE: These Q&A pairs must be kept in sync with content/docs/faq.md.
+     Update both places when FAQ content changes. */}}
 {{ if and (eq .Section "docs") (eq .File.LogicalName "faq.md") }}
 {{ $qaPairs := slice
-  (dict "@type" "Question" "name" "Which YubiKeys are supported?" "acceptedAnswer" (dict "@type" "Answer" "text" "Any FIDO2-compatible security key works with Vouch. Recommended models include YubiKey 5 series, YubiKey 5 FIPS series, YubiKey Bio, and Security Key by Yubico. Other FIDO2-compliant keys may work but have not been tested."))
-  (dict "@type" "Question" "name" "What happens if I lose my YubiKey?" "acceptedAnswer" (dict "@type" "Answer" "text" "Report it immediately to your organization administrator so they can remove the key from your account. Your active session continues until it expires (up to 8 hours), but no new sessions can be created with the lost key. Enroll a new YubiKey by running vouch enroll again."))
+  (dict "@type" "Question" "name" "Which YubiKeys are supported?" "acceptedAnswer" (dict "@type" "Answer" "text" "Any FIDO2-compatible security key works with Vouch. Recommended models include YubiKey 5 series, YubiKey 5 FIPS series, YubiKey Bio, and Security Key by Yubico. The key must support the hmac-secret extension and resident credentials. Other FIDO2-compliant keys (e.g., Google Titan, Feitian, SoloKeys) may work but have not been tested."))
+  (dict "@type" "Question" "name" "What happens if I lose my YubiKey?" "acceptedAnswer" (dict "@type" "Answer" "text" "Report it immediately to your organization administrator so they can remove the key from your account. Your active session continues until it expires (up to 8 hours), but no new sessions can be created with the lost key. Enroll a new YubiKey by running vouch enroll again. If you have a backup key already enrolled, use that key to log in while you replace the lost one."))
   (dict "@type" "Question" "name" "Can I enroll multiple YubiKeys?" "acceptedAnswer" (dict "@type" "Answer" "text" "Yes. Run vouch enroll with each key. This is recommended so you have a backup in case one key is lost or damaged. All enrolled keys can be used interchangeably for vouch login."))
-  (dict "@type" "Question" "name" "How long does a session last?" "acceptedAnswer" (dict "@type" "Answer" "text" "Sessions last 8 hours from the time you run vouch login. After 8 hours, the session expires and you need to log in again. There is no way to extend a session."))
+  (dict "@type" "Question" "name" "How long does a session last?" "acceptedAnswer" (dict "@type" "Answer" "text" "Sessions last 8 hours from the time you run vouch login. After 8 hours, the session expires and you need to log in again. There is no way to extend a session — you must re-authenticate with your YubiKey."))
   (dict "@type" "Question" "name" "Are credentials written to disk?" "acceptedAnswer" (dict "@type" "Answer" "text" "No. All credentials are held in the Vouch agent's process memory. The session token, SSH certificate, and cached STS credentials are never written to a file. If the agent process stops, all credentials are lost."))
-  (dict "@type" "Question" "name" "Does Vouch work on Windows?" "acceptedAnswer" (dict "@type" "Answer" "text" "Windows support is limited. The SSH agent and SSH certificate integration are not available on Windows. Only basic authentication and credential exchange commands are supported: enroll, login, credential aws, and credential github."))
+  (dict "@type" "Question" "name" "Does Vouch work on Windows?" "acceptedAnswer" (dict "@type" "Answer" "text" "Windows support is limited. The SSH agent and SSH certificate integration are not available on Windows. The background agent service is also not available — credentials are obtained directly by each command invocation. Supported commands: enroll, login, credential aws, and credential github."))
   (dict "@type" "Question" "name" "Does Vouch use AWS STS? Is there a cost?" "acceptedAnswer" (dict "@type" "Answer" "text" "Yes, Vouch calls AssumeRoleWithWebIdentity to obtain temporary credentials. AWS STS is free — there is no charge for STS API calls."))
   (dict "@type" "Question" "name" "Is Vouch open source?" "acceptedAnswer" (dict "@type" "Answer" "text" "Yes. Vouch is fully open source under the Apache-2.0 / MIT dual license."))
   (dict "@type" "Question" "name" "Which identity providers does Vouch support?" "acceptedAnswer" (dict "@type" "Answer" "text" "Vouch currently supports Google Workspace as the primary identity provider for user authentication. For automated user provisioning (SCIM), Vouch works with Google Workspace, Okta, Azure AD (Entra ID), and OneLogin."))
+  (dict "@type" "Question" "name" "What does vouch doctor check?" "acceptedAnswer" (dict "@type" "Answer" "text" "vouch doctor runs diagnostic checks on your Vouch installation including agent status, session status, SSH configuration, AWS credential process, Git credential helpers, Docker credential helpers, Cargo credential provider, EKS contexts, SSM configuration, and CLI version. Each check reports OK, WARNING, or ERROR with remediation steps."))
 }}
 {{ $faq := dict
   "@context" "https://schema.org"

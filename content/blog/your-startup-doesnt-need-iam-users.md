@@ -146,4 +146,4 @@ There are no access keys to hunt down, no SSH keys to remove from servers, no Gi
 
 ## Getting started
 
-See the [Vouch for Startups](https://vouch.sh/docs/startups/) guide for the complete walkthrough, including multi-account setup and team onboarding.
+See the [Vouch for Startups](/docs/startups/) guide for the complete walkthrough, including multi-account setup and team onboarding.

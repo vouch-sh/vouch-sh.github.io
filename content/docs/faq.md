@@ -2,7 +2,7 @@
 title: "Frequently Asked Questions"
 linkTitle: "FAQ"
 description: "Common questions about Vouch — supported hardware, session behavior, platform support, and cost."
-weight: 23
+weight: 24
 subtitle: "Answers to the most common questions about using Vouch"
 params:
   docsGroup: manage
@@ -164,6 +164,70 @@ An attacker with server access could issue sessions for any enrolled user, which
 ### Are credentials encrypted in transit?
 
 Yes. All communication between the CLI and server uses TLS 1.3. See [Security](/docs/security/#encryption) for details.
+
+---
+
+## Updating Vouch
+
+### How do I update the Vouch CLI?
+
+Update using the same package manager you used to install:
+
+- **macOS:** `brew upgrade vouch-sh/tap/vouch && brew services restart vouch`
+- **Debian/Ubuntu:** `sudo apt update && sudo apt upgrade vouch`
+- **Fedora/RHEL:** `sudo dnf upgrade vouch`
+
+After upgrading, restart the agent so the new version takes effect. Check your version with `vouch --version`.
+
+### Do I need to re-enroll after updating?
+
+No. Enrollment is stored on the server and on your YubiKey. Updating the CLI does not affect your enrollment or active sessions.
+
+---
+
+## Network configuration
+
+### Does Vouch work behind a corporate proxy?
+
+Vouch respects the standard `HTTPS_PROXY` and `NO_PROXY` environment variables. If your network requires an HTTPS proxy, set these before running Vouch commands:
+
+```bash
+export HTTPS_PROXY=http://proxy.corp.example.com:8080
+export NO_PROXY=localhost,127.0.0.1
+```
+
+The Vouch agent inherits proxy settings from the environment it was started in. If you change proxy settings, restart the agent.
+
+### Does Vouch work over a VPN?
+
+Yes. Vouch connects to the Vouch server over HTTPS (port 443). As long as your VPN allows outbound HTTPS traffic to `{{< instance-url >}}`, Vouch works normally.
+
+If your VPN uses split tunneling, ensure the Vouch server is routable. If you experience connection timeouts after connecting to a VPN, restart the Vouch agent.
+
+### What firewall rules does Vouch need?
+
+Vouch requires outbound HTTPS (port 443) to the Vouch server (`{{< instance-url >}}`). No inbound ports are required. If your firewall performs TLS inspection, ensure it does not interfere with the FIDO2 WebAuthn flow during enrollment and login.
+
+---
+
+## Diagnostics
+
+### What does `vouch doctor` check?
+
+`vouch doctor` runs a series of diagnostic checks and reports issues with your Vouch installation:
+
+- **Agent status** -- Whether the Vouch agent is running and reachable.
+- **Session status** -- Whether you have an active session and when it expires.
+- **SSH configuration** -- Whether `~/.ssh/config` is configured with the Vouch agent socket and the socket file exists.
+- **AWS configuration** -- Whether `~/.aws/config` contains a Vouch `credential_process` profile.
+- **Git credential helpers** -- Whether Git is configured to use Vouch for GitHub and/or CodeCommit.
+- **Docker credential helpers** -- Whether `~/.docker/config.json` references the Vouch credential helper.
+- **Cargo credential provider** -- Whether `~/.cargo/config.toml` is configured to use Vouch.
+- **EKS contexts** -- Whether any kubeconfig contexts use `vouch credential eks`.
+- **SSM configuration** -- Whether `~/.ssh/config` has a ProxyCommand for SSM instance IDs.
+- **Binary version** -- Whether the installed CLI version matches the running agent version.
+
+Each check reports **OK**, **WARNING**, or **ERROR** with a description of the issue and how to fix it. Run `vouch doctor` as a first step when something is not working as expected.
 
 ---
 

@@ -2,7 +2,7 @@
 title: "Authenticate to Kubernetes with OIDC"
 linkTitle: "Kubernetes"
 description: "Access any Kubernetes cluster using OIDC tokens from Vouch — no cloud-specific plugins required."
-weight: 5
+weight: 6
 subtitle: "Authenticate to Kubernetes clusters using OIDC identity tokens"
 params:
   docsGroup: infra

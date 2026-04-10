@@ -119,4 +119,4 @@ If credential management is the only reason you're choosing GitHub over CodeComm
 
 ## Getting started
 
-See the [CodeCommit integration guide](https://vouch.sh/docs/codecommit/) for the full setup, including cross-partition support and troubleshooting.
+See the [CodeCommit integration guide](/docs/codecommit/) for the full setup, including cross-partition support and troubleshooting.

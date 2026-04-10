@@ -5,7 +5,7 @@ description: "Run CDK, Terraform, SAM, and other IaC tools using short-lived AWS
 weight: 14
 subtitle: "Use CDK, Terraform, SAM, and other IaC tools with Vouch"
 params:
-  docsGroup: manage
+  docsGroup: infra
 ---
 
 IaC tools like Terraform, CDK, and SAM need AWS credentials to provision infrastructure. If those credentials are long-lived access keys, a compromised dev machine could modify production infrastructure. If they're shared across the team, there's no audit trail showing who deployed what.

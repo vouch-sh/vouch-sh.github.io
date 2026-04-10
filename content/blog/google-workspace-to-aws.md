@@ -60,7 +60,7 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
-The template (two resources -- an OIDC provider and an IAM role) is available in the [Startups guide](https://vouch.sh/docs/startups/).
+The template (two resources -- an OIDC provider and an IAM role) is available in the [Startups guide](/docs/startups/).
 
 ### Minute 4: Configure your AWS profile
 
@@ -117,7 +117,7 @@ No IAM user to create. No access keys to distribute. No SSH keys to add to serve
 When someone leaves:
 
 1. Deactivate their Google Workspace account (which you were doing anyway).
-2. If [SCIM](https://vouch.sh/docs/scim/) is configured, their Vouch sessions are revoked automatically.
+2. If [SCIM](/docs/scim/) is configured, their Vouch sessions are revoked automatically.
 3. Outstanding credentials expire on their own -- AWS within 1 hour, SSH within 8 hours.
 
 There are no static credentials to hunt down and revoke.
@@ -132,4 +132,4 @@ Vouch is that bridge.
 
 ## Getting started
 
-See the complete [Vouch for Startups](https://vouch.sh/docs/startups/) guide for multi-account setup, team scaling, and integration details.
+See the complete [Vouch for Startups](/docs/startups/) guide for multi-account setup, team scaling, and integration details.

@@ -2,7 +2,7 @@
 title: "Migration Guide"
 linkTitle: "Migration"
 description: "Migrate from static credentials to Vouch — phased rollout, integration-by-integration checklist, and rollback plan."
-weight: 22
+weight: 23
 subtitle: "Move from static secrets to hardware-backed credentials without disrupting your team"
 params:
   docsGroup: manage

@@ -67,8 +67,13 @@ enableGitInfo = true
   weight = 3
 
 [[menus.main]]
+  name = "Compare"
+  url = "/compare/"
+  weight = 4
+
+[[menus.main]]
   name = "GitHub"
   url = "https://github.com/vouch-sh/vouch"
-  weight = 4
+  weight = 5
   [menus.main.params]
     external = true
