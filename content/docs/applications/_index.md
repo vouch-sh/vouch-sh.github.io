@@ -193,27 +193,14 @@ Example ID token payload:
 
 ## Access Token Claims
 
-Vouch access tokens include hardware attestation claims that your application can use to enforce security policies. These claims are **not** in the ID token.
+Vouch issues access tokens as JWTs ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)). These include hardware attestation claims that your application can use to enforce security policies. These claims are **not** in the ID token or the UserInfo response.
 
 | Claim | Type | Description |
 |---|---|---|
-| `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens. |
+| `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens from the authorization code flow. |
 | `hardware_aaguid` | string | The AAGUID (Authenticator Attestation GUID) of the hardware key used for authentication. This identifies the make and model of the security key (e.g., YubiKey 5 series). |
 
-### Accessing hardware claims in your application
-
-The `hardware_verified` and `hardware_aaguid` claims are available by decoding the access token or calling the UserInfo endpoint. They are **not** present in the ID token.
-
-```javascript
-// From the access token (after verification):
-const hardwareVerified = accessToken.hardware_verified; // boolean
-const keyModel = accessToken.hardware_aaguid;           // string (AAGUID)
-
-// Enforce hardware-only authentication
-if (!hardwareVerified) {
-  throw new Error("Hardware key verification required");
-}
-```
+To access these claims, decode the access token JWT payload. See the [examples repository](https://github.com/vouch-sh/examples) for working implementations in each framework.
 
 ---
 
