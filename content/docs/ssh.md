@@ -12,9 +12,7 @@ params:
 
 > **Windows:** SSH certificate integration is not available on Windows. See the [FAQ](/docs/faq/#does-vouch-work-on-windows) for details on Windows platform support.
 
-Managing SSH access with traditional public keys is one of the most painful parts of growing a team. Every new hire means copying keys to every server. Every departure means hunting down and removing keys you hope you can find. Keys never expire, and there is no way to know who used them.
-
-Vouch eliminates this entirely. Administrators trust a single certificate authority (CA) key, and developers receive short-lived SSH certificates that expire after 8 hours. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist. Developers authenticate with `vouch login` and then `ssh` into any trusted server without passwords or key copying.
+Vouch replaces static SSH keys with short-lived certificates. Administrators trust a single certificate authority (CA) key, and developers receive SSH certificates that expire after 8 hours. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist.
 
 ## How it works
 
@@ -237,22 +235,6 @@ You should see an entry like:
 ```
 Accepted publickey for alice from 192.168.1.100 port 54321 ssh2: ED25519-CERT SHA256:... ID "alice@example.com" serial 42 CA ED25519 SHA256:...
 ```
-
----
-
-## How certificate authentication works
-
-Here is the full flow in detail:
-
-1. **Login** -- The developer runs `vouch login`, authenticates with their YubiKey (PIN + touch), and receives a signed SSH certificate from the Vouch server's Ed25519 CA.
-
-2. **Connection** -- The developer runs `ssh user@server`. The SSH client, configured to use the Vouch agent, presents the certificate to the server.
-
-3. **CA verification** -- The server checks that the certificate is signed by a CA listed in `TrustedUserCAKeys`. If the signature is invalid or the CA is not trusted, the connection is rejected.
-
-4. **Principal matching** -- The server checks whether any principal in the certificate matches an entry in the `AuthorizedPrincipalsFile` for the target Unix user. If no principals file is configured, any valid certificate is accepted.
-
-5. **Session established** -- If both checks pass, the SSH session is established. The certificate's validity period (8 hours from login) is enforced -- expired certificates are rejected at step 3.
 
 ---
 

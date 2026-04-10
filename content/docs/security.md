@@ -2,10 +2,10 @@
 title: "Security Model"
 linkTitle: "Security"
 description: "How Vouch protects credentials at every layer — data flow, threat model, credential lifecycle, and supply chain integrity."
-weight: 18
+weight: 3
 subtitle: "Understand how Vouch secures your credentials from hardware key to cloud service"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
 Vouch brokers the most sensitive credentials in a developer's stack: SSH certificates, AWS STS tokens, GitHub installation tokens, and container registry passwords. This page explains exactly how those credentials are protected at every layer.

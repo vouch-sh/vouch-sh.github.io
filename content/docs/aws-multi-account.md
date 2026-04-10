@@ -8,9 +8,7 @@ params:
   docsGroup: infra
 ---
 
-Most startups outgrow a single AWS account quickly. By the time you have a dev and production environment, you have two accounts. Add staging, a shared services account for CI/CD, and a logging account, and you have five. Each account needs an OIDC provider and IAM roles that trust Vouch.
-
-This guide covers deploying Vouch OIDC federation across an AWS Organization using CloudFormation StackSets, Terraform modules, and SCPs to enforce that only Vouch can federate into your accounts.
+Once your organization has more than one AWS account, you need a strategy for deploying Vouch federation across all of them. This guide covers three approaches -- per-account OIDC providers (via CloudFormation StackSets or Terraform), IAM role chaining through a single hub account, and SCPs to enforce that only Vouch can federate into your accounts.
 
 ---
 

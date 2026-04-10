@@ -2,10 +2,10 @@
 title: "Vouch CLI Reference"
 linkTitle: "CLI Reference"
 description: "Complete command reference for the Vouch CLI — login, credentials, setup, and configuration."
-weight: 17
+weight: 1
 subtitle: "Complete command reference for the Vouch CLI"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
 This page documents all available Vouch CLI commands. For installation instructions, see [Getting Started](/docs/getting-started/).
@@ -494,17 +494,13 @@ vouch keys rename <KEY_ID> <NEW_NAME>
 
 ## Environment
 
-### `vouch exec`
+Both `vouch exec` and `vouch env` inject credentials as environment variables. They accept the same type-specific flags and set the same variables -- `exec` runs a command with the variables injected, while `env` outputs shell export statements for use with `eval`.
 
-Run a command with Vouch credentials injected as environment variables.
-
-```
-vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
-```
+### Shared flags
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type to inject: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
+| `--type` | Credential type: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--role` | AWS IAM role ARN (required when `--type aws`) |
 | `--codeartifact-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
 | `--codeartifact-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
@@ -520,7 +516,7 @@ vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
 | `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
 | `--redshift-region` | AWS region (when `--type redshift`; auto-detected if not specified) |
 
-Environment variables injected by type:
+### Environment variables by type
 
 | Type | Variables |
 |---|---|
@@ -529,6 +525,14 @@ Environment variables injected by type:
 | `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
 | `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
 | `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
+
+### `vouch exec`
+
+Run a command with Vouch credentials injected as environment variables.
+
+```
+vouch exec --type <TYPE> [FLAGS...] -- <COMMAND> [ARGS...]
+```
 
 Examples:
 
@@ -559,7 +563,7 @@ vouch exec --type redshift \
 
 ### `vouch env`
 
-Output credential environment variables for use with `eval`. This sets variables like `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` (for AWS), `GITHUB_TOKEN` (for GitHub), or `CODEARTIFACT_AUTH_TOKEN` (for AWS CodeArtifact) in your current shell.
+Output credential environment variables for use with `eval`.
 
 ```
 eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
@@ -567,32 +571,7 @@ eval "$(vouch env --type <TYPE> [--shell <SHELL>] [FLAGS...])"
 
 | Flag | Description |
 |---|---|
-| `--type` | Credential type: `aws`, `github`, `codeartifact`, `rds`, or `redshift` (required) |
 | `--shell` | Shell syntax: `bash` or `fish` (default: `bash`). The `bash` syntax also works for zsh. |
-| `--role` | AWS IAM role ARN (required when `--type aws`) |
-| `--codeartifact-domain` | AWS CodeArtifact domain name (when `--type codeartifact`; optional if a profile is configured) |
-| `--codeartifact-domain-owner` | AWS account ID that owns the domain (when `--type codeartifact`; optional if a profile is configured) |
-| `--codeartifact-region` | AWS region (when `--type codeartifact`; optional if a profile is configured) |
-| `--codeartifact-profile` | Named AWS CodeArtifact profile to use (when `--type codeartifact`) |
-| `--rds-hostname` | RDS instance hostname (required when `--type rds`) |
-| `--rds-username` | Database username (required when `--type rds`) |
-| `--rds-port` | Database port (when `--type rds`, default: `5432`) |
-| `--rds-region` | AWS region (when `--type rds`; auto-detected if not specified) |
-| `--redshift-cluster-id` | Redshift provisioned cluster identifier (when `--type redshift`; mutually exclusive with `--redshift-workgroup`) |
-| `--redshift-workgroup` | Redshift Serverless workgroup name (when `--type redshift`; mutually exclusive with `--redshift-cluster-id`) |
-| `--redshift-db-name` | Database name (when `--type redshift`) |
-| `--redshift-duration` | Credential duration in seconds, 900--3600 (when `--type redshift`, provisioned clusters only, default: `900`) |
-| `--redshift-region` | AWS region (when `--type redshift`; auto-detected if not specified) |
-
-Environment variables set by type:
-
-| Type | Variables |
-|---|---|
-| `aws` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` |
-| `github` | `GITHUB_TOKEN`, `GH_TOKEN` |
-| `codeartifact` | `CODEARTIFACT_AUTH_TOKEN` |
-| `rds` | `PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE` |
-| `redshift` | `PGPASSWORD`, `PGUSER`, `PGSSLMODE` |
 
 Examples:
 

@@ -48,8 +48,12 @@ enableGitInfo = true
   label = "Code & Packages"
 
 [[params.sidebarGroups]]
-  key = "manage"
-  label = "Platform"
+  key = "admin"
+  label = "Administration"
+
+[[params.sidebarGroups]]
+  key = "reference"
+  label = "Reference"
 
 [[menus.main]]
   name = "Docs"

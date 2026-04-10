@@ -2,10 +2,10 @@
 title: "Threat Model"
 linkTitle: "Threat Model"
 description: "STRIDE-based threat analysis — threat actors, trust boundaries, assumptions, threats, and mitigations for the Vouch credential broker."
-weight: 19
+weight: 4
 subtitle: "Structured threat analysis following the AWS Threat Composer methodology"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
 This threat model documents the threats Vouch is designed to address, the assumptions the design relies on, and the mitigations in place. It follows the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(security)) framework and is structured after the [AWS Threat Composer](https://awslabs.github.io/threat-composer/) methodology.

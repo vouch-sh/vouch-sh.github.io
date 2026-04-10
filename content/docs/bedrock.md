@@ -8,9 +8,7 @@ params:
   docsGroup: infra
 ---
 
-AI model access creates unique audit and cost challenges. Shared API keys make it impossible to attribute usage to individual developers, and a leaked key means unlimited access to expensive model invocations with no way to trace who's responsible.
-
-[Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) uses standard AWS SigV4 authentication. Vouch's `credential_process` provides STS credentials backed by FIDO2 verification, which means every Amazon Bedrock API call is tied to a hardware-verified human identity.
+[Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) uses standard AWS SigV4 authentication. Vouch's `credential_process` provides STS credentials backed by FIDO2 verification, so every Bedrock API call is tied to a hardware-verified human identity.
 
 ```
 YubiKey tap → FIDO2 → Vouch JWT → STS → Amazon Bedrock InvokeModel → CloudTrail

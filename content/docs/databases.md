@@ -8,9 +8,7 @@ params:
   docsGroup: infra
 ---
 
-Static database passwords are shared across developers, stored in configuration files, and rarely rotated. When someone leaves the team, do you rotate every database password they had access to? Most teams don't.
-
-[IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static passwords with 15-minute tokens generated from IAM credentials. With Vouch, those IAM credentials are themselves hardware-backed and short-lived -- every database connection traces back to a verified human identity.
+[IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static database passwords with short-lived tokens generated from IAM credentials. With Vouch, those IAM credentials are hardware-backed -- every database connection traces back to a verified human identity.
 
 ## How it works
 

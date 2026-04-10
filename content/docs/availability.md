@@ -2,13 +2,13 @@
 title: "Availability and Failure Modes"
 linkTitle: "Availability"
 description: "What happens when the Vouch server is unreachable — offline behavior, credential expiry, and blast radius."
-weight: 21
+weight: 5
 subtitle: "Understand the blast radius when things go wrong"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
-Vouch sits in the critical path for developer credentials. Before adopting it, you should understand what happens when the server is unreachable, when a session expires, or when individual integrations fail.
+Vouch sits in the critical path for developer credentials. This page documents what happens when the server is unreachable, when a session expires, or when individual integrations fail.
 
 ---
 

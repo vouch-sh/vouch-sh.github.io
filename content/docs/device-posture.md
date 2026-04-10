@@ -2,10 +2,10 @@
 title: "Device Posture Policies"
 linkTitle: "Device Posture"
 description: "Enforce security requirements on developer devices before issuing credentials — disk encryption, firewalls, screen lock, endpoint protection, and more."
-weight: 12
+weight: 4
 subtitle: "Ensure every device meets your security baseline before it gets credentials"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
 Vouch can collect security signals from developer devices at login and enforce policies against them. If a device does not meet your organization's security baseline, Vouch denies access and tells the developer exactly what to fix.

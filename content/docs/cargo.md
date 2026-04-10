@@ -8,9 +8,7 @@ params:
   docsGroup: code
 ---
 
-Cargo's default credential mechanism stores a plaintext token in `~/.cargo/credentials.toml` with no expiration. If that file is committed to a dotfiles repo, included in a backup, or read by malware, the token works forever.
-
-Vouch's credential provider replaces this with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked the moment your session ends. After a single `vouch login`, commands like `cargo build`, `cargo publish`, and `cargo add` work seamlessly against private registries.
+Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked when your session ends.
 
 ## How it works
 

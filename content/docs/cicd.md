@@ -2,15 +2,13 @@
 title: "Add Human Approval Gates to CI/CD Pipelines"
 linkTitle: "CI/CD"
 description: "Require a YubiKey tap before production deployments — hardware-verified identity embedded in every CI/CD credential."
-weight: 15
+weight: 6
 subtitle: "Add human authorization gates to deployment pipelines"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
-Most CI/CD pipelines use service account credentials or workflow-generated OIDC tokens to deploy. Neither proves that a specific person authorized the deployment. If a workflow runs automatically on merge, any merged PR can reach production with no human checkpoint.
-
-Vouch's OIDC attests *human presence* -- "a verified human authorized this action with their YubiKey." This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
+Vouch's OIDC attests *human presence* -- a verified human authorized this action with their YubiKey. This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
 
 > **Fully automated pipelines:** If your pipeline does not need a human approval gate and should run unattended, use the [client credentials grant](/docs/applications/#client-credentials-machine-to-machine) instead. This lets CI/CD systems authenticate with a client ID and secret without requiring a YubiKey tap.
 

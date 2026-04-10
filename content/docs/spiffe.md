@@ -10,9 +10,7 @@ params:
   docsGroup: infra
 ---
 
-Most organizations end up with two identity systems: one for humans (SSO, hardware keys) and one for workloads (service accounts, static secrets). [SPIFFE](https://spiffe.io/) (Secure Production Identity Framework for Everyone) solves the workload side — it gives every service a cryptographic identity (an SVID) that is short-lived, automatically rotated, and platform-agnostic. But SPIFFE does not address *who deployed the workload* or *who authorized the action*.
-
-Vouch bridges that gap. Because Vouch is a standards-compliant OIDC provider, you can configure [SPIRE](https://spiffe.io/docs/latest/spire-about/spire-concepts/) (the SPIFFE reference implementation) to trust Vouch-issued tokens. This gives you a unified identity architecture where every credential — human or machine — is short-lived, cryptographically verified, and traceable.
+[SPIFFE](https://spiffe.io/) gives every workload a cryptographic identity, but it does not address *who deployed the workload* or *who authorized the action*. Because Vouch is a standards-compliant OIDC provider, you can configure [SPIRE](https://spiffe.io/docs/latest/spire-about/spire-concepts/) (the SPIFFE reference implementation) to trust Vouch-issued tokens -- bridging human and workload identity in a single architecture.
 
 ## How it works
 

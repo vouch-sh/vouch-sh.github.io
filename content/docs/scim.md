@@ -2,10 +2,10 @@
 title: "Automate User Provisioning with SCIM"
 linkTitle: "SCIM Provisioning"
 description: "Sync users and groups from your identity provider to Vouch automatically using SCIM 2.0."
-weight: 11
+weight: 3
 subtitle: "Automate user lifecycle management with your identity provider"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
 Manually adding and removing users from Vouch when people join or leave your organization is error-prone and easy to forget. A missed offboarding means someone retains access to hardware-backed credentials they should no longer have.

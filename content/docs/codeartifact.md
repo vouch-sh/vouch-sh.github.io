@@ -8,9 +8,7 @@ params:
   docsGroup: code
 ---
 
-Every package manager has its own credential mechanism -- pip uses `~/.pip/pip.conf` or `PIP_INDEX_URL`, npm uses `.npmrc`, Cargo uses `~/.cargo/credentials.toml`, and Maven uses `settings.xml`. Each requires a different token format and rotation process. Keeping them all current across a growing team is a constant chore.
-
-With [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), you can unify these behind IAM, and with Vouch, the IAM credentials are hardware-backed and automatic. After a single `vouch login`, package managers like Cargo, pip, npm, pnpm, and uv can pull and publish packages from your AWS CodeArtifact repositories without manual token management.
+Vouch authenticates to [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html) using hardware-backed IAM credentials. After a single `vouch login`, Cargo, pip, npm, pnpm, and uv can pull and publish packages without manual token management.
 
 ## How it works
 

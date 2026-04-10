@@ -10,9 +10,7 @@ params:
   docsGroup: infra
 ---
 
-If your team distributes AWS access keys through `~/.aws/credentials`, you have credentials that never expire, are trivially exfiltrated by malware, and leave no trace of who used them. Rotating keys is a manual chore that rarely happens on schedule, and a single compromised laptop exposes keys that work indefinitely.
-
-Vouch eliminates static access keys entirely. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail. There are no keys to rotate, no credentials on disk, and no shared secrets.
+Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail.
 
 ## How Vouch compares to `aws login` and `aws sso login`
 
@@ -44,33 +42,6 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 5. The developer's AWS CLI, SDK, or Terraform session uses these credentials transparently.
 
 Because the ID token is scoped to the authenticated user and is short-lived, credentials cannot be shared or reused after expiry.
-
-### SSO-based authentication
-
-If your organization uses [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html), the Vouch CLI can authenticate through your existing SSO session and automatically discover available accounts and roles:
-
-```bash
-# Authenticate via IAM Identity Center SSO
-vouch aws login
-
-# List available accounts
-vouch aws accounts
-
-# List roles in a specific account
-vouch aws roles --account 123456789012
-```
-
-See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details on role chaining and auto-discovery across multiple accounts.
-
-### Console access
-
-Open the AWS Management Console directly from the CLI without entering credentials in a browser:
-
-```bash
-vouch aws console
-```
-
-This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile.
 
 ---
 
@@ -317,27 +288,7 @@ credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/
 
 > **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
 
-### Auto-discovery with SSO
-
-If your organization uses AWS IAM Identity Center, you can automatically discover all available accounts and roles instead of configuring each profile manually:
-
-```bash
-# Authenticate with IAM Identity Center
-vouch aws login
-
-# List available accounts
-vouch aws accounts
-
-# List roles in a specific account
-vouch aws roles --account 123456789012
-
-# Auto-discover all accounts and roles, and configure profiles
-vouch setup aws --discover --prefix vouch --region us-east-1
-```
-
-The `--discover` flag queries IAM Identity Center for every account and role your identity can access, then writes a `credential_process` profile for each one into `~/.aws/config`.
-
-After setup, any tool that reads AWS profiles will transparently use Vouch credentials.
+If your organization uses AWS IAM Identity Center, you can auto-discover all available accounts and roles with `vouch setup aws --discover`. See [SSO-based authentication](#sso-based-authentication) below and [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details.
 
 ---
 
@@ -368,6 +319,37 @@ Try running a command against a real AWS service:
 ```bash
 aws s3 ls --profile vouch
 ```
+
+---
+
+## SSO-based authentication
+
+If your organization uses [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html), the Vouch CLI can authenticate through your existing SSO session and automatically discover available accounts and roles:
+
+```bash
+# Authenticate via IAM Identity Center SSO
+vouch aws login
+
+# List available accounts
+vouch aws accounts
+
+# List roles in a specific account
+vouch aws roles --account 123456789012
+```
+
+See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details on role chaining and auto-discovery across multiple accounts.
+
+---
+
+## Console access
+
+Open the AWS Management Console directly from the CLI without entering credentials in a browser:
+
+```bash
+vouch aws console
+```
+
+This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile.
 
 ---
 

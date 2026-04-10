@@ -2,7 +2,7 @@
 title: "Vouch for Startups"
 linkTitle: "Startups"
 description: "Skip IAM users, access keys, and IAM Identity Center. Go from Google Workspace to AWS in minutes with OIDC federation."
-weight: 0
+weight: 1
 subtitle: "The fastest path from a new AWS account to a secure team setup"
 params:
   docsGroup: featured

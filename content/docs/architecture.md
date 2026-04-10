@@ -2,10 +2,10 @@
 title: "Architecture Overview"
 linkTitle: "Architecture"
 description: "System components, protocols, and trust boundaries — how the Vouch CLI, agent, and server work together."
-weight: 20
+weight: 2
 subtitle: "Understand how Vouch components interact to issue and manage credentials"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
 This page describes the components that make up Vouch, the protocols they use, and how they interact to turn a YubiKey tap into short-lived credentials for SSH, AWS, GitHub, Docker, and more.

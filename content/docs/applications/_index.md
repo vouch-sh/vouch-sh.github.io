@@ -2,10 +2,10 @@
 title: "Add Hardware-Backed Sign-In to Your Application"
 linkTitle: "Applications (OIDC)"
 description: "Integrate Vouch as an OIDC provider in your web, SPA, or native app for hardware-verified authentication."
-weight: 10
+weight: 1
 subtitle: "Add hardware-backed authentication to your web application"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
 Building phishing-resistant authentication from scratch means implementing WebAuthn flows, managing attestation, and handling device lifecycle -- a significant engineering investment for a startup. If you already have an OIDC-compatible application, you can get hardware-backed sign-in without any of that.
@@ -18,10 +18,9 @@ Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) 
 
 By following this guide, you will integrate Vouch as an OIDC identity provider into your application. Users will authenticate with their YubiKey through Vouch, and your application will receive verified identity information including:
 
-- A unique, stable user identifier (`sub` claim)
-- The user's email address
-- Hardware attestation claims proving the authentication was performed with a verified security key
-- Organization membership information
+- A unique, stable user identifier (`sub` claim) in the ID token
+- The user's email address in the ID token
+- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) in the access token
 
 This works with any framework or library that supports OpenID Connect or OAuth 2.0 authorization code flow. Beyond web applications, Vouch secures **MCP tool servers** with bearer token authentication and enables **agent-to-agent (A2A)** communication backed by hardware-verified identity.
 
@@ -156,19 +155,24 @@ Most OIDC libraries can auto-configure themselves from the Discovery URL alone.
 
 ---
 
-## Vouch-Specific Claims
+## ID Token Claims
 
-Vouch ID tokens include additional claims beyond the standard OIDC claims. These provide hardware attestation information that your application can use to enforce security policies.
+Vouch ID tokens follow the standard OIDC specification. The payload contains:
 
 | Claim | Type | Description |
 |---|---|---|
-| `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens. |
-| `hardware_aaguid` | string | The AAGUID (Authenticator Attestation GUID) of the hardware key used for authentication. This identifies the make and model of the security key (e.g., YubiKey 5 series). |
-| `cnf` | object | Confirmation claim containing key binding information per RFC 7800. Includes a `kid` field referencing the specific credential used. |
-| `amr` | array | Authentication methods used (e.g., `["hwk", "pin"]`). |
-| `acr` | string | Authentication context class (e.g., NIST AAL3 for hardware MFA). |
+| `iss` | string | Issuer — your Vouch server URL |
+| `sub` | string | Subject — stable, unique user identifier |
+| `aud` | string | Audience — your application's `client_id` |
+| `exp` | number | Expiration time |
+| `iat` | number | Issued-at time |
+| `email` | string | User's email address (when `email` scope is requested) |
+| `email_verified` | boolean | Whether the email is verified (when `email` scope is requested) |
+| `amr` | array | Authentication methods used (e.g., `["hwk", "pin"]`) |
+| `acr` | string | Authentication context class (e.g., NIST AAL3 for hardware MFA) |
+| `cnf` | object | Confirmation claim containing key binding information per [RFC 7800](https://datatracker.ietf.org/doc/html/rfc7800). Includes a `kid` field referencing the specific credential used. |
 
-Example ID token payload with Vouch-specific claims:
+Example ID token payload:
 
 ```json
 {
@@ -179,8 +183,6 @@ Example ID token payload with Vouch-specific claims:
   "iat": 1699996400,
   "email": "alice@example.com",
   "email_verified": true,
-  "hardware_verified": true,
-  "hardware_aaguid": "2fc0579f-8113-47ea-b116-bb5a8db9202a",
   "amr": ["hwk", "pin"],
   "acr": "urn:nist:authentication:assurance-level:aal3",
   "cnf": {
@@ -189,17 +191,23 @@ Example ID token payload with Vouch-specific claims:
 }
 ```
 
-Your application can use the `hardware_verified` claim to enforce that only hardware-backed authentications are accepted, and the `hardware_aaguid` claim to restrict access to specific security key models.
+## Access Token Claims
 
-### Accessing Vouch claims in your application
+Vouch access tokens include hardware attestation claims that your application can use to enforce security policies. These claims are **not** in the ID token.
 
-Regardless of your framework, the Vouch-specific claims are available in the ID token's payload after standard OIDC verification. Here is a generic example:
+| Claim | Type | Description |
+|---|---|---|
+| `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens. |
+| `hardware_aaguid` | string | The AAGUID (Authenticator Attestation GUID) of the hardware key used for authentication. This identifies the make and model of the security key (e.g., YubiKey 5 series). |
+
+### Accessing hardware claims in your application
+
+The `hardware_verified` and `hardware_aaguid` claims are available by decoding the access token or calling the UserInfo endpoint. They are **not** present in the ID token.
 
 ```javascript
-// After verifying the ID token through your OIDC library:
-const hardwareVerified = idToken.hardware_verified; // boolean
-const keyModel = idToken.hardware_aaguid;           // string (AAGUID)
-const keyBinding = idToken.cnf?.kid;                // string (credential ID)
+// From the access token (after verification):
+const hardwareVerified = accessToken.hardware_verified; // boolean
+const keyModel = accessToken.hardware_aaguid;           // string (AAGUID)
 
 // Enforce hardware-only authentication
 if (!hardwareVerified) {

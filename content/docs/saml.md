@@ -2,10 +2,10 @@
 title: "SAML Identity Providers"
 linkTitle: "SAML"
 description: "Use SAML 2.0 identity providers with Vouch — Okta, Microsoft Entra ID, Google Workspace, and more."
-weight: 22
+weight: 5
 subtitle: "Connect your SAML identity provider to Vouch"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
 Most organizations already have a SAML-based identity provider for single sign-on. Vouch supports **SAML 2.0** as a first-class authentication protocol alongside OIDC, so you can use your existing IdP without changes.

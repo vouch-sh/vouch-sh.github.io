@@ -2,10 +2,10 @@
 title: "Migration Guide"
 linkTitle: "Migration"
 description: "Migrate from static credentials to Vouch — phased rollout, integration-by-integration checklist, and rollback plan."
-weight: 23
+weight: 6
 subtitle: "Move from static secrets to hardware-backed credentials without disrupting your team"
 params:
-  docsGroup: manage
+  docsGroup: reference
 ---
 
 Migrating to Vouch does not have to be all-or-nothing. You can install Vouch alongside your existing credentials and migrate one integration at a time. This guide walks through a phased rollout, a per-integration checklist, and a rollback plan.

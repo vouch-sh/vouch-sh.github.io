@@ -8,9 +8,7 @@ params:
   docsGroup: code
 ---
 
-GitHub personal access tokens are long-lived, broadly scoped, and stored in plaintext in shell configs and CI environments. Deploy keys are limited to a single repository per key and require manual management on every machine. A single leaked PAT can expose every private repo it has access to.
-
-Vouch replaces both with short-lived tokens (valid for up to 1 hour) issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization -- automatically scoped to the right repositories and tied to a hardware-verified identity. After running `vouch login`, you can clone, pull, and push to private repositories without managing any GitHub tokens yourself.
+Vouch replaces GitHub PATs and deploy keys with short-lived tokens (valid for up to 1 hour) issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization. Tokens are automatically scoped to the right repositories and tied to a hardware-verified identity.
 
 ## How it works
 

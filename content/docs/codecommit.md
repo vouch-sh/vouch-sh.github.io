@@ -8,9 +8,7 @@ params:
   docsGroup: code
 ---
 
-AWS offers three ways to authenticate to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html): SSH keys, HTTPS Git credentials (static username/password from IAM), and IAM access keys with a credential helper. All three involve long-lived secrets that need to be distributed and rotated.
-
-Vouch provides a fourth option: short-lived STS credentials that require no static secrets at all. After a single `vouch login`, you can clone, pull, and push to AWS CodeCommit repositories without managing Git credentials or IAM access keys. Vouch supports both HTTPS credential helper and native `codecommit://` remote helper authentication.
+Vouch authenticates to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) using short-lived STS credentials -- no SSH keys, no HTTPS Git credentials, and no IAM access keys to manage. Both HTTPS credential helper and native `codecommit://` remote helper are supported.
 
 ## How it works
 

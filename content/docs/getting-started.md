@@ -2,7 +2,7 @@
 title: "Getting Started with Vouch"
 linkTitle: "Getting Started"
 description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials in minutes."
-weight: 1
+weight: 0
 subtitle: "Start using Vouch in under 5 minutes"
 sitemap:
   priority: 0.9
@@ -10,9 +10,7 @@ params:
   docsGroup: featured
 ---
 
-Most developer credential systems rely on static secrets: SSH private keys sitting in `~/.ssh`, AWS access keys in `~/.aws/credentials`, GitHub PATs pasted into environment variables. These secrets never expire, are trivially exfiltrated by malware, and have no proof of who used them.
-
-Vouch replaces all of them with credentials derived from a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) hardware key assertion -- every credential is short-lived, bound to a verified human identity, and logged. This guide walks you through installing the CLI, enrolling your YubiKey, and performing your first login. By the end you will have hardware-backed credentials ready for SSH, AWS, and Git.
+Vouch replaces static developer secrets (SSH keys, AWS access keys, GitHub PATs) with short-lived credentials derived from a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) hardware key assertion. This guide walks you through installing the CLI, enrolling your YubiKey, and performing your first login.
 
 ## Prerequisites
 

@@ -2,10 +2,10 @@
 title: "Admin Dashboard"
 linkTitle: "Admin Dashboard"
 description: "Manage organization members, view audit logs, configure SCIM tokens, and enforce device posture policies from the Vouch admin dashboard."
-weight: 16
+weight: 2
 subtitle: "Manage your organization from the browser"
 params:
-  docsGroup: manage
+  docsGroup: admin
 ---
 
 The Vouch admin dashboard provides a browser-based interface for organization administrators to manage members, review audit events, and configure integrations. Access it at `https://<your-vouch-server>/admin` after logging in with an administrator account.

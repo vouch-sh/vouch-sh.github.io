@@ -8,9 +8,7 @@ params:
   docsGroup: infra
 ---
 
-Static kubeconfig tokens and shared service account credentials are hard to audit and easy to leak. Kubernetes supports [OpenID Connect (OIDC)](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens) as a first-class authentication method, letting you replace static credentials with short-lived identity tokens.
-
-Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap, the CLI fetches an OIDC ID token and presents it to the API server — no cloud-specific plugins, no static tokens, and every `kubectl` command traces back to a hardware-verified identity.
+Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap, the CLI fetches an OIDC ID token and presents it to the API server -- no cloud-specific plugins, no static tokens, and every `kubectl` command traces back to a hardware-verified identity.
 
 > **Using Amazon EKS?** EKS has its own token mechanism based on AWS IAM. See [Amazon EKS](/docs/eks/) for EKS-specific setup.
 
