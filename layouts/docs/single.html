@@ -12,6 +12,18 @@
       {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}Docs{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator">/</span>{{ end }}{{ end }}
       {{ .Title }}
     </div>
+    {{ with .OutputFormats.Get "markdown" }}
+    <div class="docs-actions" role="group" aria-label="Page actions">
+      <button type="button" class="docs-action-btn" data-md-url="{{ .Permalink }}" aria-label="Copy this page as Markdown for pasting into an LLM">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy as Markdown</span>
+      </button>
+      <a class="docs-action-btn" href="{{ .Permalink }}" aria-label="View this page as raw Markdown">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>View as .md</span>
+      </a>
+    </div>
+    {{ end }}
     <h1>{{ .Title }}</h1>
     {{ with .Params.subtitle }}<p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">{{ . }}</p>{{ end }}
     {{ .Content }}
@@ -36,5 +48,24 @@ function closeSidebar() {
   document.getElementById('docs-sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
 }
+
+document.querySelectorAll('.docs-action-btn[data-md-url]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var url = btn.getAttribute('data-md-url');
+    var label = btn.querySelector('span');
+    var original = label ? label.textContent : '';
+    fetch(url, { headers: { 'Accept': 'text/markdown, text/plain' } })
+      .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function(text) { return navigator.clipboard.writeText(text); })
+      .then(function() {
+        if (label) label.textContent = 'Copied!';
+        setTimeout(function() { if (label) label.textContent = original; }, 1500);
+      })
+      .catch(function() {
+        if (label) label.textContent = 'Copy failed';
+        setTimeout(function() { if (label) label.textContent = original; }, 2000);
+      });
+  });
+});
 </script>
 {{ end }}

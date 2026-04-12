@@ -7,6 +7,16 @@
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">
   <link rel="canonical" href="{{ .Permalink }}">
 
+  {{/* AI agent discovery: raw Markdown version + approximate token count.
+       See https://addyosmani.com/blog/agentic-engine-optimization/ */}}
+  {{ if and .IsPage (ne .Kind "home") }}
+  {{ with .OutputFormats.Get "markdown" }}
+  <link rel="alternate" type="text/markdown" href="{{ .Permalink }}" title="Markdown version for LLMs">
+  <meta name="llm-markdown-url" content="{{ .Permalink }}">
+  {{ end }}
+  <meta name="token-count" content="{{ div (len .RawContent) 4 }}">
+  {{ end }}
+
   <!-- Open Graph -->
   <meta property="og:title" content="{{ if not .IsHome }}{{ .Title }} — {{ end }}{{ .Site.Title }}">
   <meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ .Site.Params.description }}{{ end }}">

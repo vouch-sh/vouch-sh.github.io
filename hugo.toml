@@ -29,8 +29,18 @@ enableGitInfo = true
   isPlainText = true
   notAlternative = true
 
+[outputFormats.markdown]
+  mediaType = "text/markdown"
+  isPlainText = true
+  notAlternative = true
+
+[mediaTypes."text/markdown"]
+  suffixes = ["md"]
+
 [outputs]
   home = ["HTML", "RSS", "llmstxt", "llmsfull"]
+  page = ["HTML", "markdown"]
+  section = ["HTML", "RSS"]
 
 [sitemap]
   changeFreq = "weekly"
