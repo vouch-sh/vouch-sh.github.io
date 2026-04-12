@@ -4,19 +4,31 @@
 
 Vouch eliminates static secrets across your development workflow. It federates identity through OIDC, so every credential is tied to a verified hardware key and expires automatically. No more key rotation scripts, no more offboarding checklists, no more secrets in config files.
 
+Every HTML page on vouch.sh is also served as raw Markdown at the same URL (e.g. `/docs/getting-started/index.md`). Token counts below are approximate (chars ÷ 4).
+
 - [Source code](https://github.com/vouch-sh/vouch)
+- [Agent capability manifest](https://vouch.sh/agents.md)
 - [Full documentation for LLMs](https://vouch.sh/llms-full.txt)
 
 ## Documentation
 {{ $docsSection := .Site.GetPage "/docs" }}
 {{ range $docsSection.Pages.ByWeight }}
-{{ if .IsSection }}- [{{ .LinkTitle }}]({{ .Permalink }}): {{ .Description }}
-{{ range .Pages.ByWeight }}  - [{{ .Title }}]({{ .Permalink }}): {{ .Description }}
-{{ end }}{{ else }}- [{{ .LinkTitle }}]({{ .Permalink }}): {{ .Description }}
-{{ end }}{{ end }}
+{{- if .IsSection -}}
+- [{{ .LinkTitle }}]({{ .Permalink }}): {{ .Description }} (~{{ div (len .RawContent) 4 }} tok)
+{{ range .Pages.ByWeight -}}
+{{ "" }}  - [{{ .Title }}]({{ .Permalink }}): {{ .Description }} (~{{ div (len .RawContent) 4 }} tok)
+{{ end -}}
+{{- else -}}
+- [{{ .LinkTitle }}]({{ .Permalink }}): {{ .Description }} (~{{ div (len .RawContent) 4 }} tok)
+{{ end -}}
+{{- end }}
+## Product
+
+- [Compare](https://vouch.sh/compare/): How Vouch compares to Teleport, HashiCorp Vault, AWS IAM Identity Center, and 1Password
+- [Blog](https://vouch.sh/blog/): Product updates and engineering insights
+
 ## Optional
 
 - [About](https://vouch.sh/about/): Learn about Vouch and Smoke Turner, LLC
-- [Blog](https://vouch.sh/blog/): Product updates and engineering insights
 - [Privacy Policy](https://vouch.sh/privacy/): Privacy policy for vouch.sh
 - [Terms of Service](https://vouch.sh/terms/): Terms of service for vouch.sh
