@@ -27,9 +27,9 @@ After a single `vouch login`, credential helpers for SSH, AWS, GitHub, EKS, Dock
 
 ## Certifications
 
-Vouch is an [OpenID Certified](https://openid.net/certification/) OpenID Connect provider.
+Vouch is an [OpenID Certified](https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/) OpenID Connect provider.
 
-<a href="https://openid.net/certification/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
+<a href="https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
 
 ## Integrations
 
