@@ -247,8 +247,10 @@ Vouch sets the following session tags when assuming a role, which you can use in
 
 | Tag Key | Value | Example |
 |---------|-------|---------|
-| `email` | The user's verified email | `alice@example.com` |
-| `domain` | The user's organization domain (from the OIDC `hd` claim) | `example.com` |
+| `vouch:Email` | The user's verified email | `alice@example.com` |
+| `vouch:Domain` | The user's organization domain (from the OIDC `hd` claim) | `example.com` |
+| `vouch:AccessType` | Set to `ai` when an AI coding agent is detected | `ai` |
+| `vouch:Agent` | The detected agent name (only present when an agent is detected) | `claude-code` |
 
 You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
 
@@ -256,13 +258,13 @@ You can reference these tags in IAM policy conditions using `aws:PrincipalTag`:
 {
   "Condition": {
     "StringEquals": {
-      "aws:PrincipalTag/domain": "example.com"
+      "aws:PrincipalTag/vouch:Domain": "example.com"
     }
   }
 }
 ```
 
-Because Vouch marks both tags as [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), they automatically propagate through role chains. If a developer assumes a hub role via Vouch and then chains into a spoke role in another account, the spoke role's trust policy can still evaluate `aws:PrincipalTag/email` and `aws:PrincipalTag/domain` conditions.
+Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), they automatically propagate through role chains. If a developer assumes a hub role via Vouch and then chains into a spoke role in another account, the spoke role's trust policy can still evaluate `aws:PrincipalTag/vouch:Email` and `aws:PrincipalTag/vouch:Domain` conditions.
 
 ---
 
@@ -350,6 +352,41 @@ vouch aws console
 ```
 
 This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile.
+
+---
+
+## AI agent safety
+
+When `vouch credential aws` runs inside an AI coding agent, Vouch automatically restricts the returned credentials to read-only access. No configuration is required -- the CLI detects the agent environment and applies the restriction transparently.
+
+### How it works
+
+The CLI checks for environment variables set by popular AI coding agents. When one is detected:
+
+1. The [`ReadOnlyAccess`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ReadOnlyAccess.html) AWS managed policy is attached as a [session policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#policies_session), which limits the effective permissions to the intersection of the role's policies and `ReadOnlyAccess` -- regardless of what the role itself allows.
+2. The `vouch:AccessType=ai` and `vouch:Agent=<name>` session tags are added, so you can identify agent-originated API calls in CloudTrail.
+
+### Supported agents
+
+Vouch detects the following AI coding agents:
+
+| Agent | Environment Variable |
+|-------|---------------------|
+| Claude Code | `CLAUDE_CODE` |
+| Cursor | `CURSOR_TRACE_ID` |
+| GitHub Copilot | `COPILOT_MODEL` |
+| OpenAI Codex | `CODEX_SANDBOX` |
+| Google Gemini | `GEMINI_CLI` |
+| Augment | `AUGMENT_AGENT` |
+| Cline | `CLINE_ACTIVE` |
+| Amp | `AGENT=amp` |
+| Goose | `AGENT=goose` |
+
+If your agent is not listed, it will be detected if it sets the `AGENT` or `AI_AGENT` environment variable (an emerging convention).
+
+### Role chaining with agents
+
+When using [IAM role chaining](/docs/aws-multi-account/#option-3----iam-role-chaining) with an AI agent, Vouch applies an additional inline session policy to the management-account hop that restricts it to STS actions only (`sts:AssumeRole`, `sts:TagSession`, `sts:SetSourceIdentity`). The final role hop receives the `ReadOnlyAccess` session policy.
 
 ---
 
