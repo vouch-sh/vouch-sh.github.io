@@ -125,7 +125,7 @@ FIDO2 proves the human is present. The OAuth 2.0 layer protects everything after
 
 **Protected authorization requests.** Authorization parameters are sent directly to the server over a back-channel ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) and signed as JWTs ([RFC 9101](https://datatracker.ietf.org/doc/html/rfc9101)). The browser redirect carries only an opaque reference — nothing sensitive in URLs, browser history, or referrer headers.
 
-**Sender-constrained tokens.** Every access token is bound to the CLI's key pair via DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)). A stolen token cannot be used from a different machine.
+**Sender-constrained tokens.** Every access token is bound to the CLI's key pair via DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)). A stolen token cannot be used from a different machine. For service-to-service scenarios, Mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) provides an alternative — the token's `cnf` claim contains the SHA-256 thumbprint of the client's TLS certificate, and resource servers validate that the certificate presented at the TLS layer matches.
 
 **Audience-restricted tokens.** Each token includes a resource indicator ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)) restricting it to a specific service. A token issued for AWS cannot be presented to GitHub.
 
@@ -154,12 +154,14 @@ A successful login requires producing **all** of the following, and each is inde
 |---|---|
 | **Replay a captured login** | Challenge is single-use (atomic DB check); DPoP `jti` is single-use |
 | **Forge a FIDO2 assertion** | Requires the YubiKey's private key, which never leaves the hardware |
-| **Steal an access token from the network** | Token is DPoP-bound — unusable without the device's private key |
+| **Steal an access token from the network** | Token is DPoP-bound or certificate-bound — unusable without the device's private key or matching TLS certificate |
 | **Man-in-the-middle the challenge** | Challenge is signed in a state JWT with a server-only key; tampering is detected |
 | **Tamper with a request in transit** | HTTP Message Signature verification fails — the signature covers the request method, path, and body |
 | **Reuse an old assertion with a new challenge** | Challenge is embedded in `client_data_json`, which is signed by the YubiKey; mismatch is detected |
 | **Clone the YubiKey** | Counter validation detects cloned authenticators |
 | **Brute-force the PIN remotely** | PIN is verified locally by YubiKey hardware, which locks after 8 failed attempts |
+| **Present a certificate-bound token without the matching certificate** | The `x5t#S256` thumbprint in the token's `cnf` claim is validated against the client certificate presented in the TLS handshake; mismatch is rejected |
+| **Authorization server mix-up** | The `iss` parameter in authorization responses ([RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207)) lets clients verify they are communicating with the expected authorization server |
 | **Access the agent socket from another process** | Socket permissions (0600) restrict access; the agent verifies the connecting process has the same UID and PID |
 
 ---
@@ -218,7 +220,7 @@ Vouch's FAPI 2.0 security profile and hardware-backed authentication satisfy req
 
 - **NIST 800-53** — IA-2 (identification/authentication), IA-5 (authenticator management), SC-23 (session authenticity)
 - **SOC 2** — CC6.1 (logical access), CC6.8 (unauthorized access prevention), CC7.1 (detection)
-- **FedRAMP** — Hardware MFA, DPoP sender-constrained tokens, non-extractable keys
+- **FedRAMP** — Hardware MFA, DPoP and mTLS sender-constrained tokens, non-extractable keys
 - **HIPAA** — 164.312(d) (person authentication), 164.312(e) (transmission security)
 
 Detailed control-by-control mappings are available in the [Vouch server documentation](https://docs.vouch.sh/reference/compliance.html).

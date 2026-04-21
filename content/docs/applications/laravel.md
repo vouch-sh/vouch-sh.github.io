@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Install [`laravel/socialite`](https://laravel.com/docs/socialite), [`kovah/laravel-socialite-oidc`](https://github.com/Kovah/laravel-socialite-oidc), and [`socialiteproviders/manager`](https://github.com/SocialiteProviders/Manager)
 - Use the `'oidc'` driver name with `->enablePKCE()` for PKCE support
 - Register the Socialite service provider and event listener
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload after base64url character replacement
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload after base64url character replacement
 - Callback URL: `/auth/callback`
 
 ## Example

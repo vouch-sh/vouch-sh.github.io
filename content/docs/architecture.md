@@ -45,7 +45,7 @@ The server is the identity broker. It:
 - **Signs SSH certificates** using an Ed25519 certificate authority key managed by AWS KMS.
 - **Exchanges tokens** with GitHub Apps, AWS STS, and other external services on behalf of authenticated users.
 - **Manages the user directory** via SCIM 2.0 integration with identity providers.
-- **Publishes OIDC metadata** at `/.well-known/openid-configuration` and JWKS at `/.well-known/jwks.json` for external services to verify tokens.
+- **Publishes OIDC metadata** at `/.well-known/openid-configuration`, JWKS at `/.well-known/jwks.json`, and Protected Resource Metadata at `/.well-known/oauth-protected-resource` ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)). When mTLS is configured, the discovery document includes `mtls_endpoint_aliases` for mTLS-capable clients.
 - **Provides OIDC discovery** for automatic identity provider detection during enrollment.
 
 The server does not store AWS credentials, SSH private keys, or GitHub tokens. It brokers short-lived credentials from external services.
@@ -75,13 +75,13 @@ The Vouch server acts as an OIDC identity provider. After FIDO2 authentication, 
 | `hd` | Google Workspace hosted domain |
 | `amr` | Authentication methods (e.g., `["hwk", "pin"]`) |
 | `acr` | Authentication context class (NIST AAL3) |
-| `cnf` | DPoP key thumbprint for sender-constrained tokens |
+| `cnf` | Confirmation claim for sender-constrained tokens — contains `jkt` (DPoP key thumbprint) or `x5t#S256` (mTLS certificate thumbprint) |
 
 External services (AWS, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint. For [Kubernetes OIDC authentication](/docs/kubernetes/), the server issues tokens with a configurable `aud` claim (default: `kubernetes`) that matches the API server's `--oidc-client-id` flag.
 
 ### ES256 (ECDSA over P-256)
 
-Used to sign OIDC ID tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures.
+Used to sign OIDC ID tokens and access tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures. The JWKS endpoint supports key rotation — consuming services should re-fetch the JWKS when they encounter a token signed with an unknown `kid`.
 
 ### Ed25519
 
@@ -97,13 +97,35 @@ The Vouch CLI calls [AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/
 
 ### FAPI 2.0
 
-The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server.
+The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server. FAPI 2.0 also accepts Mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) as an alternative sender-constraining mechanism — see [Mutual TLS](#mutual-tls-rfc-8705) below.
 
 ### HTTP Message Signatures (RFC 9421)
 
 All authenticated requests from the CLI to the Vouch server include [HTTP Message Signatures](https://datatracker.ietf.org/doc/html/rfc9421). The CLI signs each request using the FAPI key pair stored in the OS keychain. The server verifies the signature before processing the request, providing cryptographic proof that the request was not tampered with in transit and originated from the registered client.
 
 Supported algorithms: ECDSA P-256/P-384, EdDSA, and RSA-PSS-SHA512.
+
+### Mutual TLS (RFC 8705)
+
+The Vouch server supports [OAuth 2.0 Mutual-TLS Client Authentication and Certificate-Bound Access Tokens](https://datatracker.ietf.org/doc/html/rfc8705) as an alternative to DPoP for sender-constrained tokens. When configured, a separate mTLS listener runs on port 8443 and verifies client certificates during the TLS handshake.
+
+Two client authentication methods are supported: `tls_client_auth` (PKI-validated certificates where the server verifies the certificate chain against a configured Client Certificate CA) and `self_signed_tls_client_auth` (self-signed certificates registered via the client's `jwks` or `jwks_uri` with `x5c` certificate representations).
+
+Certificate-bound access tokens include an `x5t#S256` thumbprint (SHA-256 hash of the client's DER-encoded X.509 certificate) in the `cnf` claim. Resource servers validate that the certificate presented at the TLS layer matches the thumbprint bound to the token. The Client Certificate CA can be managed locally or via AWS KMS, following the same pattern as the SSH CA.
+
+The OpenID Configuration discovery document advertises mTLS support via `mtls_endpoint_aliases`, which provides alternative endpoint URLs for token, revocation, and introspection endpoints on the mTLS port.
+
+### Protected Resource Metadata (RFC 9728)
+
+The Vouch server publishes [OAuth 2.0 Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728) at `/.well-known/oauth-protected-resource`. This document describes the resource's authorization policy: which authorization server to use, the JWKS URI, supported scopes, bearer token presentation methods, DPoP and mTLS binding requirements, and descriptive URLs.
+
+Every response includes a `signed_metadata` field — an ES256 JWS with `typ=oauth-protected-resource+jwt`, verifiable via the advertised `jwks_uri`. When a protected endpoint returns a 401, the `WWW-Authenticate` header includes a `resource_metadata` parameter pointing clients to the metadata document for automatic authorization server discovery.
+
+Descriptive metadata fields are configurable via environment variables: `VOUCH_RESOURCE_NAME`, `VOUCH_RESOURCE_DOCUMENTATION`, `VOUCH_RESOURCE_POLICY_URI`, and `VOUCH_RESOURCE_TOS_URI`.
+
+### Step-Up Authentication (RFC 9470)
+
+The Vouch server supports the [OAuth 2.0 Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470). When a protected resource requires a higher authentication assurance level than the current token provides, it returns a `WWW-Authenticate` challenge with `error="insufficient_user_authentication"` and `acr_values` or `max_age` parameters specifying the required authentication strength or recency. Clients use these parameters in a new authorization request to obtain a token meeting the elevated requirements. Vouch's FIDO2 hardware authentication satisfies NIST AAL3 (`acr` claim), which meets most step-up requirements.
 
 ### SAML 2.0
 
@@ -112,6 +134,42 @@ For organizations using SAML-based identity providers, the Vouch server acts as 
 ### SCIM 2.0
 
 The Vouch server implements [SCIM 2.0](https://datatracker.ietf.org/doc/html/rfc7644) endpoints for automated user provisioning. Identity providers (Google Workspace, Okta, Azure AD) push user lifecycle events to synchronize the Vouch user directory.
+
+### Standards compliance
+
+The Vouch server implements the following standards, each with dedicated test coverage:
+
+| Standard | Title | Usage in Vouch |
+|---|---|---|
+| [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html) | OpenID Connect Core 1.0 | Identity provider, ID tokens, UserInfo |
+| [FAPI 2.0 SP](https://openid.net/specs/fapi-security-profile-2_0-final.html) | FAPI 2.0 Security Profile | Security controls for CLI and application clients |
+| [FAPI 2.0 MS](https://openid.net/specs/fapi-message-signing-2_0-final.html) | FAPI 2.0 Message Signing | HTTP Message Signatures on requests and responses |
+| [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) | OAuth 2.0 Authorization Framework | Core authorization flows |
+| [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009) | Token Revocation | `/oauth/revoke` endpoint |
+| [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) | JWT Bearer Client Authentication | `private_key_jwt` client authentication |
+| [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) | Dynamic Client Registration | CLI auto-registration |
+| [RFC 7592](https://datatracker.ietf.org/doc/html/rfc7592) | Dynamic Client Registration Management | Client registration updates |
+| [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636) | PKCE | Code challenge for public clients |
+| [RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644) | SCIM 2.0 | User provisioning |
+| [RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662) | Token Introspection | `/oauth/introspect` endpoint |
+| [RFC 7800](https://datatracker.ietf.org/doc/html/rfc7800) | Proof-of-Possession Key Semantics | `cnf` claim in tokens |
+| [RFC 8176](https://datatracker.ietf.org/doc/html/rfc8176) | Authentication Method Reference Values | `amr` claim values |
+| [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) | Authorization Server Metadata | `/.well-known/openid-configuration` |
+| [RFC 8628](https://datatracker.ietf.org/doc/html/rfc8628) | Device Authorization Grant | CLI and native app authentication |
+| [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) | Token Exchange | Service-to-service delegation |
+| [RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705) | Mutual-TLS | mTLS client auth, certificate-bound tokens |
+| [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) | Resource Indicators | Audience-restricted tokens |
+| [RFC 8725](https://datatracker.ietf.org/doc/html/rfc8725) | JWT Best Current Practices | JWT security hardening |
+| [RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068) | JWT Profile for Access Tokens | Access token format |
+| [RFC 9101](https://datatracker.ietf.org/doc/html/rfc9101) | JWT-Secured Authorization Request | Signed authorization requests |
+| [RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126) | Pushed Authorization Requests | Back-channel authorization |
+| [RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207) | AS Issuer Identification | Mix-up attack prevention via `iss` parameter |
+| [RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396) | Rich Authorization Requests | Structured authorization details |
+| [RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421) | HTTP Message Signatures | Request-level integrity |
+| [RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449) | DPoP | Sender-constrained tokens |
+| [RFC 9470](https://datatracker.ietf.org/doc/html/rfc9470) | Step-Up Authentication | Authentication challenge protocol |
+| [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) | Protected Resource Metadata | `/.well-known/oauth-protected-resource` |
+| [SAML 2.0](http://docs.oasis-open.org/security/saml/v2.0/) | SAML 2.0 | Identity provider federation |
 
 ---
 
@@ -189,6 +247,7 @@ The Vouch CLI and agent need to reach the following endpoints:
 | Destination | Port | Protocol | Purpose |
 |---|---|---|---|
 | Vouch server (e.g., `us.vouch.sh`) | 443 | HTTPS | Authentication, credential exchange, OIDC |
+| Vouch server mTLS endpoint | 8443 | mTLS (HTTPS) | Certificate-bound token requests, mTLS client authentication (when configured) |
 | AWS STS (`sts.amazonaws.com`) | 443 | HTTPS | `AssumeRoleWithWebIdentity` |
 | Target SSH hosts | 22 | SSH | SSH connections (if SSH integration is used) |
 

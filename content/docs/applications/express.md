@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Use `client.discovery()` for automatic issuer metadata, then `authorizationCodeGrant()` with PKCE
 - Manual state, nonce, and PKCE code verifier management
 - Store tokens in `express-session` with `saveUninitialized: false`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)) — decode with `Buffer.from(token.split('.')[1], 'base64url')`
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)) — decode with `Buffer.from(token.split('.')[1], 'base64url')`
 
 ## Example
 

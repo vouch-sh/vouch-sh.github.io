@@ -15,7 +15,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Configure `spring.security.oauth2.client.provider.vouch.issuer-uri` for auto-discovery
 - Set `authorization-grant-type: authorization_code` and `scope: openid,email`
 - Enable PKCE with `OAuth2AuthorizationRequestCustomizers.withPkce()`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload to read them
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload to read it
 
 ## Example
 

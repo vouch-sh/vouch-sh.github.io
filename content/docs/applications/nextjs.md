@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Configure a custom OAuth provider with `wellKnown` discovery URL
 - Set `id_token_signed_response_alg: 'ES256'` to match Vouch's signing algorithm
 - Enable PKCE with `checks: ['pkce', 'state']` and set `idToken: true`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode in the `jwt` callback and propagate through the session callback
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode in the `jwt` callback and propagate through the session callback
 - Requires `NEXTAUTH_SECRET` environment variable (generate with `openssl rand -base64 32`)
 
 ## Example

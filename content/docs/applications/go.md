@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Initialize the provider with `oidc.NewProvider()` for auto-discovery
 - Generate PKCE verifier with `oauth2.GenerateVerifier()` and `oauth2.S256ChallengeOption()`
 - Manual state, nonce, and PKCE verifier management required
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload into a struct after token exchange
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload into a struct after token exchange
 
 ## Example
 

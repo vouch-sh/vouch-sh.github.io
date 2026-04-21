@@ -11,7 +11,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 
 The [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) lets AI assistants call tools on remote servers. This guide covers building an MCP remote server that requires Vouch OIDC bearer tokens, using the official TypeScript SDK and [`jose`](https://github.com/panva/jose) for JWT verification.
 
-The server validates access tokens against the Vouch JWKS endpoint and extracts hardware attestation claims (`hardware_verified`, `hardware_aaguid`) from the JWT payload. Tools can gate sensitive operations on hardware key attestation.
+The server validates access tokens against the Vouch JWKS endpoint and extracts the hardware attestation claim (`hardware_verified`) from the JWT payload. Tools can gate sensitive operations on hardware key attestation.
 
 ## Example
 

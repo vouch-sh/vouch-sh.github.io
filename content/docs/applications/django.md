@@ -15,7 +15,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Set `oauth_pkce_enabled: True` and `fetch_userinfo: True` in `SOCIALACCOUNT_PROVIDERS`
 - Use `server_url` (not `issuer`) in provider settings
 - Callback URL: `/accounts/oidc/vouch/login/callback/`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload to read them
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload to read it
 
 ## Example
 

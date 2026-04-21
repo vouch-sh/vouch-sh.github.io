@@ -15,7 +15,7 @@ The Backend-for-Frontend (BFF) pattern keeps all OAuth tokens on the server. The
 - PKCE is automatic with [`openid-client`](https://github.com/panva/openid-client)
 - Set `httpOnly: true`, `sameSite: 'strict'`, and `secure: true` (in production) on session cookies
 - Proxy a `/api/me` endpoint so the frontend never handles tokens directly
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are decoded server-side from the access token JWT
+- The hardware attestation claim (`hardware_verified`) is decoded server-side from the access token JWT
 
 ## Example
 

@@ -14,7 +14,7 @@ ASP.NET Core includes built-in OpenID Connect middleware. Key configuration:
 - Requires .NET 10.0 or later with [`Microsoft.AspNetCore.Authentication.OpenIdConnect`](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication)
 - Enable PKCE with `options.UsePkce = true`
 - Set `GetClaimsFromUserInfoEndpoint = true` and `SaveTokens = true`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode with `JsonDocument.Parse()` after base64url decoding with padding adjustment
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode with `JsonDocument.Parse()` after base64url decoding with padding adjustment
 
 ## Example
 

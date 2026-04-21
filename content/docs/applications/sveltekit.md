@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - No client secret needed (public client with PKCE, enabled by default)
 - Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires
 - Uses `sessionStorage` for state persistence
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode with `atob(token.split('.')[1])` after base64url character replacement
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode with `atob(token.split('.')[1])` after base64url character replacement
 
 ## Example
 

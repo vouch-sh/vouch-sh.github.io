@@ -15,7 +15,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Enable PKCE in the OmniAuth provider configuration (`pkce: true`)
 - CSRF protection is required for the OmniAuth request phase
 - Callback URL: `/auth/vouch/callback`
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload to read them
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload to read it
 
 ## Example
 

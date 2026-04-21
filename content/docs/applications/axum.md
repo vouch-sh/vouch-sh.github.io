@@ -14,7 +14,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 - Use `CoreProviderMetadata::discover_async()` for OIDC auto-discovery
 - PKCE is automatic with `PkceCodeChallenge::new_random_sha256()`
 - Define a custom claims struct implementing `AdditionalClaims` for type-safe access to Vouch-specific fields
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload after token exchange
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload after token exchange
 - Use tower-sessions for session management (use a persistent store in production)
 
 ## Example

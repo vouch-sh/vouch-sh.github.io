@@ -20,7 +20,7 @@ By following this guide, you will integrate Vouch as an OIDC identity provider i
 
 - A unique, stable user identifier (`sub` claim) in the ID token
 - The user's email address in the ID token
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) in the access token
+- Hardware attestation claim (`hardware_verified`) in the access token
 
 This works with any framework or library that supports OpenID Connect or OAuth 2.0 authorization code flow. Beyond web applications, Vouch secures **MCP tool servers** with bearer token authentication and enables **agent-to-agent (A2A)** communication backed by hardware-verified identity.
 
@@ -150,8 +150,18 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **PAR Endpoint** | `https://{{< instance-url >}}/oauth/par` |
 | **Token Revocation Endpoint** | `https://{{< instance-url >}}/oauth/revoke` |
 | **Token Introspection Endpoint** | `https://{{< instance-url >}}/oauth/introspect` |
+| **Protected Resource Metadata** | `https://{{< instance-url >}}/.well-known/oauth-protected-resource` |
 
 Most OIDC libraries can auto-configure themselves from the Discovery URL alone.
+
+### Additional capabilities
+
+The authorization endpoint supports several advanced features:
+
+- **`response_mode=form_post`** — The authorization code is delivered via an auto-submitting HTML form POST instead of a query-string redirect. Useful for server-side applications that want the code in the request body.
+- **`request_uri` by URL** — In addition to PAR (`urn:ietf:params:oauth:request_uri:...`) and inline `request` JWTs, the authorization endpoint accepts HTTPS URLs as `request_uri` values for hosting Request Objects externally (OIDC Core Section 6.2).
+- **Signed UserInfo** — Applications that register `userinfo_signed_response_alg` (ES256 or RS256) during client registration receive signed JWT responses from the UserInfo endpoint instead of plain JSON.
+- **Client branding** — Applications that register `logo_uri`, `policy_uri`, or `tos_uri` during client registration have these displayed on the Vouch login page.
 
 ---
 
@@ -193,14 +203,15 @@ Example ID token payload:
 
 ## Access Token Claims
 
-Vouch issues access tokens as JWTs ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)). These include hardware attestation claims that your application can use to enforce security policies. These claims are **not** in the ID token or the UserInfo response.
+Vouch issues access tokens as JWTs ([RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068)). These include a hardware attestation claim that your application can use to enforce security policies. This claim is **not** in the ID token or the UserInfo response.
 
 | Claim | Type | Description |
 |---|---|---|
 | `hardware_verified` | boolean | `true` if the authentication was performed using a verified hardware security key. Always `true` for Vouch-issued tokens from the authorization code flow. |
-| `hardware_aaguid` | string | The AAGUID (Authenticator Attestation GUID) of the hardware key used for authentication. This identifies the make and model of the security key (e.g., YubiKey 5 series). |
 
-To access these claims, decode the access token JWT payload. See the [examples repository](https://github.com/vouch-sh/examples) for working implementations in each framework.
+To access this claim, decode the access token JWT payload. See the [examples repository](https://github.com/vouch-sh/examples) for working implementations in each framework.
+
+The `hardware_aaguid` claim (FIDO2 authenticator AAGUID identifying the key make and model) is available in cloud federation tokens (AWS STS, Kubernetes) but not in standard OIDC access tokens.
 
 ---
 
@@ -255,7 +266,7 @@ The new token is scoped to Service B's audience and inherits the user's identity
 
 For automated systems that need to authenticate without any human interaction -- CI/CD pipelines, background services, or daemon processes -- Vouch supports the OAuth **client credentials** grant ([RFC 6749 Section 4.4](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4)).
 
-Unlike the authorization code flow (which requires a browser and a YubiKey tap), the client credentials flow lets a service authenticate directly using its client ID and client secret.
+Unlike the authorization code flow (which requires a browser and a YubiKey tap), the client credentials flow lets a service authenticate directly using its client ID and client secret. Services can also use Mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) for client authentication (`tls_client_auth` or `self_signed_tls_client_auth`) and certificate-bound access tokens as an alternative to client secrets — see [Architecture](/docs/architecture/#mutual-tls-rfc-8705) for details.
 
 ### When to use client credentials
 

@@ -13,7 +13,7 @@ See the [Applications overview](/docs/applications/) for prerequisites, configur
 
 - Register the provider with `server_metadata_url` and `code_challenge_method='S256'` for PKCE
 - Add `SessionMiddleware` with a secret key before the auth middleware
-- Hardware attestation claims (`hardware_verified`, `hardware_aaguid`) are in the access token JWT — decode the payload with base64url and padding adjustment
+- The hardware attestation claim (`hardware_verified`) is in the access token JWT — decode the payload with base64url and padding adjustment
 - Callback URL: `/callback`
 
 ## Example

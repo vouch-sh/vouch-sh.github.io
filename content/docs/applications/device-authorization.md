@@ -17,7 +17,7 @@ For native desktop applications and CLI tools that cannot open a browser redirec
 2. The user opens the verification URL in a browser and enters the displayed code.
 3. The user authenticates with their YubiKey in the browser.
 4. Your application polls `POST /oauth/token` with the `device_code` until the user completes authentication.
-5. The token response includes an access token with hardware attestation claims (`hardware_verified`, `hardware_aaguid`).
+5. The token response includes an access token with the hardware attestation claim (`hardware_verified`).
 
 Key details:
 
