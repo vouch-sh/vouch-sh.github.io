@@ -81,6 +81,8 @@ Resources:
                 !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"
               StringLike:
                 !Sub "${VouchServerUrl}:sub": "*@example.com"
+                "sts:RoleSessionName":
+                  !Join ["", ["${", !Ref VouchServerUrl, ":sub}"]]
       ManagedPolicyArns:
         - !Ref ManagedPolicyArn
 
@@ -196,6 +198,7 @@ resource "aws_iam_role" "vouch" {
           }
           StringLike = {
             "${var.vouch_server_url}:sub" = var.allowed_email_pattern
+            "sts:RoleSessionName"         = "$${${var.vouch_server_url}:sub}"
           }
         }
       }
@@ -270,7 +273,8 @@ Create a role in the management account that trusts Vouch as an OIDC provider. T
           "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
         },
         "StringLike": {
-          "{{< instance-url >}}:sub": "*@example.com"
+          "{{< instance-url >}}:sub": "*@example.com",
+          "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
         }
       }
     }
@@ -467,6 +471,9 @@ Add an email condition to the production deployer role's trust policy:
       "alice@example.com",
       "bob@example.com"
     ]
+  },
+  "StringLike": {
+    "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
   }
 }
 ```

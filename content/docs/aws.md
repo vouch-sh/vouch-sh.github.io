@@ -115,7 +115,8 @@ cat > /tmp/vouch-trust-policy.json << EOF
           "{{< instance-url >}}:aud": "{{< instance-url >}}"
         },
         "StringLike": {
-          "{{< instance-url >}}:sub": "*@example.com"
+          "{{< instance-url >}}:sub": "*@example.com",
+          "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
         }
       }
     }
@@ -156,6 +157,7 @@ Resources:
                 "{{< instance-url >}}:aud": "{{< instance-url >}}"
               StringLike:
                 "{{< instance-url >}}:sub": "*@example.com"
+                "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
 ```
@@ -196,6 +198,7 @@ resource "aws_iam_role" "vouch_developer" {
           }
           StringLike = {
             "{{< instance-url >}}:sub" = "*@example.com"
+            "sts:RoleSessionName"      = "${{{< instance-url >}}:sub}"
           }
         }
       }
@@ -222,6 +225,9 @@ Limit role assumption to specific users by adding an email condition to the trus
   "StringEquals": {
     "{{< instance-url >}}:aud": "{{< instance-url >}}",
     "{{< instance-url >}}:sub": ["user@example.com"]
+  },
+  "StringLike": {
+    "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
   }
 }
 ```
@@ -236,10 +242,25 @@ Allow any user from a specific domain:
     "{{< instance-url >}}:aud": "{{< instance-url >}}"
   },
   "StringLike": {
-    "{{< instance-url >}}:sub": "*@example.com"
+    "{{< instance-url >}}:sub": "*@example.com",
+    "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
   }
 }
 ```
+
+### Prevent session name spoofing
+
+The `RoleSessionName` is a client-provided STS API parameter. Without a trust policy condition, someone with a valid Vouch JWT could set it to another user's email, making CloudTrail session ARNs misleading. The `sts:RoleSessionName` condition binds the session name to the authenticated `sub` claim from the validated JWT:
+
+```json
+"StringLike": {
+  "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+}
+```
+
+All trust policy examples in this guide include this condition. AWS rejects any `AssumeRoleWithWebIdentity` call where the session name does not match the OIDC subject.
+
+> **Note:** The immutable `SourceIdentity` claim (set to the user's email) provides a second attribution anchor in CloudTrail that cannot be spoofed regardless of this condition.
 
 ### Session tags
 
