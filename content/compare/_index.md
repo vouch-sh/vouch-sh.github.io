@@ -27,7 +27,7 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 | **Device posture policies** | Yes (CEL-based) | No | No | No | No | Yes | No |
 | **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes | Yes (passkeys/WebAuthn) |
 | **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) | Yes |
-| **Open source** | Yes (CLI) | No | Source-available (BSL) | No | AGPL source + restricted binaries | No | Yes (core components) |
+| **Open source** | Yes | No | Source-available (BSL) | No | AGPL source + restricted binaries | No | Yes (core components) |
 | **Pricing** | Free tier available | Free (included with AWS) | Free Community / Paid Enterprise or HCP | Included with 1Password | Free Community / Paid Enterprise or Cloud | Paid | Free developer / Paid SaaS + enterprise self-hosted |
 
 ---
