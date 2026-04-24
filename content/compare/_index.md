@@ -9,26 +9,26 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 
 ## Feature matrix
 
-|  | **Vouch** | **AWS IAM Identity Center** | **HashiCorp Vault** | **1Password SSH Agent** | **Teleport** | **Beyond Identity** |
-|---|---|---|---|---|---|---|
-| **What it is** | Credential broker | AWS SSO service | Secrets manager + PKI | Password manager with SSH | PAM + access platform | Passwordless identity |
-| **Hardware key required** | Yes (FIDO2) | Optional (depends on IdP) | Optional | No | Optional | Yes (device-bound) |
-| **AWS credentials** | Yes (STS via OIDC) | Yes (native) | Yes (AWS secrets engine) | No | Yes (via app access) | No |
-| **SSH certificates** | Yes (built-in CA) | No | Yes (SSH secrets engine) | Yes (key agent) | Yes (built-in CA) | No |
-| **GitHub tokens** | Yes (installation tokens) | No | No | No | No | No |
-| **Docker registry auth** | Yes (ECR + GHCR) | No | No | No | No | No |
-| **CodeCommit** | Yes (SigV4) | No | No | No | No | No |
-| **CodeArtifact** | Yes (token exchange) | No | No | No | No | No |
-| **Cargo registries** | Yes | No | No | No | No | No |
-| **Kubernetes (EKS)** | Yes | Yes | Yes | No | Yes | No |
-| **Database auth (RDS)** | Yes (IAM auth) | No | Yes (database engines) | No | Yes | No |
-| **OIDC application SSO** | Yes (17 frameworks) | Yes | Yes (OIDC provider) | No | Yes | Yes |
-| **Session lifetime** | 8 hours | Configurable | Configurable | N/A | Configurable | Configurable |
-| **Device posture policies** | Yes (CEL-based) | No | No | No | No | Yes |
-| **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes |
-| **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) |
-| **Open source** | Yes (CLI) | No | Yes (core) | No | Yes | No |
-| **Pricing** | Free tier available | Free (included with AWS) | Free (OSS) / Paid (Enterprise) | Included with 1Password | Free (Community) / Paid | Paid |
+|  | **Vouch** | **AWS IAM Identity Center** | **HashiCorp Vault** | **1Password SSH Agent** | **Teleport** | **Beyond Identity** | **Ory** |
+|---|---|---|---|---|---|---|---|
+| **What it is** | Credential broker | AWS SSO service | Secrets manager + PKI | Password manager with SSH | PAM + access platform | Passwordless identity | Identity + OAuth/OIDC platform |
+| **Hardware key required** | Yes (FIDO2) | Optional (depends on IdP) | Optional | No | Optional | Yes (device-bound) | Optional (passkeys/WebAuthn) |
+| **AWS credentials** | Yes (STS via OIDC) | Yes (native) | Yes (AWS secrets engine) | Stored keys via plugin | Yes (via app access) | No | No |
+| **SSH certificates** | Yes (built-in CA) | No | Yes (SSH secrets engine) | Yes (key agent) | Yes (built-in CA) | No | No |
+| **GitHub tokens** | Yes (installation tokens) | No | No | No | No | No | No |
+| **Docker registry auth** | Yes (ECR + GHCR) | No | No | No | No | No | No |
+| **CodeCommit** | Yes (SigV4) | No | No | No | No | No | No |
+| **CodeArtifact** | Yes (token exchange) | No | No | No | No | No | No |
+| **Cargo registries** | Yes | No | No | No | No | No | No |
+| **Kubernetes (EKS)** | Yes | Yes | Yes | No | Yes | No | No |
+| **Database auth (RDS)** | Yes (IAM auth) | No | Yes (database engines) | No | Yes | No | No |
+| **OIDC application SSO** | Yes (23 app and agent guides) | Yes | Yes (OIDC provider) | No | Yes | Yes | Yes |
+| **Session lifetime** | 8 hours | Configurable | Configurable | N/A | Configurable | Configurable | Configurable |
+| **Device posture policies** | Yes (CEL-based) | No | No | No | No | Yes | No |
+| **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes | Yes (passkeys/WebAuthn) |
+| **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) | Yes |
+| **Open source** | Yes (CLI) | No | Source-available (BSL) | No | AGPL source + restricted binaries | No | Yes (core components) |
+| **Pricing** | Free tier available | Free (included with AWS) | Free Community / Paid Enterprise or HCP | Included with 1Password | Free Community / Paid Enterprise or Cloud | Paid | Free developer / Paid SaaS + enterprise self-hosted |
 
 ---
 
@@ -86,6 +86,14 @@ Choose Beyond Identity when:
 - You need **passwordless authentication** for workforce identity across SaaS applications.
 - You need device trust and posture checks deeply integrated into SaaS application authentication (Vouch now supports [device posture policies](/docs/device-posture/) for developer credential issuance, but Beyond Identity focuses on broader workforce SSO).
 - Developer credentials (AWS, SSH, GitHub) are not a primary concern.
+
+### Ory
+
+Choose Ory when:
+
+- You want to build or operate a full **identity platform** for your own applications, including user registration, login, OAuth/OIDC, passkeys, permissions, or an identity-aware proxy.
+- You need self-hostable identity infrastructure and have the engineering capacity to wire it into your application stack.
+- Developer credential brokering (AWS, SSH, GitHub, Docker, package registries) is not the primary problem you are solving.
 
 ---
 
