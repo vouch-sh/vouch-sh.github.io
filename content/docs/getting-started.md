@@ -107,6 +107,15 @@ You can manage your enrolled security keys at any time from the Vouch dashboard:
 
 ![Security Keys page showing an enrolled YubiKey](/images/admin/security-keys.png)
 
+<div class="checkpoint">
+<p><strong>You are done with enrollment when...</strong></p>
+<ul>
+  <li><code>vouch enroll</code> finishes without errors.</li>
+  <li>Your YubiKey appears on the dashboard security keys page.</li>
+  <li>Future <code>vouch</code> commands remember the server URL without another <code>--server</code> flag.</li>
+</ul>
+</div>
+
 ---
 
 ## Step 3 -- Daily login
@@ -122,41 +131,33 @@ Authenticated for 8 hours
 
 That is it. After login, every integration -- SSH, AWS, Git -- uses the session credentials automatically. When the 8-hour window expires, run `vouch login` again.
 
----
-
-## Step 4 -- Set up integrations
-
-Before your tools can use Vouch credentials, your organization needs to configure the relevant integrations on the Vouch server. Work with your administrator to enable the services you need:
-
-- **[AWS Integration](/docs/aws/)** -- Federate into AWS with OIDC and assume IAM roles using short-lived STS credentials.
-- **[SSH Certificates](/docs/ssh/)** -- Connect to servers using Vouch-signed SSH certificates instead of static keys.
-- **[Amazon EKS](/docs/eks/)** -- Authenticate to Kubernetes clusters running on EKS.
-- **[GitHub Integration](/docs/github/)** -- Access private GitHub repositories using short-lived tokens.
-- **[Docker Registries](/docs/docker/)** -- Authenticate to container registries like ECR and GHCR.
-- **[AWS CodeArtifact](/docs/codeartifact/)** -- Authenticate to AWS CodeArtifact package repositories.
-- **[AWS CodeCommit](/docs/codecommit/)** -- Authenticate to AWS CodeCommit Git repositories.
-- **[Cargo Integration](/docs/cargo/)** -- Authenticate to private Cargo registries.
-- **[AWS Systems Manager Session Manager](/docs/ssm/)** -- Connect to EC2 instances through AWS Systems Manager.
-- **[Database Authentication](/docs/databases/)** -- Connect to RDS, Aurora, and Redshift with IAM authentication.
-- **[Infrastructure as Code](/docs/iac/)** -- Use CDK, Terraform, SAM, and other IaC tools.
-- **[CI/CD Integration](/docs/cicd/)** -- Add human authorization gates to deployments.
-- **[AI Model Access](/docs/bedrock/)** -- Hardware-verified access to Amazon Bedrock.
+<div class="checkpoint">
+<p><strong>You are done with login when...</strong></p>
+<ul>
+  <li>The command reports that you are authenticated.</li>
+  <li><code>vouch status</code> shows an active session and the remaining session time.</li>
+  <li>You do not need to touch the YubiKey again until the session expires or policy requires it.</li>
+</ul>
+</div>
 
 ---
 
-## Step 5 -- Use SSH, AWS, and Git
+## Step 4 -- Use your first credential
 
-With an active session, your tools work without any extra flags or configuration:
+With an active session, your tools work without extra wrappers. Try the integration your administrator has already configured:
 
 ```
 # SSH just works
 ssh user@server
 
-# AWS credentials available
-aws s3 ls --profile vouch
+# AWS credentials are available through the configured profile
+aws sts get-caller-identity --profile vouch
+
+# Git prompts Vouch's credential helper when needed
+git ls-remote https://github.com/example/private-repo.git
 ```
 
-Vouch provides credentials on demand to each tool through the lightweight integrations configured in Step 4.
+Vouch provides credentials on demand to each tool through the lightweight integrations configured by your organization.
 
 ### What just started working?
 
@@ -173,7 +174,45 @@ One YubiKey tap gives you credentials that cascade across your entire toolchain:
 | `helm push` | OCI Charts |
 | `kubectl` | EKS |
 
-These tools read your AWS config or Docker config -- no additional setup beyond the integrations in Step 4.
+These tools read your AWS config, SSH config, Git credential helper, or Docker config -- no additional wrapper commands are needed after setup.
+
+<div class="checkpoint">
+<p><strong>You are done with first use when...</strong></p>
+<ul>
+  <li>At least one tool successfully uses credentials from the active Vouch session.</li>
+  <li>AWS commands show your assumed role, SSH accepts your Vouch certificate, or Git uses the Vouch credential helper.</li>
+  <li>No long-lived AWS keys, SSH private keys, GitHub PATs, or registry passwords were created for the test.</li>
+</ul>
+</div>
+
+---
+
+## Step 5 -- Choose your next integration
+
+Before a tool can use Vouch, your organization needs to configure the matching integration. Choose the guide that matches the credential you want to replace next.
+
+<div class="journey-grid">
+  <div class="journey-card">
+    <h3>Cloud and infrastructure</h3>
+    <p>Start here for AWS, servers, Kubernetes, databases, and infrastructure tooling.</p>
+    <p><a href="/docs/aws/">AWS</a> · <a href="/docs/ssh/">SSH</a> · <a href="/docs/eks/">EKS</a> · <a href="/docs/kubernetes/">Kubernetes</a> · <a href="/docs/databases/">Databases</a> · <a href="/docs/iac/">IaC</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Code and packages</h3>
+    <p>Use Vouch for source control, containers, package repositories, and AWS developer services.</p>
+    <p><a href="/docs/github/">GitHub</a> · <a href="/docs/docker/">Docker</a> · <a href="/docs/codeartifact/">CodeArtifact</a> · <a href="/docs/codecommit/">CodeCommit</a> · <a href="/docs/cargo/">Cargo</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Organization rollout</h3>
+    <p>Set up the hosted dashboard, onboard users, and connect identity lifecycle controls.</p>
+    <p><a href="/docs/startups/">Startup setup</a> · <a href="/docs/admin/">Admin dashboard</a> · <a href="/docs/scim/">SCIM</a> · <a href="/docs/saml/">SAML</a> · <a href="/docs/migration/">Migration</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Security review</h3>
+    <p>Evaluate the architecture, credential lifecycle, threat model, and failure modes.</p>
+    <p><a href="/docs/security/">Security</a> · <a href="/docs/architecture/">Architecture</a> · <a href="/docs/threat-model/">Threat model</a> · <a href="/docs/availability/">Availability</a></p>
+  </div>
+</div>
 
 ---
 

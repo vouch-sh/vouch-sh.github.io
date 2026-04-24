@@ -14,6 +14,31 @@ Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) 
 
 <a href="https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
 
+## Choose a guide
+
+<div class="journey-grid">
+  <div class="journey-card">
+    <h3>Server-rendered web apps</h3>
+    <p>Use the authorization code flow with a backend session.</p>
+    <p><a href="#server-side-frameworks">Server frameworks</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Single-page apps</h3>
+    <p>Use authorization code with PKCE for browser-based clients.</p>
+    <p><a href="#single-page-applications">SPA frameworks</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Native and CLI apps</h3>
+    <p>Use the Device Authorization Grant for terminals and desktop apps.</p>
+    <p><a href="#native--cli-applications">Native and CLI guides</a></p>
+  </div>
+  <div class="journey-card">
+    <h3>Agents and MCP servers</h3>
+    <p>Protect tool servers and agent-to-agent calls with Vouch OIDC tokens.</p>
+    <p><a href="#mcp-servers">MCP guides</a> · <a href="#agent-to-agent-a2a">A2A guides</a></p>
+  </div>
+</div>
+
 ## What you'll build
 
 By following this guide, you will integrate Vouch as an OIDC identity provider into your application. Users will authenticate with their YubiKey through Vouch, and your application will receive verified identity information including:

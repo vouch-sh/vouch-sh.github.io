@@ -2,25 +2,34 @@
 {{ $docsSection := .Site.GetPage "/docs" }}
 {{ $allPages := $docsSection.Pages.ByWeight }}
 <ul>
-  {{/* Render featured pages first (no group header) */}}
-  {{ range $allPages }}
-    {{ if and (not .IsSection) (eq (default "" .Params.docsGroup) "featured") }}
-      <li>
-        <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
-          {{ .LinkTitle }}
-        </a>
-      </li>
-    {{ end }}
+  {{/* Render featured pages first as the starting path */}}
+  {{ $featuredPages := where $allPages ".Params.docsGroup" "featured" }}
+  {{ with $featuredPages }}
+    <li class="sidebar-section-group">
+      <span class="sidebar-section-label">Start Here</span>
+      <ul>
+        {{ range . }}
+          {{ if not .IsSection }}
+            <li>
+              <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
+                {{ .LinkTitle }}
+              </a>
+            </li>
+          {{ end }}
+        {{ end }}
+      </ul>
+    </li>
   {{ end }}
 
   {{/* Render each sidebar group */}}
   {{ range $group := site.Params.sidebarGroups }}
-    <li class="sidebar-section-group">
-      <span class="sidebar-section-label">{{ $group.label }}</span>
-      <ul>
-        {{ range $allPages }}
-          {{ if .IsSection }}
-            {{ if eq (default "" .Params.docsGroup) $group.key }}
+    {{ $groupPages := where $allPages ".Params.docsGroup" $group.key }}
+    {{ with $groupPages }}
+      <li class="sidebar-section-group">
+        <span class="sidebar-section-label">{{ $group.label }}</span>
+        <ul>
+          {{ range . }}
+            {{ if .IsSection }}
               {{/* Collapsible section group (e.g., Applications) */}}
               {{ $isAncestor := $currentPage.IsDescendant . }}
               {{ $isActive := eq $currentPage.Permalink .Permalink }}
@@ -45,9 +54,7 @@
                   {{ end }}
                 </ul>
               </li>
-            {{ end }}
-          {{ else }}
-            {{ if eq (default "" .Params.docsGroup) $group.key }}
+            {{ else }}
               <li>
                 <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
                   {{ .LinkTitle }}
@@ -55,8 +62,8 @@
               </li>
             {{ end }}
           {{ end }}
-        {{ end }}
-      </ul>
-    </li>
+        </ul>
+      </li>
+    {{ end }}
   {{ end }}
 </ul>
