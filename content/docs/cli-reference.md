@@ -10,6 +10,20 @@ params:
 
 This page documents all available Vouch CLI commands. For installation instructions, see [Getting Started](/docs/getting-started/).
 
+## Quick links
+
+- [Global flags](#global-flags)
+- [Authentication](#authentication)
+- [AWS](#aws)
+- [Setup](#setup)
+- [Credentials](#credentials)
+- [Key management](#key-management)
+- [Environment](#environment)
+- [Device posture](#device-posture)
+- [Diagnostics](#diagnostics)
+- [Exit codes](#exit-codes)
+- [Binary download verification](#binary-download-verification)
+
 ---
 
 ## Global flags

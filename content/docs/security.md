@@ -10,6 +10,14 @@ params:
 
 Vouch brokers the most sensitive credentials in a developer's stack: SSH certificates, AWS STS tokens, GitHub installation tokens, and container registry passwords. This page explains exactly how those credentials are protected at every layer.
 
+## Executive summary
+
+- Vouch does not store AWS credentials, SSH private keys, GitHub tokens, or registry passwords. It brokers short-lived credentials after hardware-backed authentication.
+- User authentication is based on FIDO2/WebAuthn assertions from enrolled YubiKeys, requiring both the key and user verification.
+- Credentials are scoped to one authenticated user, held in memory by the local agent, and expire automatically.
+- Server-side signing keys are managed by AWS KMS, and authenticated requests use modern OAuth and FAPI protections including DPoP, PAR, private-key client authentication, and HTTP Message Signatures.
+- Security reviewers should also read the [Threat Model](/docs/threat-model/), [Architecture](/docs/architecture/), [Availability](/docs/availability/), and [Migration](/docs/migration/) guides.
+
 ---
 
 ## Data flow

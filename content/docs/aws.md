@@ -43,9 +43,18 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 
 Because the ID token is scoped to the authenticated user and is short-lived, credentials cannot be shared or reused after expiry.
 
+## Who does what
+
+| Role | Steps | Outcome |
+|---|---|---|
+| **AWS administrator** | Step 1 and Step 2 | AWS trusts Vouch and exposes an IAM role developers can assume. |
+| **Developer** | Step 3 and Step 4 | The local AWS profile uses Vouch credentials and confirms the assumed identity. |
+
 ---
 
 ## Step 1 -- Create the OIDC Provider in AWS (admin)
+
+<span class="role-label">Admin task</span>
 
 Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider in the target AWS account.
 
@@ -88,6 +97,8 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 ---
 
 ## Step 2 -- Create an IAM Role (admin)
+
+<span class="role-label">Admin task</span>
 
 Create an IAM role that developers will assume. The trust policy must allow [`AssumeRoleWithWebIdentity`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) from the Vouch OIDC provider.
 
@@ -291,6 +302,8 @@ Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/lat
 
 ## Step 3 -- Configure the Vouch CLI
 
+<span class="role-label">Developer task</span>
+
 Each developer needs to tell the CLI which IAM role to assume and in which AWS profile to store the credentials. Run:
 
 ```bash
@@ -317,6 +330,8 @@ If your organization uses AWS IAM Identity Center, you can auto-discover all ava
 
 ## Step 4 -- Test
 
+<span class="role-label">Developer task</span>
+
 Verify that everything is working:
 
 ```bash
@@ -327,7 +342,7 @@ vouch login
 aws sts get-caller-identity --profile vouch
 ```
 
-You should see output similar to:
+Expected output:
 
 ```json
 {
@@ -342,6 +357,15 @@ Try running a command against a real AWS service:
 ```bash
 aws s3 ls --profile vouch
 ```
+
+<div class="checkpoint">
+<p><strong>You are done when...</strong></p>
+<ul>
+  <li><code>aws sts get-caller-identity --profile vouch</code> returns an assumed-role ARN for the expected AWS account.</li>
+  <li>The role session name matches the authenticated Vouch user.</li>
+  <li>A real AWS command succeeds without static credentials in <code>~/.aws/credentials</code>.</li>
+</ul>
+</div>
 
 ---
 
