@@ -324,7 +324,7 @@ Each member account has a `VouchAccess` role that trusts the management account 
       ],
       "Condition": {
         "StringLike": {
-          "sts:SourceIdentity": "*@example.com"
+          "aws:SourceIdentity": "*@example.com"
         }
       }
     }
