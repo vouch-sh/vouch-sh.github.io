@@ -123,7 +123,7 @@ cat > /tmp/vouch-trust-policy.json << EOF
       ],
       "Condition": {
         "StringEquals": {
-          "{{< instance-url >}}:aud": "{{< instance-url >}}"
+          "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
         },
         "StringLike": {
           "{{< instance-url >}}:sub": "*@example.com",
@@ -165,7 +165,7 @@ Resources:
               - "sts:TagSession"
             Condition:
               StringEquals:
-                "{{< instance-url >}}:aud": "{{< instance-url >}}"
+                "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
               StringLike:
                 "{{< instance-url >}}:sub": "*@example.com"
                 "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
@@ -205,7 +205,7 @@ resource "aws_iam_role" "vouch_developer" {
         ]
         Condition = {
           StringEquals = {
-            "{{< instance-url >}}:aud" = "{{< instance-url >}}"
+            "{{< instance-url >}}:aud" = "https://{{< instance-url >}}"
           }
           StringLike = {
             "{{< instance-url >}}:sub" = "*@example.com"
@@ -234,7 +234,7 @@ Limit role assumption to specific users by adding an email condition to the trus
 ```json
 "Condition": {
   "StringEquals": {
-    "{{< instance-url >}}:aud": "{{< instance-url >}}",
+    "{{< instance-url >}}:aud": "https://{{< instance-url >}}",
     "{{< instance-url >}}:sub": ["user@example.com"]
   },
   "StringLike": {
@@ -250,7 +250,7 @@ Allow any user from a specific domain:
 ```json
 "Condition": {
   "StringEquals": {
-    "{{< instance-url >}}:aud": "{{< instance-url >}}"
+    "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
   },
   "StringLike": {
     "{{< instance-url >}}:sub": "*@example.com",
@@ -417,7 +417,7 @@ Vouch detects the following AI coding agents:
 
 | Agent | Environment Variable |
 |-------|---------------------|
-| Claude Code | `CLAUDE_CODE` |
+| Claude Code | `AI_AGENT` or `CLAUDE_CODE` |
 | Cursor | `CURSOR_TRACE_ID` |
 | GitHub Copilot | `COPILOT_MODEL` |
 | OpenAI Codex | `CODEX_SANDBOX` |

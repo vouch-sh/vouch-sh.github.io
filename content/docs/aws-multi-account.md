@@ -41,15 +41,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Vouch OIDC federation (deployed via StackSet)"
 
 Parameters:
-  VouchServerUrl:
+  EmailDomain:
     Type: String
-    Default: "{{< instance-url >}}"
-
-  RoleName:
-    Type: String
-    Default: "VouchDeveloper"
-
-  ManagedPolicyArn:
+    Description: Your Google Workspace domain (e.g. example.com)
+  ManagedPolicyArn
     Type: String
     Default: "arn:aws:iam::aws:policy/ReadOnlyAccess"
     Description: "Permissions policy to attach to the role"
@@ -65,24 +60,23 @@ Resources:
   VouchRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Ref RoleName
+      RoleName: VouchDeveloper
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/${VouchServerUrl}"
+              Federated: !Sub "arn:${AWS::Partition}$:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
               - "sts:SetSourceIdentity"
               - "sts:TagSession"
             Condition:
               StringEquals:
-                !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"
+                "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
               StringLike:
-                !Sub "${VouchServerUrl}:sub": "*@example.com"
-                "sts:RoleSessionName":
-                  !Join ["", ["${", !Ref VouchServerUrl, ":sub}"]]
+                "{{< instance-url >}}:sub": !Sub "*@${EmailDomain}"
+                "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
       ManagedPolicyArns:
         - !Ref ManagedPolicyArn
 
@@ -297,13 +291,18 @@ Attach an identity policy to the management account role that allows it to assum
         "sts:SetSourceIdentity",
         "sts:TagSession"
       ],
-      "Resource": "arn:aws:iam::*:role/VouchAccess"
+      "Resource": "arn:aws:iam::*:role/VouchAccess",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgId": "o-xxxxxxxxx"
+        }
+      }
     }
   ]
 }
 ```
 
-> **Tip:** Replace the wildcard (`*`) in the resource ARN with specific account IDs to follow the principle of least privilege (e.g., `arn:aws:iam::111111111111:role/VouchAccess`).
+> **Tip:** Replace the organization ID (`o-xxxxxxxxx`) in the condition key to only allow access to the AWS Accounts within the AWS Organization.
 
 ### Member account -- Trust policy
 

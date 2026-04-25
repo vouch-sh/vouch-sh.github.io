@@ -122,7 +122,7 @@ Resources:
               - "sts:TagSession"
             Condition:
               StringEquals:
-                "{{< instance-url >}}:aud": "{{< instance-url >}}"
+                "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
               StringLike:
                 "{{< instance-url >}}:sub": !Sub "*@${EmailDomain}"
                 "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
