@@ -61,6 +61,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: VouchDeveloper
+      Path: /vouch/
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -172,6 +173,7 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 resource "aws_iam_role" "vouch" {
   name = var.role_name
+  path = "/vouch/"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -291,7 +293,7 @@ Attach an identity policy to the management account role that allows it to assum
         "sts:SetSourceIdentity",
         "sts:TagSession"
       ],
-      "Resource": "arn:aws:iam::*:role/VouchAccess",
+      "Resource": "arn:aws:iam::*:role/vouch/VouchAccess",
       "Condition": {
         "StringEquals": {
           "aws:PrincipalOrgId": "o-xxxxxxxxx"
@@ -315,7 +317,7 @@ Each member account has a `VouchAccess` role that trusts the management account 
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:role/VouchAccess"
+        "AWS": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:role/vouch/VouchAccess"
       },
       "Action": [
         "sts:AssumeRole",
@@ -375,6 +377,98 @@ Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/
 
 ---
 
+## Protecting Vouch roles from accidental deletion
+
+A common convention is to prefix critical roles with `DO-NOT-DELETE-*`, but that is a social signal, not a control. Tired engineers ignore it; automation never reads it. Use technical guardrails as the real protection, and use names, paths, and tags only as the addressing scheme those guardrails attach to.
+
+### Use an IAM path, not a name prefix
+
+Place Vouch roles under a dedicated IAM [path](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) such as `/vouch/`. Paths are first-class in the role ARN, can be wildcarded in policy `Resource` fields, and don't pollute the role's display name:
+
+```
+arn:aws:iam::123456789012:role/vouch/VouchDeveloper
+```
+
+In CloudFormation, add a single line to the role:
+
+```yaml
+VouchRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: VouchDeveloper
+    Path: /vouch/
+```
+
+In Terraform:
+
+```hcl
+resource "aws_iam_role" "vouch" {
+  name = var.role_name
+  path = "/vouch/"
+  # ...
+}
+```
+
+### Tag for ABAC and inventory
+
+Tag every Vouch-managed resource so an SCP or audit query can find it even if someone forgets the path:
+
+```yaml
+Tags:
+  - Key: ManagedBy
+    Value: Vouch
+  - Key: Purpose
+    Value: OIDCFederation
+```
+
+### Deny deletion with an SCP
+
+This is the actual control. Deny destructive IAM actions against anything in the `/vouch/` path and against the Vouch OIDC provider, with an exception for your deployment principal so legitimate updates can still happen:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProtectVouchRoles",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:DeleteOpenIDConnectProvider"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/vouch/*",
+        "arn:aws:iam::*:oidc-provider/{{< instance-url >}}"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:role/VouchDeploymentRole"
+        }
+      }
+    }
+  ]
+}
+```
+
+Replace `VouchDeploymentRole` with whatever principal your CloudFormation StackSet, Terraform pipeline, or platform team uses.
+
+### IaC-level protections
+
+Belt-and-suspenders settings in your stack definitions catch the cases where someone bypasses the SCP exception and runs `terraform destroy` or deletes a CloudFormation stack:
+
+- **CloudFormation:** set `DeletionPolicy: Retain` and `UpdateReplacePolicy: Retain` on the role and OIDC provider resources.
+- **Terraform:** add `lifecycle { prevent_destroy = true }` to each resource.
+- **StackSets:** enable termination protection on the stack set itself.
+
+### Detective backstop
+
+Even with all of the above, alert on the action so you find out fast if something slips through. An EventBridge rule on `DeleteRole` and `DeleteOpenIDConnectProvider` events filtered to the `/vouch/` path, targeting an SNS topic, gives you a notification within seconds.
+
+---
+
 ## Developer setup
 
 Each developer configures a named AWS profile for each account:
@@ -382,17 +476,17 @@ Each developer configures a named AWS profile for each account:
 ```bash
 # Development account
 vouch setup aws \
-  --role arn:aws:iam::111111111111:role/VouchDeveloper \
+  --role arn:aws:iam::111111111111:role/vouch/VouchDeveloper \
   --profile vouch-dev
 
 # Staging account
 vouch setup aws \
-  --role arn:aws:iam::333333333333:role/VouchDeveloper \
+  --role arn:aws:iam::333333333333:role/vouch/VouchDeveloper \
   --profile vouch-staging
 
 # Production account (read-only)
 vouch setup aws \
-  --role arn:aws:iam::222222222222:role/VouchReadOnly \
+  --role arn:aws:iam::222222222222:role/vouch/VouchReadOnly \
   --profile vouch-prod
 ```
 
@@ -400,13 +494,13 @@ This produces the following `~/.aws/config`:
 
 ```ini
 [profile vouch-dev]
-credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/VouchDeveloper
+credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/vouch/VouchDeveloper
 
 [profile vouch-staging]
-credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/VouchDeveloper
+credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/vouch/VouchDeveloper
 
 [profile vouch-prod]
-credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/VouchReadOnly
+credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchReadOnly
 ```
 
 Use profiles per command:
