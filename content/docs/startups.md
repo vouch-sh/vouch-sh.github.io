@@ -91,21 +91,20 @@ Deploy a single CloudFormation template to register Vouch as an OIDC identity pr
 
 ```yaml
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Vouch OIDC Federation — one-click setup for startups"
+Description: Vouch OIDC Federation for startups
 
 Parameters:
-  VouchServerUrl:
+  EmailDomain:
     Type: String
-    Default: "{{< instance-url >}}"
-    Description: "Vouch server hostname (without https://)"
+    Description: Your Google Workspace domain (e.g. example.com)
 
 Resources:
   VouchOIDCProvider:
     Type: AWS::IAM::OIDCProvider
     Properties:
-      Url: !Sub "https://${VouchServerUrl}"
+      Url: "https://{{< instance-url >}}"
       ClientIdList:
-        - !Sub "https://${VouchServerUrl}"
+        - "https://{{< instance-url >}}"
 
   VouchDeveloperRole:
     Type: AWS::IAM::Role
@@ -116,33 +115,37 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/${VouchServerUrl}"
+              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
             Action:
               - "sts:AssumeRoleWithWebIdentity"
               - "sts:SetSourceIdentity"
               - "sts:TagSession"
             Condition:
               StringEquals:
-                !Sub "${VouchServerUrl}:aud": !Sub "https://${VouchServerUrl}"
+                "{{< instance-url >}}:aud": "{{< instance-url >}}"
+              StringLike:
+                "{{< instance-url >}}:sub": !Sub "*@${EmailDomain}"
+                "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/PowerUserAccess
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/PowerUserAccess"
 
 Outputs:
   RoleArn:
     Value: !GetAtt VouchDeveloperRole.Arn
-    Description: "Use this ARN with 'vouch setup aws --role <ARN>'"
+    Description: Use with 'vouch setup aws --role <ARN>'
 ```
 
-Deploy it:
+Deploy it, supplying your Google Workspace domain:
 
 ```bash
 aws cloudformation deploy \
   --template-file vouch-startup.yaml \
   --stack-name vouch-federation \
+  --parameter-overrides EmailDomain=yourcompany.com \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
-> **Note:** This template uses `PowerUserAccess` as a starting point. Adjust the managed policy to match your team's needs. See the [AWS integration guide](/docs/aws/#tips-for-restricting-access) for examples of restricting access by email address or domain.
+> **Note:** The trust policy restricts role assumption to users whose verified email ends in `@<EmailDomain>` and binds the CloudTrail session name to the authenticated user. The role uses `PowerUserAccess` as a starting point -- adjust the managed policy to match your team's needs. See the [AWS integration guide](/docs/aws/#tips-for-restricting-access) for narrower patterns (single-user restrictions, ABAC session tags, etc.).
 
 ---
 
