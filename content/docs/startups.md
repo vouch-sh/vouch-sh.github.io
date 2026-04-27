@@ -85,67 +85,11 @@ As long as they authenticate with the same Google Workspace domain, they join th
 
 ---
 
-## Step 3 -- Deploy the AWS OIDC provider
+## Step 3 -- Deploy AWS federation
 
-Deploy a single CloudFormation template to register Vouch as an OIDC identity provider in your AWS account and create an IAM role for your team:
+Follow the [AWS integration guide](/docs/aws/), choosing **[Pattern A -- Managed policy](/docs/aws/#pattern-a--managed-policy)** with `PowerUserAccess` and a `*@yourcompany.com` email-domain trust condition. That is the recommended starting configuration for a startup; you can tighten it later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
 
-```yaml
-AWSTemplateFormatVersion: "2010-09-09"
-Description: Vouch OIDC Federation for startups
-
-Parameters:
-  EmailDomain:
-    Type: String
-    Description: Your Google Workspace domain (e.g. example.com)
-
-Resources:
-  VouchOIDCProvider:
-    Type: AWS::IAM::OIDCProvider
-    Properties:
-      Url: "https://{{< instance-url >}}"
-      ClientIdList:
-        - "https://{{< instance-url >}}"
-
-  VouchDeveloperRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: VouchDeveloper
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
-            Action:
-              - "sts:AssumeRoleWithWebIdentity"
-              - "sts:SetSourceIdentity"
-              - "sts:TagSession"
-            Condition:
-              StringEquals:
-                "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
-              StringLike:
-                "{{< instance-url >}}:sub": !Sub "*@${EmailDomain}"
-                "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
-      ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/PowerUserAccess"
-
-Outputs:
-  RoleArn:
-    Value: !GetAtt VouchDeveloperRole.Arn
-    Description: Use with 'vouch setup aws --role <ARN>'
-```
-
-Deploy it, supplying your Google Workspace domain:
-
-```bash
-aws cloudformation deploy \
-  --template-file vouch-startup.yaml \
-  --stack-name vouch-federation \
-  --parameter-overrides EmailDomain=yourcompany.com \
-  --capabilities CAPABILITY_NAMED_IAM
-```
-
-> **Note:** The trust policy restricts role assumption to users whose verified email ends in `@<EmailDomain>` and binds the CloudTrail session name to the authenticated user. The role uses `PowerUserAccess` as a starting point -- adjust the managed policy to match your team's needs. See the [AWS integration guide](/docs/aws/#tips-for-restricting-access) for narrower patterns (single-user restrictions, ABAC session tags, etc.).
+When the role exists, copy its ARN -- you'll need it in Step 4.
 
 ---
 
@@ -218,7 +162,7 @@ As your team grows:
 
 - **5--15 people:** Manual user management works fine. SCIM is optional.
 - **15--50 people:** Set up [SCIM provisioning](/docs/scim/) to automate onboarding and offboarding with Google Workspace.
-- **Multiple AWS accounts:** See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for deploying the OIDC provider across dev/staging/prod accounts.
+- **Multiple AWS accounts:** See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for chaining into dev/staging/prod accounts through a single hub.
 - **Database access:** Replace static RDS/Aurora passwords with [IAM database authentication](/docs/databases/) backed by hardware keys.
 - **CI/CD gates:** Add [human approval gates](/docs/cicd/) to production deployments.
 - **Compliance requirements:** See [Security](/docs/security/) and the [Threat Model](/docs/threat-model/) for details on how Vouch protects credentials.

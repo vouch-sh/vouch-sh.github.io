@@ -8,143 +8,160 @@ params:
   docsGroup: infra
 ---
 
-Once your organization has more than one AWS account, you need a strategy for deploying Vouch federation across all of them. This guide covers three approaches -- per-account OIDC providers (via CloudFormation StackSets or Terraform), IAM role chaining through a single hub account, and SCPs to enforce that only Vouch can federate into your accounts.
+Multi-account AWS layouts use **role chaining**: the Vouch OIDC provider lives only in the management account, developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. This page picks up where [AWS / Step 3 / Pattern C](/docs/aws/#pattern-c--stsassumerole-only) leaves off.
+
+We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One hub plus per-account spokes covers the same use cases with less surface area.
 
 ---
 
 ## Architecture
 
 ```
-AWS Organization (Management Account)
-├── Shared Services (CI/CD, logging)
-├── Development
-├── Staging
-└── Production
-
-Each account gets:
-  ├── OIDC Provider (trusting us.vouch.sh)
-  └── IAM Roles (VouchDeveloper, VouchReadOnly, etc.)
+Vouch (OIDC) ──▶ Management Account ──▶ Member Account
+                  VouchAccess (hub)        VouchAccess (spoke)
+                AssumeRoleWithWebIdentity     AssumeRole + SourceIdentity
 ```
 
-Every developer uses the same `vouch login` session. The AWS profile they select determines which account and role they assume.
+- The Vouch OIDC provider lives in the **management account only**.
+- The **hub role** uses [Pattern C](/docs/aws/#pattern-c--stsassumerole-only) -- its identity policy is `sts:AssumeRole` only.
+- Each **spoke role** trusts the hub through a plain AWS-principal trust (no OIDC).
+- The developer's verified email propagates through the chain as [`SourceIdentity`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html): set to `alice@example.com` at `AssumeRoleWithWebIdentity`, carried forward through each `AssumeRole`, recorded in CloudTrail in every member account.
+- All session tags are [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), so conditions like `aws:PrincipalTag/vouch:Domain` and `aws:PrincipalTag/vouch:Email` work in spoke trust policies just as they do in the hub.
+
+Every developer uses the same `vouch login` session. The AWS profile they select determines which spoke role -- and therefore which account -- they assume.
 
 ---
 
-## Option 1 -- CloudFormation StackSets
+## Step 1 -- Deploy the hub role
 
-StackSets deploy a CloudFormation template across all accounts in an AWS Organization (or a subset).
+<span class="role-label">Admin task</span>
 
-### Template
+Deploy the hub role in your management account using [Pattern C from the AWS guide](/docs/aws/#pattern-c--stsassumerole-only). Two specifics for the hub-and-spoke topology:
+
+- The trust policy's `sub` condition uses your email domain (e.g. `*@example.com`).
+- The identity policy's `Resource` must match the spoke role ARNs you'll deploy in Step 2: `arn:aws:iam::*:role/vouch/VouchAccess`.
+
+Replace the `aws:PrincipalOrgId` placeholder with your AWS Organization ID, and record the hub role ARN (e.g. `arn:aws:iam::999999999999:role/vouch/VouchAccess`) -- every spoke role's trust policy references it.
+
+---
+
+## Step 2 -- Deploy spoke roles in member accounts
+
+<span class="role-label">Admin task</span>
+
+Each member account needs a `VouchAccess` role that trusts the hub role and grants the actual permissions developers need in that account. The spoke role's trust policy is a plain AWS-principal trust (no OIDC provider, no JWT condition) because the chained `AssumeRole` call comes from a regular IAM role, not from a federated identity. The `aws:SourceIdentity` condition ensures only requests originating from an authenticated Vouch user with a matching email domain can assume the role.
+
+Pick one of the deployment options below. Both produce the same result.
+
+### Option A -- CloudFormation StackSets
+
+StackSets deploy a single template across every account in your AWS Organization (or a chosen OU).
 
 ```yaml
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Vouch OIDC federation (deployed via StackSet)"
+Description: "Vouch spoke role (deployed via StackSet)"
 
 Parameters:
+  ManagementAccountId:
+    Type: String
+    Description: "Account ID of the AWS Organization management account"
   EmailDomain:
     Type: String
     Description: Your Google Workspace domain (e.g. example.com)
-  ManagedPolicyArn
+  ManagedPolicyArn:
     Type: String
     Default: "arn:aws:iam::aws:policy/ReadOnlyAccess"
-    Description: "Permissions policy to attach to the role"
+    Description: "Permissions policy to attach to the spoke role"
 
 Resources:
-  VouchOIDCProvider:
-    Type: AWS::IAM::OIDCProvider
-    Properties:
-      Url: !Sub "https://${VouchServerUrl}"
-      ClientIdList:
-        - !Sub "https://${VouchServerUrl}"
-
-  VouchRole:
+  VouchSpokeRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: VouchDeveloper
+      RoleName: VouchAccess
       Path: /vouch/
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Sub "arn:${AWS::Partition}$:iam::${AWS::AccountId}:oidc-provider/{{< instance-url >}}"
+              AWS: !Sub "arn:${AWS::Partition}:iam::${ManagementAccountId}:role/vouch/VouchAccess"
             Action:
-              - "sts:AssumeRoleWithWebIdentity"
+              - "sts:AssumeRole"
               - "sts:SetSourceIdentity"
               - "sts:TagSession"
             Condition:
-              StringEquals:
-                "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
               StringLike:
-                "{{< instance-url >}}:sub": !Sub "*@${EmailDomain}"
-                "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+                "aws:SourceIdentity": !Sub "*@${EmailDomain}"
       ManagedPolicyArns:
         - !Ref ManagedPolicyArn
 
 Outputs:
   RoleArn:
-    Value: !GetAtt VouchRole.Arn
+    Value: !GetAtt VouchSpokeRole.Arn
 ```
 
-### Deploy to all accounts
-
-From the management account:
+Deploy from the management account:
 
 ```bash
 aws cloudformation create-stack-set \
-  --stack-set-name vouch-federation \
-  --template-body file://vouch-stackset.yaml \
+  --stack-set-name vouch-spokes \
+  --template-body file://vouch-spoke.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
   --permission-model SERVICE_MANAGED \
   --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false
 
 aws cloudformation create-stack-instances \
-  --stack-set-name vouch-federation \
+  --stack-set-name vouch-spokes \
   --deployment-targets OrganizationalUnitIds=ou-xxxx-xxxxxxxx \
-  --regions us-east-1
+  --regions us-east-1 \
+  --parameter-overrides \
+    ParameterKey=ManagementAccountId,ParameterValue=999999999999 \
+    ParameterKey=EmailDomain,ParameterValue=example.com
 ```
 
-With `--auto-deployment Enabled`, new accounts added to the OU automatically receive the Vouch OIDC provider and IAM role.
+With `--auto-deployment Enabled`, new accounts added to the OU automatically receive the spoke role.
 
-### Per-account role customization
+#### Per-account permissions
 
-Use different parameter overrides per account to control permissions:
+Override `ManagedPolicyArn` per account to scope permissions:
 
 ```bash
 # Development: PowerUserAccess
 aws cloudformation create-stack-instances \
-  --stack-set-name vouch-federation \
+  --stack-set-name vouch-spokes \
   --accounts 111111111111 \
   --regions us-east-1 \
-  --parameter-overrides ParameterKey=ManagedPolicyArn,ParameterValue=arn:aws:iam::aws:policy/PowerUserAccess ParameterKey=RoleName,ParameterValue=VouchDeveloper
+  --parameter-overrides \
+    ParameterKey=ManagementAccountId,ParameterValue=999999999999 \
+    ParameterKey=EmailDomain,ParameterValue=example.com \
+    ParameterKey=ManagedPolicyArn,ParameterValue=arn:aws:iam::aws:policy/PowerUserAccess
 
 # Production: ReadOnlyAccess
 aws cloudformation create-stack-instances \
-  --stack-set-name vouch-federation \
+  --stack-set-name vouch-spokes \
   --accounts 222222222222 \
   --regions us-east-1 \
-  --parameter-overrides ParameterKey=ManagedPolicyArn,ParameterValue=arn:aws:iam::aws:policy/ReadOnlyAccess ParameterKey=RoleName,ParameterValue=VouchReadOnly
+  --parameter-overrides \
+    ParameterKey=ManagementAccountId,ParameterValue=999999999999 \
+    ParameterKey=EmailDomain,ParameterValue=example.com \
+    ParameterKey=ManagedPolicyArn,ParameterValue=arn:aws:iam::aws:policy/ReadOnlyAccess
 ```
 
----
+### Option B -- Terraform
 
-## Option 2 -- Terraform
-
-### Module
-
-Create a reusable Terraform module:
+Create a reusable module for the spoke role:
 
 ```hcl
-# modules/vouch-federation/main.tf
+# modules/vouch-spoke/main.tf
 
-variable "vouch_server_url" {
-  type    = string
-  default = "{{< instance-url >}}"
+variable "management_account_id" {
+  type        = string
+  description = "AWS Organization management account ID"
 }
 
-variable "role_name" {
-  type    = string
-  default = "VouchDeveloper"
+variable "email_domain" {
+  type        = string
+  description = "Email domain to allow via SourceIdentity"
 }
 
 variable "policy_arns" {
@@ -152,27 +169,10 @@ variable "policy_arns" {
   default = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
 
-variable "allowed_email_pattern" {
-  type        = string
-  default     = "*@example.com"
-  description = "Email pattern to restrict who can assume this role"
-}
-
-data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-locals {
-  aws_account_id = data.aws_caller_identity.current.account_id
-  aws_partition  = data.aws_partition.current.partition
-}
-
-resource "aws_iam_openid_connect_provider" "vouch" {
-  url            = "https://${var.vouch_server_url}"
-  client_id_list = ["https://${var.vouch_server_url}"]
-}
-
-resource "aws_iam_role" "vouch" {
-  name = var.role_name
+resource "aws_iam_role" "vouch_spoke" {
+  name = "VouchAccess"
   path = "/vouch/"
 
   assume_role_policy = jsonencode({
@@ -181,20 +181,16 @@ resource "aws_iam_role" "vouch" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = "arn:${local.aws_partition}:iam::${local.aws_account_id}:oidc-provider/${var.vouch_server_url}"
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${var.management_account_id}:role/vouch/VouchAccess"
         }
         Action = [
-          "sts:AssumeRoleWithWebIdentity",
+          "sts:AssumeRole",
           "sts:SetSourceIdentity",
           "sts:TagSession",
         ]
         Condition = {
-          StringEquals = {
-            "${var.vouch_server_url}:aud" = "https://${var.vouch_server_url}"
-          }
           StringLike = {
-            "${var.vouch_server_url}:sub" = var.allowed_email_pattern
-            "sts:RoleSessionName"         = "$${${var.vouch_server_url}:sub}"
+            "aws:SourceIdentity" = "*@${var.email_domain}"
           }
         }
       }
@@ -202,148 +198,119 @@ resource "aws_iam_role" "vouch" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "vouch" {
+resource "aws_iam_role_policy_attachment" "vouch_spoke" {
   count      = length(var.policy_arns)
-  role       = aws_iam_role.vouch.name
+  role       = aws_iam_role.vouch_spoke.name
   policy_arn = var.policy_arns[count.index]
 }
 
 output "role_arn" {
-  value = aws_iam_role.vouch.arn
+  value = aws_iam_role.vouch_spoke.arn
 }
 ```
 
-### Usage per account
+Per-account usage:
 
 ```hcl
 # environments/dev/main.tf
 module "vouch" {
-  source                = "../../modules/vouch-federation"
-  role_name             = "VouchDeveloper"
+  source                = "../../modules/vouch-spoke"
+  management_account_id = "999999999999"
+  email_domain          = "example.com"
   policy_arns           = ["arn:aws:iam::aws:policy/PowerUserAccess"]
-  allowed_email_pattern = "*@example.com"
 }
 
 # environments/prod/main.tf
 module "vouch" {
-  source                = "../../modules/vouch-federation"
-  role_name             = "VouchReadOnly"
+  source                = "../../modules/vouch-spoke"
+  management_account_id = "999999999999"
+  email_domain          = "example.com"
   policy_arns           = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
-  allowed_email_pattern = "*@example.com"
 }
 ```
+
+<div class="checkpoint">
+<p><strong>You are done with role deployment when...</strong></p>
+<ul>
+  <li>The hub role exists in the management account with an <code>sts:AssumeRole</code>-only identity policy.</li>
+  <li>Each member account has a <code>/vouch/VouchAccess</code> role whose trust policy lists the hub role as principal.</li>
+  <li>From an authenticated Vouch session you can assume the hub and chain into a spoke; CloudTrail in the spoke account records the developer's email as <code>SourceIdentity</code>.</li>
+</ul>
+</div>
 
 ---
 
-## Option 3 -- IAM Role Chaining
+## Step 3 -- Configure developer profiles
 
-In Options 1 and 2, every AWS account has its own OIDC provider and directly trusts Vouch. Role chaining is an alternative where only the **management account** has an OIDC provider. Developers federate into a single management account role, which then assumes roles in member accounts using [`sts:AssumeRole`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html). The developer's verified email propagates through the chain via [`SourceIdentity`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html).
+<span class="role-label">Developer task</span>
 
-```
-Vouch (OIDC) → Management Account Role → Member Account Role
-                 (AssumeRoleWithWebIdentity)   (AssumeRole + SourceIdentity)
-```
+Each developer configures a named AWS profile per account. The role ARN points to the spoke role (`/vouch/VouchAccess`) in the target account; the Vouch CLI handles the chain through the hub:
 
-This pattern reduces the number of OIDC providers to one, simplifies member account IAM, and still provides per-user attribution in CloudTrail across all accounts.
+```bash
+# Development account
+vouch setup aws \
+  --role arn:aws:iam::111111111111:role/vouch/VouchAccess \
+  --profile vouch-dev
 
-### Management account -- Trust policy
+# Staging account
+vouch setup aws \
+  --role arn:aws:iam::333333333333:role/vouch/VouchAccess \
+  --profile vouch-staging
 
-Create a role in the management account that trusts Vouch as an OIDC provider. The three actions allow federation, source identity propagation, and session tagging:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:oidc-provider/{{< instance-url >}}"
-      },
-      "Action": [
-        "sts:AssumeRoleWithWebIdentity",
-        "sts:SetSourceIdentity",
-        "sts:TagSession"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
-        },
-        "StringLike": {
-          "{{< instance-url >}}:sub": "*@example.com",
-          "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
-        }
-      }
-    }
-  ]
-}
+# Production account
+vouch setup aws \
+  --role arn:aws:iam::222222222222:role/vouch/VouchAccess \
+  --profile vouch-prod
 ```
 
-### Management account -- Identity policy
+This produces the following `~/.aws/config`:
 
-Attach an identity policy to the management account role that allows it to assume roles in member accounts, propagate session tags, and propagate the source identity:
+```ini
+[profile vouch-dev]
+credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/vouch/VouchAccess
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sts:AssumeRole",
-        "sts:SetSourceIdentity",
-        "sts:TagSession"
-      ],
-      "Resource": "arn:aws:iam::*:role/vouch/VouchAccess",
-      "Condition": {
-        "StringEquals": {
-          "aws:PrincipalOrgId": "o-xxxxxxxxx"
-        }
-      }
-    }
-  ]
-}
+[profile vouch-staging]
+credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/vouch/VouchAccess
+
+[profile vouch-prod]
+credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchAccess
 ```
 
-> **Tip:** Replace the organization ID (`o-xxxxxxxxx`) in the condition key to only allow access to the AWS Accounts within the AWS Organization.
+Use profiles per command:
 
-### Member account -- Trust policy
+```bash
+# Deploy to dev
+cdk deploy --profile vouch-dev
 
-Each member account has a `VouchAccess` role that trusts the management account role (not Vouch directly). The `aws:SourceIdentity` condition ensures that only requests originating from a verified Vouch user with a matching email domain can assume the role:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::MANAGEMENT_ACCOUNT_ID:role/vouch/VouchAccess"
-      },
-      "Action": [
-        "sts:AssumeRole",
-        "sts:SetSourceIdentity",
-        "sts:TagSession"
-      ],
-      "Condition": {
-        "StringLike": {
-          "aws:SourceIdentity": "*@example.com"
-        }
-      }
-    }
-  ]
-}
+# Check production
+aws s3 ls --profile vouch-prod
 ```
 
-### How SourceIdentity works
+Or set a default:
 
-When a developer federates into the management account role, Vouch sets the `SourceIdentity` to their verified email address. This identity propagates through the role chain:
+```bash
+export AWS_PROFILE=vouch-dev
+```
 
-1. `vouch login` -- authenticates with YubiKey.
-2. `AssumeRoleWithWebIdentity` -- federates into the management account role; `SourceIdentity` is set to `alice@example.com`.
-3. `AssumeRole` -- chains into a member account role; `SourceIdentity` is carried forward.
-4. CloudTrail in the member account records `alice@example.com` as the source identity.
+### Auto-discovery with SSO
 
-This gives you per-user attribution in every account without deploying OIDC providers everywhere.
+If your organization uses AWS IAM Identity Center, developers can skip the manual per-account configuration entirely:
+
+```bash
+# Authenticate with IAM Identity Center
+vouch aws login
+
+# See which accounts are available
+vouch aws accounts
+
+# See which roles are available in a specific account
+vouch aws roles --account 111111111111
+
+# Auto-discover all accounts and roles, configure all profiles at once
+vouch setup aws --discover --prefix vouch --region us-east-1
+```
+
+The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
 
 ---
 
@@ -386,7 +353,7 @@ A common convention is to prefix critical roles with `DO-NOT-DELETE-*`, but that
 Place Vouch roles under a dedicated IAM [path](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) such as `/vouch/`. Paths are first-class in the role ARN, can be wildcarded in policy `Resource` fields, and don't pollute the role's display name:
 
 ```
-arn:aws:iam::123456789012:role/vouch/VouchDeveloper
+arn:aws:iam::123456789012:role/vouch/VouchAccess
 ```
 
 In CloudFormation, add a single line to the role:
@@ -395,7 +362,7 @@ In CloudFormation, add a single line to the role:
 VouchRole:
   Type: AWS::IAM::Role
   Properties:
-    RoleName: VouchDeveloper
+    RoleName: VouchAccess
     Path: /vouch/
 ```
 
@@ -469,117 +436,39 @@ Even with all of the above, alert on the action so you find out fast if somethin
 
 ---
 
-## Developer setup
-
-Each developer configures a named AWS profile for each account:
-
-```bash
-# Development account
-vouch setup aws \
-  --role arn:aws:iam::111111111111:role/vouch/VouchDeveloper \
-  --profile vouch-dev
-
-# Staging account
-vouch setup aws \
-  --role arn:aws:iam::333333333333:role/vouch/VouchDeveloper \
-  --profile vouch-staging
-
-# Production account (read-only)
-vouch setup aws \
-  --role arn:aws:iam::222222222222:role/vouch/VouchReadOnly \
-  --profile vouch-prod
-```
-
-This produces the following `~/.aws/config`:
-
-```ini
-[profile vouch-dev]
-credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/vouch/VouchDeveloper
-
-[profile vouch-staging]
-credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/vouch/VouchDeveloper
-
-[profile vouch-prod]
-credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchReadOnly
-```
-
-Use profiles per command:
-
-```bash
-# Deploy to dev
-cdk deploy --profile vouch-dev
-
-# Check production (read-only)
-aws s3 ls --profile vouch-prod
-```
-
-Or set a default:
-
-```bash
-export AWS_PROFILE=vouch-dev
-```
-
-### Auto-discovery with SSO
-
-If your organization uses AWS IAM Identity Center, developers can skip the manual per-account configuration entirely:
-
-```bash
-# Authenticate with IAM Identity Center
-vouch aws login
-
-# See which accounts are available
-vouch aws accounts
-
-# See which roles are available in a specific account
-vouch aws roles --account 111111111111
-
-# Auto-discover all accounts and roles, configure all profiles at once
-vouch setup aws --discover --prefix vouch --region us-east-1
-```
-
-The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
-
----
-
 ## Role design patterns
 
 ### By environment
 
-| Account | Role | Policy | Who |
+The default spoke role is `/vouch/VouchAccess`, scoped per-account by the policy you attach. For higher-privilege production access, deploy a second spoke role with a tighter `aws:SourceIdentity` allowlist:
+
+| Account | Spoke role | Policy | Who can chain in |
 |---|---|---|---|
-| Development | `VouchDeveloper` | `PowerUserAccess` | All developers |
-| Staging | `VouchDeveloper` | `PowerUserAccess` | All developers |
-| Production | `VouchReadOnly` | `ReadOnlyAccess` | All developers |
-| Production | `VouchDeployer` | Custom deploy policy | Senior engineers only |
+| Development | `vouch/VouchAccess` | `PowerUserAccess` | Anyone in `*@example.com` |
+| Staging | `vouch/VouchAccess` | `PowerUserAccess` | Anyone in `*@example.com` |
+| Production | `vouch/VouchAccess` | `ReadOnlyAccess` | Anyone in `*@example.com` |
+| Production | `vouch/VouchDeploy` | Custom deploy policy | Specific emails only |
 
-### Restricting production access by email
+### Restricting production access to specific people
 
-Add an email condition to the production deployer role's trust policy:
+Tighten the `aws:SourceIdentity` condition on the production deployer's spoke role:
 
 ```json
 "Condition": {
   "StringEquals": {
-    "{{< instance-url >}}:aud": "https://{{< instance-url >}}",
-    "{{< instance-url >}}:sub": [
+    "aws:SourceIdentity": [
       "alice@example.com",
       "bob@example.com"
     ]
-  },
-  "StringLike": {
-    "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
   }
 }
 ```
 
-Only Alice and Bob can assume the `VouchDeployer` role. Everyone else can still assume `VouchReadOnly`.
+Only Alice and Bob can chain into `vouch/VouchDeploy`. Everyone else still gets the read-only `vouch/VouchAccess` spoke.
 
 ---
 
 ## Troubleshooting
-
-### "OIDC provider already exists"
-
-The OIDC provider URL must be unique per account. If you already created one manually, the StackSet deployment will fail for that account. Either import the existing resource or delete it before deploying.
 
 ### Credentials for the wrong account
 

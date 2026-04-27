@@ -36,27 +36,39 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 ## How it works
 
 1. The developer runs `vouch login` and authenticates with their YubiKey.
-2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The user's identity is carried in the `sub` claim (the developer's email address), which AWS exposes as `${<instance>:sub}` in IAM trust policies -- matching the role-trust examples in [Multi-Account AWS](/docs/aws-multi-account/).
+2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The user's identity is carried in the `sub` claim (the developer's email address), which AWS exposes as `${<instance>:sub}` in IAM trust policies.
 3. When the developer runs an AWS command (or `vouch credential aws`), the CLI calls **AWS STS AssumeRoleWithWebIdentity**, presenting the ID token.
 4. AWS validates the token signature against the Vouch server's JWKS endpoint, checks the audience and issuer, and returns temporary credentials (access key, secret key, session token) valid for up to 1 hour.
 5. The developer's AWS CLI, SDK, or Terraform session uses these credentials transparently.
 
 Because the ID token is scoped to the authenticated user and is short-lived, credentials cannot be shared or reused after expiry.
 
-## Who does what
-
-| Role | Steps | Outcome |
-|---|---|---|
-| **AWS administrator** | Step 1 and Step 2 | AWS trusts Vouch and exposes an IAM role developers can assume. |
-| **Developer** | Step 3 and Step 4 | The local AWS profile uses Vouch credentials and confirms the assumed identity. |
-
----
-
-## Step 1 -- Create the OIDC Provider in AWS (admin)
+## Step 1 -- Choose your topology
 
 <span class="role-label">Admin task</span>
 
-Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider in the target AWS account.
+Vouch uses **exactly one OIDC provider per organization**. Where it lives depends on your AWS layout:
+
+<div class="journey-grid">
+  <div class="journey-card">
+    <h3>Single AWS account</h3>
+    <p>One AWS account for everything (or you'll deal with multiple accounts later). Register the OIDC provider in that account and continue with Steps 2--5 below.</p>
+  </div>
+  <div class="journey-card">
+    <h3>AWS Organization</h3>
+    <p>An AWS Organization with a management account and member accounts. Register the OIDC provider in the <strong>management account</strong> only, then follow <a href="/docs/aws-multi-account/">Multi-Account AWS</a> to deploy spoke roles in member accounts.</p>
+  </div>
+</div>
+
+We don't recommend deploying multiple OIDC providers across independent accounts. In practice, you either have one account or you have an Organization, and the Organization case is best served by chaining through a single hub.
+
+---
+
+## Step 2 -- Register the Vouch OIDC provider
+
+<span class="role-label">Admin task</span>
+
+Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider. Run this once in the AWS account you chose in Step 1 (single account, or the management account of an Organization).
 
 ### AWS CLI
 
@@ -96,25 +108,28 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 ---
 
-## Step 2 -- Create an IAM Role (admin)
+## Step 3 -- Deploy a Vouch role
 
 <span class="role-label">Admin task</span>
 
-Create an IAM role that developers will assume. The trust policy must allow [`AssumeRoleWithWebIdentity`](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html) from the Vouch OIDC provider.
+Every Vouch IAM role has the **same trust policy** (allowing `AssumeRoleWithWebIdentity` from the Vouch OIDC provider) plus **one of three identity-policy patterns**:
 
-### AWS CLI
+- **Pattern A -- Managed policy** -- Attach an AWS-managed policy like `PowerUserAccess` or `ReadOnlyAccess`. Best for getting started.
+- **Pattern B -- Explicit actions** -- Attach a custom least-privilege policy listing specific actions. Best when you know what your team needs.
+- **Pattern C -- `sts:AssumeRole` only** -- The role can do nothing in this account except assume roles in other accounts. This is the management-account hub for an [AWS Organization](/docs/aws-multi-account/).
 
-```bash
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+The trust policy below is shared by all three patterns. The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
 
-cat > /tmp/vouch-trust-policy.json << EOF
+### Shared trust policy
+
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/{{< instance-url >}}"
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/{{< instance-url >}}"
       },
       "Action": [
         "sts:AssumeRoleWithWebIdentity",
@@ -133,19 +148,13 @@ cat > /tmp/vouch-trust-policy.json << EOF
     }
   ]
 }
-EOF
-
-aws iam create-role \
-  --role-name VouchDeveloper \
-  --assume-role-policy-document file:///tmp/vouch-trust-policy.json
-
-# Attach a permissions policy (example: read-only access)
-aws iam attach-role-policy \
-  --role-name VouchDeveloper \
-  --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
 ```
 
-### CloudFormation
+### Pattern A -- Managed policy
+
+Attach an AWS-managed policy. This is the fastest way to get a working role.
+
+#### CloudFormation
 
 ```yaml
 Resources:
@@ -170,17 +179,14 @@ Resources:
                 "{{< instance-url >}}:sub": "*@example.com"
                 "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
       ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/PowerUserAccess"
 ```
 
-### Terraform
+#### Terraform
 
 ```hcl
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
-data "aws_iam_policy" "readonly" {
-  name = "ReadOnlyAccess"
-}
 
 locals {
   aws_partition  = data.aws_partition.current.partition
@@ -215,13 +221,87 @@ resource "aws_iam_role" "vouch_developer" {
       }
     ]
   })
-}
 
-resource "aws_iam_role_policy_attachment" "vouch_developer_readonly" {
-  role       = aws_iam_role.vouch_developer.name
-  policy_arn = data.aws_iam_policy.readonly.arn
+  managed_policy_arns = ["arn:${local.aws_partition}:iam::aws:policy/PowerUserAccess"]
 }
 ```
+
+### Pattern B -- Explicit actions
+
+Attach a custom inline policy listing only the actions your team needs. Use the same trust policy and role definition as Pattern A; replace the `ManagedPolicyArns` block with an inline policy. Example -- read/write a specific S3 bucket and read CloudWatch logs:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-app-data",
+        "arn:aws:s3:::my-app-data/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+In CloudFormation, use [`Policies`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-role.html#cfn-iam-role-policies) on the role; in Terraform, use [`aws_iam_role_policy`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy).
+
+### Pattern C -- `sts:AssumeRole` only
+
+Use this pattern when the role is the **management-account hub** for an AWS Organization. The role itself can do nothing in this account except assume roles in member accounts.
+
+Use the same shared trust policy as Pattern A (with `*@example.com` matching your domain). Replace the identity policy with:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
+      "Resource": "arn:aws:iam::*:role/vouch/VouchAccess",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgId": "o-xxxxxxxxx"
+        }
+      }
+    }
+  ]
+}
+```
+
+The `aws:PrincipalOrgId` condition restricts the hub to assuming roles only inside your AWS Organization. Replace `o-xxxxxxxxx` with your organization ID.
+
+Continue with [Multi-Account AWS](/docs/aws-multi-account/) to deploy the spoke roles in member accounts and configure chaining.
+
+<div class="checkpoint">
+<p><strong>You are done with role deployment when...</strong></p>
+<ul>
+  <li>You picked one pattern (A, B, or C) for this role's identity policy.</li>
+  <li>The role uses the shared trust policy with your email domain in the <code>sub</code> condition.</li>
+  <li>You have the role ARN written down -- developers will need it in Step 4.</li>
+</ul>
+</div>
 
 ---
 
@@ -300,7 +380,7 @@ Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/lat
 
 ---
 
-## Step 3 -- Configure the Vouch CLI
+## Step 4 -- Configure the Vouch CLI
 
 <span class="role-label">Developer task</span>
 
@@ -312,7 +392,7 @@ vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 
 This command accepts the following flags:
 
-- `--role` -- The ARN of the IAM role created in Step 2 (required).
+- `--role` -- The ARN of the IAM role created in Step 3 (required).
 - `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
 
 The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
@@ -324,11 +404,9 @@ credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/
 
 > **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
 
-If your organization uses AWS IAM Identity Center, you can auto-discover all available accounts and roles with `vouch setup aws --discover`. See [SSO-based authentication](#sso-based-authentication) below and [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details.
-
 ---
 
-## Step 4 -- Test
+## Step 5 -- Test
 
 <span class="role-label">Developer task</span>
 
@@ -366,25 +444,6 @@ aws s3 ls --profile vouch
   <li>A real AWS command succeeds without static credentials in <code>~/.aws/credentials</code>.</li>
 </ul>
 </div>
-
----
-
-## SSO-based authentication
-
-If your organization uses [AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html), the Vouch CLI can authenticate through your existing SSO session and automatically discover available accounts and roles:
-
-```bash
-# Authenticate via IAM Identity Center SSO
-vouch aws login
-
-# List available accounts
-vouch aws accounts
-
-# List roles in a specific account
-vouch aws roles --account 123456789012
-```
-
-See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for details on role chaining and auto-discovery across multiple accounts.
 
 ---
 
@@ -431,7 +490,7 @@ If your agent is not listed, it will be detected if it sets the `AGENT` or `AI_A
 
 ### Role chaining with agents
 
-When using [IAM role chaining](/docs/aws-multi-account/#option-3----iam-role-chaining) with an AI agent, Vouch applies an additional inline session policy to the management-account hop that restricts it to STS actions only (`sts:AssumeRole`, `sts:TagSession`, `sts:SetSourceIdentity`). The final role hop receives the `ReadOnlyAccess` session policy.
+When using [role chaining](/docs/aws-multi-account/#architecture) with an AI agent, Vouch applies an additional inline session policy to the management-account hop that restricts it to STS actions only (`sts:AssumeRole`, `sts:TagSession`, `sts:SetSourceIdentity`). The final role hop receives the `ReadOnlyAccess` session policy.
 
 ---
 
