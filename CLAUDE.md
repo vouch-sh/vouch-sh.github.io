@@ -90,3 +90,23 @@ Dark theme using CSS custom properties defined in `assets/css/main.css`:
 ## Deployment
 
 Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/hugo.yml`) which builds with Hugo v0.142.0 (pinned in the workflow) and force-pushes the built output to the `gh-pages` branch. The `static/CNAME` file maps the custom domain `vouch.sh`.
+
+## Stream Timeout Prevention
+
+1. Do each numbered task ONE AT A TIME. Complete one task fully,
+   confirm it worked, then move to the next.
+2. Never write a file longer than ~150 lines in a single tool call.
+   If a file will be longer, write it in multiple append/edit passes.
+3. Start a fresh session if the conversation gets long (20+ tool calls).
+   The error gets worse as the session grows.
+4. Keep individual grep/search outputs short. Use flags like
+   --include and -l (list files only) to limit output size.
+5. If you do hit the timeout, retry the same step in a shorter form.
+   Don't repeat the entire task from scratch.
+
+## Committing Changes
+
+- When committing, write the message from the user's description — do NOT run `git diff` or `git log` to read all changes first.
+- Only run `git status` to see which files are staged, then commit with the message the user provided.
+- This avoids large diff output that causes stream idle timeouts.
+- After completing each discrete task or feature, commit immediately before moving to the next task. Keep commits small and frequent.
