@@ -22,6 +22,8 @@ Vouch replaces static SSH keys with short-lived certificates. Administrators tru
 4. The server verifies the certificate was signed by the trusted CA and that one of the certificate's principals matches an allowed user.
 5. The connection is established without any `authorized_keys` lookup.
 
+Once issued, the certificate is cached by the local Vouch SSH agent for its 8-hour lifetime -- subsequent `ssh` connections reuse the same certificate without contacting the Vouch server, so latency stays low even on connection-heavy workflows.
+
 Because certificates expire after 8 hours, a compromised certificate is useless the next day. There is nothing to revoke and nothing to rotate.
 
 ---

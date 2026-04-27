@@ -36,7 +36,7 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 ## How it works
 
 1. The developer runs `vouch login` and authenticates with their YubiKey.
-2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The token contains claims such as `sub` (user ID) and `email`.
+2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The user's identity is carried in the `sub` claim (the developer's email address), which AWS exposes as `${<instance>:sub}` in IAM trust policies -- matching the role-trust examples in [Multi-Account AWS](/docs/aws-multi-account/).
 3. When the developer runs an AWS command (or `vouch credential aws`), the CLI calls **AWS STS AssumeRoleWithWebIdentity**, presenting the ID token.
 4. AWS validates the token signature against the Vouch server's JWKS endpoint, checks the audience and issuer, and returns temporary credentials (access key, secret key, session token) valid for up to 1 hour.
 5. The developer's AWS CLI, SDK, or Terraform session uses these credentials transparently.
@@ -409,7 +409,7 @@ When `vouch credential aws` runs inside an AI coding agent, Vouch automatically 
 The CLI checks for environment variables set by popular AI coding agents. When one is detected:
 
 1. The [`ReadOnlyAccess`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ReadOnlyAccess.html) AWS managed policy is attached as a [session policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#policies_session), which limits the effective permissions to the intersection of the role's policies and `ReadOnlyAccess` -- regardless of what the role itself allows.
-2. The `vouch:AccessType=ai` and `vouch:Agent=<name>` session tags are added, so you can identify agent-originated API calls in CloudTrail.
+2. The `vouch:AccessType=ai` and `vouch:Agent=<name>` session tags are added, where `<name>` is the verbatim value of the detected agent environment variable (for agents that set `AI_AGENT` or `AGENT`, the raw value is forwarded; for agents detected by a marker variable like `CLAUDE_CODE` or `CURSOR_TRACE_ID`, the agent name is used). These tags appear on every CloudTrail event for the session, so you can attribute API calls to the specific agent that made them.
 
 ### Supported agents
 
