@@ -112,13 +112,13 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 <span class="role-label">Admin task</span>
 
-Every Vouch IAM role has the **same trust policy** (allowing `AssumeRoleWithWebIdentity` from the Vouch OIDC provider) plus **one of three identity-policy patterns**:
+The role you deploy here is the entry point for `vouch login` -- the role developers federate into directly from their YubiKey-backed session. Its trust policy is the same regardless of what the role is allowed to do; only the **identity policy** changes based on how you want to use it. Pick one of three patterns:
 
 - **Pattern A -- Managed policy** -- Attach an AWS-managed policy like `PowerUserAccess` or `ReadOnlyAccess`. Best for getting started.
 - **Pattern B -- Explicit actions** -- Attach a custom least-privilege policy listing specific actions. Best when you know what your team needs.
-- **Pattern C -- `sts:AssumeRole` only** -- The role can do nothing in this account except assume roles in other accounts. This is the management-account hub for an [AWS Organization](/docs/aws-multi-account/).
+- **Pattern C -- `sts:AssumeRole` only** -- The role can do nothing in this account except assume roles in other accounts. This is the management-account hub for an [AWS Organization](/docs/aws-multi-account/); spoke roles in member accounts use a different trust policy and are covered in [Multi-Account AWS](/docs/aws-multi-account/).
 
-The trust policy below is shared by all three patterns. The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
+All three patterns share the trust policy below. The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
 
 ### Shared trust policy
 
