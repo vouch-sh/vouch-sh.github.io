@@ -176,6 +176,7 @@ Update using the same package manager you used to install:
 - **macOS:** `brew upgrade vouch-sh/tap/vouch && brew services restart vouch`
 - **Debian/Ubuntu:** `sudo apt update && sudo apt upgrade vouch`
 - **Fedora/RHEL:** `sudo dnf upgrade vouch`
+- **Windows:** `winget upgrade SmokeTurner.Vouch`
 
 After upgrading, restart the agent so the new version takes effect. Check your version with `vouch --version`.
 

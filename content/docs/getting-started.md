@@ -70,9 +70,13 @@ sudo dnf install -y vouch
 
 ### Windows
 
-Windows support is limited. Download the latest binary from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page.
+Install with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
 
-> **Note:** The SSH agent and SSH integration are not available on Windows. Only basic authentication and credential exchange commands are supported: `enroll`, `login`, `credential aws`, and `credential github`.
+```
+winget install SmokeTurner.Vouch
+```
+
+> **Note:** Windows support is limited. The SSH agent and SSH integration are not available on Windows. Only basic authentication and credential exchange commands are supported: `enroll`, `login`, `credential aws`, and `credential github`.
 
 ### Verify the installation
 
