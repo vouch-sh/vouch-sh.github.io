@@ -339,6 +339,56 @@ Allow any user from a specific domain:
 }
 ```
 
+### Revoke access for a specific user
+
+There are two complementary techniques for cutting off a user. Use both together for full offboarding.
+
+**1. Immediate revocation via an explicit `Deny` on the role's permissions policy.** Permissions policies are evaluated on every AWS API call, and explicit `Deny` always wins. Because Vouch sets the `vouch:Email` session tag on every assumed-role session (see [Session tags](#session-tags)), you can block an offboarded user on the next API call -- including calls made with STS credentials that the Vouch agent has already cached:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyOffboardedUsers",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalTag/vouch:Email": [
+            "former-employee@example.com"
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+Attach this as an inline policy on each Vouch role, or apply it as a [Service Control Policy](/docs/aws-multi-account/) in the management account to enforce it organization-wide. Because Vouch marks session tags as transitive, the `vouch:Email` tag propagates through role chains, so the same condition works in both the entry role and any spoke roles.
+
+**2. Block new role assumption via the trust policy.** Add a `StringNotEquals` clause to the trust policy listing the emails to deny. The next `AssumeRoleWithWebIdentity` call from that user will fail:
+
+```json
+"Condition": {
+  "StringEquals": {
+    "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
+  },
+  "StringLike": {
+    "{{< instance-url >}}:sub": "*@example.com",
+    "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+  },
+  "StringNotEquals": {
+    "{{< instance-url >}}:sub": ["former-employee@example.com"]
+  }
+}
+```
+
+On its own, this only takes effect when the Vouch agent's cached STS credentials expire (up to 1 hour later), because the trust policy is evaluated at `AssumeRoleWithWebIdentity` time, not on every API call. Combined with the deny statement above, it provides a durable record of who is offboarded and prevents the role from being re-assumed even after the deny statement is later removed.
+
+**For full offboarding**, also revoke the user in your identity provider (or remove them via SCIM) so they cannot start new Vouch sessions. The 8-hour Vouch session is separate from the AWS trust policy: the trust policy controls who AWS will federate, not whether the user can still authenticate to Vouch.
+
 ### Prevent session name spoofing
 
 The `RoleSessionName` is a client-provided STS API parameter. Without a trust policy condition, someone with a valid Vouch JWT could set it to another user's email, making CloudTrail session ARNs misleading. The `sts:RoleSessionName` condition binds the session name to the authenticated `sub` claim from the validated JWT:
