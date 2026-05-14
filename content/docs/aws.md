@@ -387,7 +387,12 @@ Attach this as an inline policy on each Vouch role, or apply it as a [Service Co
 
 On its own, this only takes effect when the Vouch agent's cached STS credentials expire (up to 1 hour later), because the trust policy is evaluated at `AssumeRoleWithWebIdentity` time, not on every API call. Combined with the deny statement above, it provides a durable record of who is offboarded and prevents the role from being re-assumed even after the deny statement is later removed.
 
-**For full offboarding**, also revoke the user in your identity provider (or remove them via SCIM) so they cannot start new Vouch sessions. The 8-hour Vouch session is separate from the AWS trust policy: the trust policy controls who AWS will federate, not whether the user can still authenticate to Vouch.
+**For full offboarding**, also deactivate the user in Vouch so they cannot start new sessions and existing non-AWS credentials (like SSH certificates) are cut off:
+
+- **With [SCIM](/docs/scim/) provisioning**, deactivating the user in your identity provider automatically revokes their active Vouch session and blocks future logins -- no manual step required.
+- **Without SCIM**, an administrator can use the **Deactivate** and **Revoke credentials** actions in the [admin console](/docs/admin/) to do the same thing.
+
+Note that revoking the Vouch session does not invalidate STS credentials already cached in the user's local Vouch agent -- the explicit `Deny` from step 1 is what blocks those on the AWS side. The Vouch-side action prevents new sessions and severs other credentials issued from the same session.
 
 ### Prevent session name spoofing
 
