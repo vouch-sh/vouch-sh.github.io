@@ -21,7 +21,7 @@ YubiKey tap → FIDO2 → Vouch OIDC JWT → jwt-bearer exchange → short-lived
 - **Every API call has a verified identity** -- no shared keys or service-account secrets for human users.
 - **No static credentials to leak** -- tokens expire in minutes instead of never; there is nothing long-lived to exfiltrate from CI, an agent, or a laptop.
 - **Per-user and per-agent attribution** -- usage and cost map back to the hardware-verified identity that the token was minted for.
-- **Standards-based** -- both providers accept any standards-compliant OIDC issuer. Vouch publishes [OIDC discovery](https://{{< instance-url >}}/.well-known/openid-configuration) (which advertises the `jwks_uri` where signing keys are served) and implements [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) (JWT bearer), [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) (token exchange), and [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) (audience-restricted tokens).
+- **Standards-based** -- both providers accept any standards-compliant OIDC issuer. Vouch publishes [OIDC discovery](https://{{< instance-url >}}/.well-known/openid-configuration) (which advertises the `jwks_uri` where signing keys are served), issues ES256-signed JWTs the provider verifies, and supports [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) token exchange and [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) resource indicators when a provider requires a specific `aud`. The [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` grant runs at the provider's token endpoint, not Vouch's.
 
 ## How it works
 
@@ -65,6 +65,8 @@ Scope:   workspace:developer
 ```
 
 ### Step 4 -- Get a token <span class="role-label">Developer task</span>
+
+> **CLI status:** `vouch setup anthropic` / `vouch setup openai` and `vouch credential anthropic` / `vouch credential openai` are landing in the Vouch CLI alongside this page. Until they ship, drive the federation exchange directly with the [official Anthropic SDK's](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE`, kept current from the AWS-flow ID token returned by [`/v1/credentials/aws/token`](/docs/aws/).
 
 Record the federation parameters once, then mint short-lived tokens on demand:
 
@@ -173,7 +175,7 @@ Because each agent now runs as a hardware-verified identity, you get per-develop
 
 ## Audience matching {#audience-matching}
 
-Vouch's default token `aud` claim is the Vouch server URL. Anthropic audience matching is optional — a rule can match on `sub` alone — so the default works for Claude. When a provider requires the token's `aud` to be a specific value, mint an audience-scoped token using Vouch's [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication), and register that exact value as the expected audience on the provider side.
+The Vouch ID token's `aud` defaults to the Vouch issuer URL for cloud federation flows (matching the OIDC provider client-id-list pattern Vouch already uses for AWS). Anthropic audience matching is optional — a rule can match on `sub` alone — so the default works for Claude. When a provider requires the token's `aud` to be a specific value, mint an audience-scoped token using Vouch's [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication), and register that exact value as the expected audience on the provider side.
 
 ## Interactive developers vs. headless agents
 
@@ -190,7 +192,7 @@ For agents that act **on behalf of** a human (preserving the human-identity chai
 
 **Provider cannot fetch JWKS / signature validation fails.** The issuer URL must be `https://{{< instance-url >}}` and reachable from the public internet. Confirm `https://{{< instance-url >}}/.well-known/openid-configuration` resolves and that the `jwks_uri` it advertises is reachable.
 
-**Rule does not match.** Decode your Vouch token (`vouch credential token | cut -d. -f2 | base64 -d`) and confirm the `sub`/claims satisfy the federation rule's match conditions exactly.
+**Rule does not match.** The provider matches against the **ID token** that `vouch credential anthropic` / `vouch credential openai` mints internally (its `sub` is your email). Note that `vouch credential token` prints the RFC 9068 *access* token whose `sub` is a stable user UUID — useful for debugging Vouch-protected APIs, but not what the federation rule sees.
 
 **Audience mismatch.** If the provider rejects the audience, mint an audience-scoped token (see [Audience matching](#audience-matching)) so `aud` equals the value the provider expects.
 
