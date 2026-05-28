@@ -169,6 +169,32 @@ codex "refactor this module"
 
 Keep any static key out of `~/.codex` and your shell profile.
 
+### Opencode
+
+[Opencode](https://opencode.ai/) reads provider credentials from the environment / `.env` file at startup, from the auth store written by `opencode auth login`, or from substitutions in `opencode.json`. The simplest path is to export the federated token before launching:
+
+```bash
+export ANTHROPIC_API_KEY="$(vouch credential anthropic)"
+# or, for OpenAI-backed models:
+# export OPENAI_API_KEY="$(vouch credential openai)"
+opencode
+```
+
+You can also pin the substitution in `opencode.json` so the same config works across shells:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "anthropic": {
+      "options": { "apiKey": "{env:ANTHROPIC_API_KEY}" }
+    }
+  }
+}
+```
+
+Both paths read the token **at launch** — Opencode does not have a command-backed auth provider with proactive refresh like Codex's `model_providers.*.auth`, so a session that outlives the minted token will fail mid-conversation. For long sessions, re-launch Opencode, or write an [Opencode plugin](https://opencode.ai/docs/plugins) that hooks `account.update` to shell out to `vouch credential anthropic` / `vouch credential openai` on demand. Keep any static `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` out of your shell profile so it does not shadow the federated token.
+
 Because each agent now runs as a hardware-verified identity, you get per-developer (or per-agent) usage attribution and an audit trail instead of a shared key.
 
 ---
