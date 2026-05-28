@@ -21,7 +21,7 @@ YubiKey tap → FIDO2 → Vouch OIDC JWT → jwt-bearer exchange → short-lived
 - **Every API call has a verified identity** -- no shared keys or service-account secrets for human users.
 - **No static credentials to leak** -- tokens expire in minutes instead of never; there is nothing long-lived to exfiltrate from CI, an agent, or a laptop.
 - **Per-user and per-agent attribution** -- usage and cost map back to the hardware-verified identity that the token was minted for.
-- **Standards-based** -- both providers accept any standards-compliant OIDC issuer. Vouch publishes [OIDC discovery](https://{{< instance-url >}}/.well-known/openid-configuration) and [JWKS](https://{{< instance-url >}}/.well-known/jwks.json), and implements [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) (JWT bearer), [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) (token exchange), and [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) (audience-restricted tokens).
+- **Standards-based** -- both providers accept any standards-compliant OIDC issuer. Vouch publishes [OIDC discovery](https://{{< instance-url >}}/.well-known/openid-configuration) (which advertises the `jwks_uri` where signing keys are served) and implements [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) (JWT bearer), [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) (token exchange), and [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) (audience-restricted tokens).
 
 ## How it works
 
@@ -126,24 +126,46 @@ Once `vouch setup anthropic` / `vouch setup openai` is configured, each CLI poin
 
 ### Claude Code
 
-Set Claude Code's `apiKeyHelper` to `vouch credential anthropic`. Claude Code re-runs the helper to refresh, so each request carries a current short-lived token:
+Set Claude Code's `apiKeyHelper` to `vouch credential anthropic`. The helper's stdout is sent on every request, so each call carries a current short-lived token:
 
 ```bash
 claude config set apiKeyHelper "vouch credential anthropic"
+```
+
+Claude Code only re-runs the helper if you also set **`CLAUDE_CODE_API_KEY_HELPER_TTL_MS`** — without it, the first token is cached until it expires and is never refreshed. Set the TTL below the minted token's lifetime (the default is 3600 s, so 5 minutes is a safe margin):
+
+```bash
+export CLAUDE_CODE_API_KEY_HELPER_TTL_MS=300000   # re-run the helper every 5 minutes
 ```
 
 Make sure `ANTHROPIC_API_KEY` is **unset** — it sits above the helper in the credential precedence and will silently shadow it.
 
 ### OpenAI Codex CLI
 
-Codex CLI authenticates with `OPENAI_API_KEY`. Export it from `vouch credential openai` rather than a static key:
+Configure a command-backed auth provider in `~/.codex/config.toml` so Codex runs `vouch credential openai` itself and refreshes proactively, before the token expires:
+
+```toml
+[model_providers.openai-vouch]
+name = "OpenAI via Vouch"
+base_url = "https://api.openai.com/v1"
+
+[model_providers.openai-vouch.auth]
+command = "vouch"
+args = ["credential", "openai"]
+timeout_ms = 5000
+refresh_interval_ms = 300000   # re-run before the token expires
+```
+
+Codex invokes the auth command with no stdin and reads the token from stdout — exactly what `vouch credential openai` prints. This `auth` block cannot be combined with `env_key` or `requires_openai_auth` on the same provider.
+
+For a one-off invocation you can instead export the token directly, but it is read only at startup and will not refresh mid-session:
 
 ```bash
-export OPENAI_API_KEY="$(vouch credential openai)"
+export OPENAI_API_KEY="$(vouch credential openai)"   # one-off; no refresh
 codex "refactor this module"
 ```
 
-Re-export before starting a long session, since the federated token is short-lived, and keep any static key out of `~/.codex` and your shell profile.
+Keep any static key out of `~/.codex` and your shell profile.
 
 Because each agent now runs as a hardware-verified identity, you get per-developer (or per-agent) usage attribution and an audit trail instead of a shared key.
 
@@ -153,13 +175,20 @@ Because each agent now runs as a hardware-verified identity, you get per-develop
 
 Vouch's default token `aud` claim is the Vouch server URL. Anthropic audience matching is optional — a rule can match on `sub` alone — so the default works for Claude. When a provider requires the token's `aud` to be a specific value, mint an audience-scoped token using Vouch's [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication), and register that exact value as the expected audience on the provider side.
 
-## Agents and delegation
+## Interactive developers vs. headless agents
 
-For automated agents that call these APIs on behalf of a user, issue scoped tokens with an agent-specific `sub` claim and short lifetimes, and target a dedicated service account / federation rule per agent. This keeps the human-identity chain intact while limiting each agent to only what it needs. See [Credential Brokering for Agents](/docs/applications/credential-brokering-agents/).
+The `vouch login` → `vouch credential` flow above is for an **interactive developer**: the YubiKey tap happens at the start of the session, and every minted token traces back to that human.
+
+An **unattended agent** — a CI job or a long-running service — has no human to tap a key, so it cannot use the FIDO2 login flow. Give it its own non-interactive identity instead:
+
+- Use Vouch's [client-credentials (machine-to-machine) flow](/docs/applications/#client-credentials-machine-to-machine) to obtain a Vouch token without a hardware tap, then run the same federation exchange against the provider.
+- Issue scoped tokens with an agent-specific `sub` claim and short lifetimes, and target a dedicated service account / federation rule per agent so its access is limited to what it needs.
+
+For agents that act **on behalf of** a human (preserving the human-identity chain), see [Credential Brokering for Agents](/docs/applications/credential-brokering-agents/).
 
 ## Troubleshooting
 
-**Provider cannot fetch JWKS / signature validation fails.** The issuer URL must be `https://{{< instance-url >}}` and reachable from the public internet. Confirm `https://{{< instance-url >}}/.well-known/openid-configuration` and `/.well-known/jwks.json` resolve.
+**Provider cannot fetch JWKS / signature validation fails.** The issuer URL must be `https://{{< instance-url >}}` and reachable from the public internet. Confirm `https://{{< instance-url >}}/.well-known/openid-configuration` resolves and that the `jwks_uri` it advertises is reachable.
 
 **Rule does not match.** Decode your Vouch token (`vouch credential token | cut -d. -f2 | base64 -d`) and confirm the `sub`/claims satisfy the federation rule's match conditions exactly.
 
