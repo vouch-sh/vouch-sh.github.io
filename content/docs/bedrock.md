@@ -87,3 +87,10 @@ With [Amazon Bedrock model invocation logging](https://docs.aws.amazon.com/bedro
 ## Agent delegation
 
 For automated agents that call Amazon Bedrock on behalf of users, you can use scoped JWTs with agent-specific `sub` claims and session policies that limit model access. This preserves the human identity chain while restricting the agent's capabilities to only the models it needs.
+
+---
+
+## Related guides
+
+- [Claude & OpenAI APIs](/docs/ai-api-keys/) -- Access the Claude and OpenAI APIs directly (not through AWS) with short-lived tokens via Workload Identity Federation.
+- [AWS](/docs/aws/) -- The OIDC federation pattern Vouch uses for AWS STS credentials.

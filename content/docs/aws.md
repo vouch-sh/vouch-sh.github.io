@@ -585,3 +585,4 @@ When using [role chaining](/docs/aws-multi-account/#architecture) with an AI age
 - [Database Authentication](/docs/databases/) -- Connect to RDS, Aurora, and Redshift with IAM authentication.
 - [AWS CodeArtifact](/docs/codeartifact/) -- Authenticate to package repositories using Vouch.
 - [Infrastructure as Code](/docs/iac/) -- Use CDK, Terraform, SAM, and other IaC tools with Vouch credentials.
+- [Claude & OpenAI APIs](/docs/ai-api-keys/) -- Replace long-lived AI provider API keys with short-lived tokens via Workload Identity Federation.

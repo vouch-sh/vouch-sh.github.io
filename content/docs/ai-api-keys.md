@@ -64,32 +64,32 @@ Target:  svac_...   (service account)
 Scope:   workspace:developer
 ```
 
-### Step 4 -- Exchange the token <span class="role-label">Developer task</span>
+### Step 4 -- Get a token <span class="role-label">Developer task</span>
 
-After `vouch login`, print the raw session JWT with [`vouch credential token`](/docs/cli-reference/#vouch-credential-token) and exchange it at Anthropic's token endpoint:
+Record the federation parameters once, then mint short-lived tokens on demand:
 
 ```bash
-JWT=$(vouch credential token)
+vouch setup anthropic \
+  --federation-rule-id fdrl_... \
+  --organization-id 00000000-0000-0000-0000-000000000000 \
+  --service-account-id svac_... \
+  --workspace-id wrkspc_...
 
-ACCESS_TOKEN=$(curl -sS https://api.anthropic.com/v1/oauth/token \
-  -H "content-type: application/json" \
-  -d '{
-    "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-    "assertion": "'"$JWT"'",
-    "federation_rule_id": "fdrl_...",
-    "organization_id": "00000000-0000-0000-0000-000000000000",
-    "service_account_id": "svac_...",
-    "workspace_id": "wrkspc_..."
-  }' | jq -r .access_token)
+vouch login                       # YubiKey tap, once per session
+vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
+```
 
+`vouch credential anthropic` runs the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` exchange against Anthropic's token endpoint with your session token and caches the result, refreshing it as needed — the same pattern as [`vouch credential aws`](/docs/cli-reference/) and `vouch credential k8s`. Use it inline:
+
+```bash
 curl -sS https://api.anthropic.com/v1/messages \
-  -H "authorization: Bearer $ACCESS_TOKEN" \
+  -H "authorization: Bearer $(vouch credential anthropic)" \
   -H "anthropic-version: 2023-06-01" \
   -H "content-type: application/json" \
   -d '{"model":"claude-sonnet-4-6","max_tokens":1024,"messages":[{"role":"user","content":"Hello, Claude"}]}'
 ```
 
-In production, the official Anthropic SDKs run this exchange and refresh loop for you when you set the federation environment variables (`ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID`, `ANTHROPIC_WORKSPACE_ID`) and point `ANTHROPIC_IDENTITY_TOKEN_FILE` at a file kept populated with a fresh Vouch token. Make sure `ANTHROPIC_API_KEY` is unset — it takes precedence over federation and will silently shadow it.
+Under the hood this is a standard token exchange, so non-Vouch SDK workloads can federate the same way using the official Anthropic SDK's `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE`. Either way, ensure `ANTHROPIC_API_KEY` is unset — it takes precedence over federation and will silently shadow it.
 
 ---
 
@@ -107,42 +107,43 @@ In your OpenAI organization's workload identity settings, configure:
 | Audience | The audience your workload requests (see [Audience matching](#audience-matching) below) |
 | Subject mapping | Map the Vouch `sub` claim (user/agent email) to the OpenAI service account |
 
-### Step 2 -- Exchange the token <span class="role-label">Developer task</span>
+### Step 2 -- Get a token <span class="role-label">Developer task</span>
 
-Obtain the Vouch JWT with `vouch credential token` and let the OpenAI SDK exchange it for a short-lived OpenAI access token, which it then sends as the bearer credential on each request. As with Anthropic, ensure no static `OPENAI_API_KEY` is left in the environment to shadow federation.
+Record the OpenAI federation parameters once, then mint tokens with `vouch credential openai`:
+
+```bash
+vouch setup openai --audience https://api.openai.com/v1   # plus org/service-account as prompted
+vouch credential openai                                   # prints a short-lived OpenAI access token
+```
+
+As with Anthropic, ensure no static `OPENAI_API_KEY` is left in the environment to shadow federation.
 
 ---
 
 ## Use it with coding agents
 
-Both flagship coding CLIs read their provider credentials from the environment, so they pick up federated tokens the same way any SDK does.
+Once `vouch setup anthropic` / `vouch setup openai` is configured, each CLI points at the matching `vouch credential` command and refreshes through it — no static keys and no token files to manage.
 
 ### Claude Code
 
-Claude Code is built on the Anthropic SDK and honors the same credential precedence. The most self-contained option is Claude Code's `apiKeyHelper` setting — a script that performs the exchange and prints the resulting token, which Claude Code re-runs to refresh:
+Set Claude Code's `apiKeyHelper` to `vouch credential anthropic`. Claude Code re-runs the helper to refresh, so each request carries a current short-lived token:
 
 ```bash
-#!/usr/bin/env bash
-# ~/.vouch/anthropic-token.sh — set as apiKeyHelper in Claude Code settings
-JWT=$(vouch credential token)
-curl -sS https://api.anthropic.com/v1/oauth/token \
-  -H "content-type: application/json" \
-  -d '{"grant_type":"urn:ietf:params:oauth:grant-type:jwt-bearer","assertion":"'"$JWT"'","federation_rule_id":"fdrl_...","organization_id":"...","service_account_id":"svac_...","workspace_id":"wrkspc_..."}' \
-  | jq -r .access_token
+claude config set apiKeyHelper "vouch credential anthropic"
 ```
 
-Alternatively, set the `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE` (kept current with `vouch credential token`), and let the bundled SDK handle the exchange. Either way, confirm `ANTHROPIC_API_KEY` is unset so it does not shadow federation.
+Make sure `ANTHROPIC_API_KEY` is **unset** — it sits above the helper in the credential precedence and will silently shadow it.
 
 ### OpenAI Codex CLI
 
-Codex CLI authenticates with `OPENAI_API_KEY`. Wrap your session so the variable holds a freshly exchanged OpenAI access token rather than a static key:
+Codex CLI authenticates with `OPENAI_API_KEY`. Export it from `vouch credential openai` rather than a static key:
 
 ```bash
-export OPENAI_API_KEY=$(vouch-openai-token)   # script that exchanges the Vouch JWT
+export OPENAI_API_KEY="$(vouch credential openai)"
 codex "refactor this module"
 ```
 
-Re-run the exchange (or use a wrapper that refreshes on expiry) for long sessions, since the federated token is short-lived. Keep the static key out of `~/.codex` and shell profiles.
+Re-export before starting a long session, since the federated token is short-lived, and keep any static key out of `~/.codex` and your shell profile.
 
 Because each agent now runs as a hardware-verified identity, you get per-developer (or per-agent) usage attribution and an audit trail instead of a shared key.
 
