@@ -79,12 +79,12 @@ federation {
 }
 ```
 
-The `https_web` profile tells SPIRE to authenticate the endpoint using its public TLS certificate (standard web PKI). SPIRE fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` and automatically refreshes it as keys rotate.
+The `https_web` profile tells SPIRE to authenticate the endpoint using its public TLS certificate (standard web PKI). SPIRE fetches the JWKS from `https://{{< instance-url >}}/oauth/jwks` and automatically refreshes it as keys rotate.
 
 **For air-gapped environments**, fetch the keys manually and import them:
 
 ```bash
-curl -s https://{{< instance-url >}}/.well-known/jwks.json -o vouch-jwks.json
+curl -s https://{{< instance-url >}}/oauth/jwks -o vouch-jwks.json
 
 spire-server bundle set \
   -id spiffe://vouch.sh \

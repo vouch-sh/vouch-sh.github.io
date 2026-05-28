@@ -45,7 +45,7 @@ The server is the identity broker. It:
 - **Signs SSH certificates** using an Ed25519 certificate authority key managed by AWS KMS.
 - **Exchanges tokens** with GitHub Apps, AWS STS, and other external services on behalf of authenticated users.
 - **Manages the user directory** via SCIM 2.0 integration with identity providers.
-- **Publishes OIDC metadata** at `/.well-known/openid-configuration`, JWKS at `/.well-known/jwks.json`, and Protected Resource Metadata at `/.well-known/oauth-protected-resource` ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)). When mTLS is configured, the discovery document includes `mtls_endpoint_aliases` for mTLS-capable clients.
+- **Publishes OIDC metadata** at `/.well-known/openid-configuration`, JWKS at `/oauth/jwks`, and Protected Resource Metadata at `/.well-known/oauth-protected-resource` ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)). When mTLS is configured, the discovery document includes `mtls_endpoint_aliases` for mTLS-capable clients.
 - **Provides OIDC discovery** for automatic identity provider detection during enrollment.
 
 The server does not store AWS credentials, SSH private keys, or GitHub tokens. It brokers short-lived credentials from external services.
@@ -81,7 +81,7 @@ External services (AWS, custom OIDC applications) validate these tokens using th
 
 ### ES256 (ECDSA over P-256)
 
-Used to sign OIDC ID tokens and access tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures. The JWKS endpoint supports key rotation — consuming services should re-fetch the JWKS when they encounter a token signed with an unknown `kid`.
+Used to sign OIDC ID tokens and access tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/oauth/jwks` to verify token signatures. The JWKS endpoint supports key rotation — consuming services should re-fetch the JWKS when they encounter a token signed with an unknown `kid`.
 
 ### Ed25519
 
