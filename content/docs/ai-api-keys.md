@@ -64,9 +64,9 @@ Target:  svac_...   (service account)
 Scope:   workspace:developer
 ```
 
-### Step 4 -- Get a token <span class="role-label">Developer task</span>
+### Step 4 -- Get a token <span class="role-label">Developer task</span> {#claude-get-a-token}
 
-> **CLI status:** `vouch setup anthropic` / `vouch setup openai` and `vouch credential anthropic` / `vouch credential openai` are landing in the Vouch CLI alongside this page. Until they ship, drive the federation exchange directly with the [official Anthropic SDK's](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE`, kept current from the AWS-flow ID token returned by [`/v1/credentials/aws/token`](/docs/aws/).
+> **Requires Vouch v2026.5.4 or later.** The `vouch setup anthropic` / `vouch setup openai` and `vouch credential anthropic` / `vouch credential openai` commands ship in Vouch **v2026.5.4**. On earlier versions, drive the federation exchange directly with the [official Anthropic SDK's](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE`, kept current from the AWS-flow ID token returned by [`/v1/credentials/aws/token`](/docs/aws/).
 
 Record the federation parameters once, then mint short-lived tokens on demand:
 
@@ -110,6 +110,8 @@ In your OpenAI organization's workload identity settings, configure:
 | Subject mapping | Map the Vouch `sub` claim (user/agent email) to the OpenAI service account |
 
 ### Step 2 -- Get a token <span class="role-label">Developer task</span>
+
+> **Requires Vouch v2026.5.4 or later** (see the [Claude API note above](#claude-get-a-token) for the pre-v2026.5.4 SDK workaround).
 
 Record the OpenAI federation parameters once, then mint tokens with `vouch credential openai`:
 
