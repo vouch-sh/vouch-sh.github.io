@@ -166,7 +166,7 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **Authorization Endpoint** | `https://{{< instance-url >}}/oauth/authorize` |
 | **Token Endpoint** | `https://{{< instance-url >}}/oauth/token` |
 | **UserInfo Endpoint** | `https://{{< instance-url >}}/oauth/userinfo` |
-| **JWKS URI** | `https://{{< instance-url >}}/.well-known/jwks.json` |
+| **JWKS URI** | `https://{{< instance-url >}}/oauth/jwks` |
 | **Signing Algorithm** | `ES256` |
 | **Supported Scopes** | `openid`, `email` |
 | **Authorization Details** | Supported via `authorization_details` parameter ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) |
@@ -373,7 +373,7 @@ Error: ID token signature verification failed
 ```
 
 - Ensure your library is configured to use the `ES256` signing algorithm. Vouch uses ECDSA with P-256, not RSA.
-- Verify the JWKS endpoint is reachable: `https://{{< instance-url >}}/.well-known/jwks.json`
+- Verify the JWKS endpoint is reachable: `https://{{< instance-url >}}/oauth/jwks`
 - Check that the `iss` claim matches your configured issuer URL exactly.
 - Ensure your server's clock is synchronized (token validation is time-sensitive).
 

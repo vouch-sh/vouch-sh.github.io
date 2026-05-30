@@ -45,7 +45,7 @@ The server is the identity broker. It:
 - **Signs SSH certificates** using an Ed25519 certificate authority key managed by AWS KMS.
 - **Exchanges tokens** with GitHub Apps, AWS STS, and other external services on behalf of authenticated users.
 - **Manages the user directory** via SCIM 2.0 integration with identity providers.
-- **Publishes OIDC metadata** at `/.well-known/openid-configuration`, JWKS at `/.well-known/jwks.json`, and Protected Resource Metadata at `/.well-known/oauth-protected-resource` ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)). When mTLS is configured, the discovery document includes `mtls_endpoint_aliases` for mTLS-capable clients.
+- **Publishes OIDC metadata** at `/.well-known/openid-configuration`, JWKS at `/oauth/jwks`, and Protected Resource Metadata at `/.well-known/oauth-protected-resource` ([RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728)). When mTLS is configured, the discovery document includes `mtls_endpoint_aliases` for mTLS-capable clients.
 - **Provides OIDC discovery** for automatic identity provider detection during enrollment.
 
 The server does not store AWS credentials, SSH private keys, or GitHub tokens. It brokers short-lived credentials from external services.
@@ -68,20 +68,20 @@ The Vouch server acts as an OIDC identity provider. After FIDO2 authentication, 
 | Claim | Description |
 |---|---|
 | `iss` | Vouch server URL (e.g., `https://us.vouch.sh`) |
-| `sub` | User's email address |
-| `aud` | Vouch server URL (used as the OIDC client ID) |
-| `exp` | Token expiration (short-lived) |
+| `sub` | Subject. For cloud federation ID tokens (AWS, Kubernetes), this is the user's email — what the consuming service matches in trust policies. For OAuth 2.0 access tokens issued under [RFC 9068](https://datatracker.ietf.org/doc/html/rfc9068), this is a stable opaque user identifier; the email is carried in a separate `email` claim when the `email` scope is granted. |
+| `aud` | Audience. Cloud federation: the Vouch issuer URL (AWS) or a configurable value (Kubernetes — default `kubernetes`, matches the API server's `--oidc-client-id`). Standard OIDC auth-code flow: the registered `client_id`. Tokens can be re-scoped to a different audience via [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) resource indicators or [RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) token exchange. |
+| `exp` | Token expiration (default 8 hours, configurable via `VOUCH_SESSION_HOURS`) |
 | `iat` | Token issued-at timestamp |
 | `hd` | Google Workspace hosted domain |
 | `amr` | Authentication methods (e.g., `["hwk", "pin"]`) |
 | `acr` | Authentication context class (NIST AAL3) |
 | `cnf` | Confirmation claim for sender-constrained tokens — contains `jkt` (DPoP key thumbprint) or `x5t#S256` (mTLS certificate thumbprint) |
 
-External services (AWS, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint. For [Kubernetes OIDC authentication](/docs/kubernetes/), the server issues tokens with a configurable `aud` claim (default: `kubernetes`) that matches the API server's `--oidc-client-id` flag.
+External services (AWS, Kubernetes, custom OIDC applications) validate these tokens using the Vouch server's JWKS endpoint.
 
 ### ES256 (ECDSA over P-256)
 
-Used to sign OIDC ID tokens and access tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/.well-known/jwks.json` to verify token signatures. The JWKS endpoint supports key rotation — consuming services should re-fetch the JWKS when they encounter a token signed with an unknown `kid`.
+Used to sign OIDC ID tokens and access tokens. The signing key is managed by AWS KMS — the private key never exists outside the KMS boundary. External services fetch the public key from `/oauth/jwks` to verify token signatures. The JWKS endpoint supports key rotation — consuming services should re-fetch the JWKS when they encounter a token signed with an unknown `kid`.
 
 ### Ed25519
 

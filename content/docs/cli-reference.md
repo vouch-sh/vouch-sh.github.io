@@ -87,7 +87,7 @@ vouch logout
 
 ### `vouch status`
 
-Display the current session status, including remaining session time and active integrations (SSH, AWS, SSM, Git, Docker, Cargo).
+Display the current session status, including remaining session time and active integrations (SSH, AWS, SSM, Git, Docker, Cargo, Claude, OpenAI).
 
 ```
 vouch status [--format <FORMAT>]
@@ -311,6 +311,44 @@ vouch setup k8s --cluster <NAME> --server <URL> [--certificate-authority <PATH>]
 
 See [Kubernetes](/docs/kubernetes/) for full details.
 
+### `vouch setup anthropic`
+
+Configure Anthropic (Claude) Workload Identity Federation. Persists federation parameters to `~/.vouch/config.json` and auto-merges `~/.claude/settings.json` to set `apiKeyHelper` → `vouch credential anthropic` plus `env.CLAUDE_CODE_API_KEY_HELPER_TTL_MS` so Claude Code re-runs the helper before the token expires.
+
+```
+vouch setup anthropic --federation-rule-id <ID> --organization-id <UUID> --service-account-id <ID> --workspace-id <ID> [--audience <AUD>] [--token-endpoint <URL>] [--force]
+```
+
+| Flag | Description |
+|---|---|
+| `--federation-rule-id` | Anthropic federation rule ID (`fdrl_...`) (required) |
+| `--organization-id` | Anthropic organization ID (UUID) (required) |
+| `--service-account-id` | Anthropic service account ID (`svac_...`) (required) |
+| `--workspace-id` | Anthropic workspace ID (`wrkspc_...`) (required) |
+| `--audience` | `aud` claim to request on the assertion (optional; most federation rules match on `sub` alone) |
+| `--token-endpoint` | Override the Anthropic token endpoint (defaults to Anthropic's public endpoint) |
+| `--force` | Overwrite an existing Claude Code `apiKeyHelper` configuration |
+
+See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
+
+### `vouch setup openai`
+
+Configure OpenAI Workload Identity Federation. Persists federation parameters to `~/.vouch/config.json` and auto-merges `~/.codex/config.toml` to add a `[model_providers.vouch]` block (with a refreshing `auth` command) and set the top-level `model_provider = "vouch"`.
+
+```
+vouch setup openai --identity-provider-id <ID> --service-account-id <ID> [--audience <AUD>] [--token-endpoint <URL>] [--force]
+```
+
+| Flag | Description |
+|---|---|
+| `--identity-provider-id` | OpenAI Workload Identity Provider ID for the Vouch issuer (required) |
+| `--service-account-id` | OpenAI service account ID (required) |
+| `--audience` | `aud` claim to request on the assertion (matches the audience OpenAI configured for the Vouch issuer) |
+| `--token-endpoint` | Override the OpenAI token endpoint (defaults to OpenAI's public endpoint) |
+| `--force` | Switch Codex's top-level `model_provider` away from another provider already in place |
+
+OpenAI must onboard the Vouch issuer as a workload identity provider before this works — custom OIDC issuers are not self-service on OpenAI's side. See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
+
 ### `vouch setup ssm`
 
 Configure SSH to use AWS Systems Manager Session Manager as a proxy for connections to EC2 and managed instances.
@@ -438,6 +476,30 @@ vouch credential k8s --cluster <NAME> [--audience <AUDIENCE>]
 |---|---|
 | `--cluster` | Kubernetes cluster name — used as cache key (required) |
 | `--audience` | OIDC audience — must match `--oidc-client-id` on the API server (default: `kubernetes`) |
+
+### `vouch credential anthropic`
+
+Obtain a short-lived Anthropic (Claude) API token via Workload Identity Federation ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) `jwt-bearer` grant). Requires `vouch setup anthropic` and an active session.
+
+```
+vouch credential anthropic
+```
+
+Prints a bare `sk-ant-oat01-...` token to stdout with no trailing newline — designed to be invoked by Claude Code's `apiKeyHelper`. The token is cached until just before its expiry; subsequent invocations within that window return the cached value.
+
+See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
+
+### `vouch credential openai`
+
+Obtain a short-lived OpenAI API token via Workload Identity Federation ([RFC 8693](https://datatracker.ietf.org/doc/html/rfc8693) token-exchange grant). Requires `vouch setup openai`, an active session, and that OpenAI has onboarded the Vouch issuer.
+
+```
+vouch credential openai
+```
+
+Prints a bare OpenAI access token to stdout with no trailing newline — designed to be invoked by the OpenAI Codex CLI as a `[model_providers.*.auth]` command with `refresh_interval_ms`. The token is cached until just before its expiry.
+
+See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
 
 ### `vouch credential token`
 
@@ -656,6 +718,7 @@ This checks:
 - Agent connectivity
 - Server reachability
 - Integration configurations (SSH, AWS, SSM, EKS, Git, Docker, Cargo)
+- Claude / OpenAI federation (cross-checks `~/.vouch/config.json` against Claude Code's `apiKeyHelper` and Codex's `model_provider`)
 
 ### `vouch completions`
 

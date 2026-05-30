@@ -80,7 +80,7 @@ aws iam create-open-id-connect-provider \
   --client-id-list "https://{{< instance-url >}}"
 ```
 
-> **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/.well-known/jwks.json` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
+> **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/oauth/jwks` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
 
 ### CloudFormation
 
@@ -564,7 +564,7 @@ When using [role chaining](/docs/aws-multi-account/#architecture) with an AI age
 ### "Invalid identity token"
 
 - Ensure the OIDC provider in AWS points to the correct Vouch server URL: `https://{{< instance-url >}}`.
-- Verify that the Vouch server's JWKS endpoint (`https://{{< instance-url >}}/.well-known/jwks.json`) is reachable from the internet (AWS must be able to fetch it).
+- Verify that the Vouch server's JWKS endpoint (`https://{{< instance-url >}}/oauth/jwks`) is reachable from the internet (AWS must be able to fetch it).
 
 ### Credentials not appearing in the expected profile
 
@@ -585,3 +585,4 @@ When using [role chaining](/docs/aws-multi-account/#architecture) with an AI age
 - [Database Authentication](/docs/databases/) -- Connect to RDS, Aurora, and Redshift with IAM authentication.
 - [AWS CodeArtifact](/docs/codeartifact/) -- Authenticate to package repositories using Vouch.
 - [Infrastructure as Code](/docs/iac/) -- Use CDK, Terraform, SAM, and other IaC tools with Vouch credentials.
+- [Claude & OpenAI APIs](/docs/ai-api-keys/) -- Replace long-lived AI provider API keys with short-lived tokens via Workload Identity Federation.
