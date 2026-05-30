@@ -112,7 +112,7 @@ vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
 
 No `--audience` flag is needed when the rule's Expected audience matches Vouch's default `aud` (the issuer URL `https://{{< instance-url >}}`). Pass `--audience <value>` only if you pinned the rule to a different audience.
 
-`vouch setup anthropic` persists the federation parameters in `~/.vouch/config.json` and also auto-configures Claude Code's credential helper (see [Use it with coding agents](#use-it-with-coding-agents) below). Pass `--force` to overwrite an existing `apiKeyHelper` if Claude Code is already configured.
+`vouch setup anthropic` persists the federation parameters in `~/.vouch/config.json` so subsequent `vouch credential anthropic` invocations know which rule, service account, and workspace to exchange against.
 
 `vouch credential anthropic` mints a fresh OIDC ID token from your active Vouch session (no extra YubiKey tap), uses it as the assertion in the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` exchange against Anthropic's token endpoint, and caches the returned `sk-ant-oat01-...` until just before it expires — the same caching pattern as [`vouch credential aws`](/docs/cli-reference/) and `vouch credential k8s`. Use it inline:
 
@@ -166,15 +166,20 @@ As with Anthropic, ensure no static `OPENAI_API_KEY` is left in the environment 
 
 ## Use it with coding agents
 
-Once `vouch setup anthropic` / `vouch setup openai` is configured, each CLI points at the matching `vouch credential` command and refreshes through it — no static keys and no token files to manage.
+Once `vouch setup anthropic` / `vouch setup openai` is configured, each CLI sources its credential from the matching `vouch credential` command — no static keys and no token files to manage.
 
 ### Claude Code
 
-`vouch setup anthropic` auto-configures Claude Code for you — it merges `~/.claude/settings.json` to set both `apiKeyHelper` (→ `vouch credential anthropic`) and `env.CLAUDE_CODE_API_KEY_HELPER_TTL_MS = "3000000"` (≈50 min, comfortably under the ~1 h provider token lifetime), so each request carries a current short-lived token and Claude Code actually re-invokes the helper before it expires. If Claude Code already has a different `apiKeyHelper`, the command refuses to overwrite — re-run with `--force` to replace it.
+Export the federated token as `ANTHROPIC_AUTH_TOKEN` before launching `claude`:
 
-Without the TTL env var Claude Code caches the first token until it expires and never refreshes it, so don't set `apiKeyHelper` by hand unless you also set `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` to a value below the minted token's lifetime.
+```bash
+export ANTHROPIC_AUTH_TOKEN="$(vouch credential anthropic)"
+claude
+```
 
-Make sure `ANTHROPIC_API_KEY` is **unset** — it sits above the helper in the credential precedence and will silently shadow it.
+Use `ANTHROPIC_AUTH_TOKEN`, not `ANTHROPIC_API_KEY` — the latter is reserved for static `sk-ant-api...` keys and will reject the federated `sk-ant-oat01-...` token.
+
+The token is read **at launch**, so a session that outlives the minted token will fail mid-conversation. Relaunch `claude` to mint a fresh one. Keep any static `ANTHROPIC_API_KEY` out of your shell profile so it does not shadow `ANTHROPIC_AUTH_TOKEN`.
 
 ### OpenAI Codex CLI
 
@@ -270,7 +275,7 @@ For agents that act **on behalf of** a human (preserving the human-identity chai
 
 **Audience mismatch.** If the provider rejects the audience, mint an audience-scoped token (see [Audience matching](#audience-matching)) so `aud` equals the value the provider expects.
 
-**A static key keeps winning.** `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` take precedence over federation. Unset them everywhere the workload runs (container env, CI secrets, shell profiles).
+**A static key keeps winning.** `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` take precedence over federation and will shadow `ANTHROPIC_AUTH_TOKEN`. Unset them everywhere the workload runs (container env, CI secrets, shell profiles) — and for Claude Code, make sure you are exporting `ANTHROPIC_AUTH_TOKEN`, not `ANTHROPIC_API_KEY`, since the API-key variable rejects federated `sk-ant-oat01-...` tokens.
 
 ## Related guides
 
