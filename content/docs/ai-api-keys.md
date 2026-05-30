@@ -81,7 +81,9 @@ vouch login                       # YubiKey tap, once per session
 vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
 ```
 
-`vouch credential anthropic` runs the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` exchange against Anthropic's token endpoint with your session token and caches the result, refreshing it as needed — the same pattern as [`vouch credential aws`](/docs/cli-reference/) and `vouch credential k8s`. Use it inline:
+`vouch setup anthropic` persists the federation parameters in `~/.vouch/config.json` and also auto-configures Claude Code's credential helper (see [Use it with coding agents](#use-it-with-coding-agents) below). Pass `--force` to overwrite an existing `apiKeyHelper` if Claude Code is already configured.
+
+`vouch credential anthropic` mints a fresh OIDC ID token from your active Vouch session (no extra YubiKey tap), uses it as the assertion in the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` exchange against Anthropic's token endpoint, and caches the returned `sk-ant-oat01-...` until just before it expires — the same caching pattern as [`vouch credential aws`](/docs/cli-reference/) and `vouch credential k8s`. Use it inline:
 
 ```bash
 curl -sS https://api.anthropic.com/v1/messages \
@@ -116,9 +118,16 @@ In your OpenAI organization's workload identity settings, configure:
 Record the OpenAI federation parameters once, then mint tokens with `vouch credential openai`:
 
 ```bash
-vouch setup openai --audience https://api.openai.com/v1   # plus org/service-account as prompted
-vouch credential openai                                   # prints a short-lived OpenAI access token
+vouch setup openai \
+  --identity-provider-id wip_... \
+  --service-account-id sa_... \
+  --audience https://api.openai.com/v1   # set to whatever audience OpenAI configured
+
+vouch login                              # YubiKey tap, once per session
+vouch credential openai                  # prints a short-lived OpenAI access token
 ```
+
+`vouch setup openai` persists the federation parameters and also auto-writes a Codex provider block at `~/.codex/config.toml` (see [Use it with coding agents](#use-it-with-coding-agents) below). Pass `--force` to switch the top-level Codex `model_provider` away from another provider already in place.
 
 As with Anthropic, ensure no static `OPENAI_API_KEY` is left in the environment to shadow federation.
 
@@ -130,37 +139,34 @@ Once `vouch setup anthropic` / `vouch setup openai` is configured, each CLI poin
 
 ### Claude Code
 
-Set Claude Code's `apiKeyHelper` to `vouch credential anthropic`. The helper's stdout is sent on every request, so each call carries a current short-lived token:
+`vouch setup anthropic` auto-configures Claude Code for you — it merges `~/.claude/settings.json` to set both `apiKeyHelper` (→ `vouch credential anthropic`) and `env.CLAUDE_CODE_API_KEY_HELPER_TTL_MS = "3000000"` (≈50 min, comfortably under the ~1 h provider token lifetime), so each request carries a current short-lived token and Claude Code actually re-invokes the helper before it expires. If Claude Code already has a different `apiKeyHelper`, the command refuses to overwrite — re-run with `--force` to replace it.
 
-```bash
-claude config set apiKeyHelper "vouch credential anthropic"
-```
-
-Claude Code only re-runs the helper if you also set **`CLAUDE_CODE_API_KEY_HELPER_TTL_MS`** — without it, the first token is cached until it expires and is never refreshed. Set the TTL below the minted token's lifetime (the default is 3600 s, so 5 minutes is a safe margin):
-
-```bash
-export CLAUDE_CODE_API_KEY_HELPER_TTL_MS=300000   # re-run the helper every 5 minutes
-```
+Without the TTL env var Claude Code caches the first token until it expires and never refreshes it, so don't set `apiKeyHelper` by hand unless you also set `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` to a value below the minted token's lifetime.
 
 Make sure `ANTHROPIC_API_KEY` is **unset** — it sits above the helper in the credential precedence and will silently shadow it.
 
 ### OpenAI Codex CLI
 
-Configure a command-backed auth provider in `~/.codex/config.toml` so Codex runs `vouch credential openai` itself and refreshes proactively, before the token expires:
+`vouch setup openai` auto-configures Codex for you — it merges `~/.codex/config.toml` to add a `[model_providers.vouch]` block with a refreshing auth command, and flips the top-level `model_provider` to `vouch`:
 
 ```toml
-[model_providers.openai-vouch]
-name = "OpenAI via Vouch"
-base_url = "https://api.openai.com/v1"
+model_provider = "vouch"
 
-[model_providers.openai-vouch.auth]
+[model_providers.vouch]
+name = "vouch"
+base_url = "https://api.openai.com/v1"
+wire_api = "chat"
+
+[model_providers.vouch.auth]
 command = "vouch"
 args = ["credential", "openai"]
 timeout_ms = 5000
-refresh_interval_ms = 300000   # re-run before the token expires
+refresh_interval_ms = 300000   # re-run before the ~1 h token expires
 ```
 
 Codex invokes the auth command with no stdin and reads the token from stdout — exactly what `vouch credential openai` prints. This `auth` block cannot be combined with `env_key` or `requires_openai_auth` on the same provider.
+
+The `[model_providers.vouch]` block is owned by `vouch setup openai` and overwritten silently — re-run the setup command to pick up a moved `vouch` binary or a new refresh interval. The top-level `model_provider` is shared with your other providers, so changing it away from a non-`vouch` value requires `--force`.
 
 For a one-off invocation you can instead export the token directly, but it is read only at startup and will not refresh mid-session:
 
