@@ -41,28 +41,57 @@ Anthropic's Workload Identity Federation accepts any standards-compliant OIDC is
 
 ### Step 1 -- Register Vouch as a federation issuer <span class="role-label">Admin task</span>
 
-In the [Claude Console](https://platform.claude.com/), go to **Settings → Workload identity → Issuers** and select **Create issuer**. Choose the **generic OIDC** preset and set:
+In the [Claude Console](https://platform.claude.com/), go to **Settings → Workload identity → Issuers** and select **Create issuer**. Fill in the form:
 
-| Field | Value |
-|---|---|
-| Issuer URL | `https://{{< instance-url >}}` |
-| JWKS source | `discovery` -- Vouch serves `/.well-known/openid-configuration` at the issuer URL |
+- **Name** -- a lowercase identifier shown in rules and audit logs. `vouch` is a good default.
+- **Issuer URL (iss claim)** -- `https://{{< instance-url >}}`. This must match the `iss` in Vouch-minted tokens exactly.
+- **JWKS source** -- **OIDC discovery**. Vouch serves `/.well-known/openid-configuration` at the issuer URL, which advertises the `jwks_uri` Anthropic fetches signing keys from.
+- **Discovery base URL** -- leave blank. Vouch publishes discovery at the issuer URL.
+- **CA certificate (PEM)** -- leave blank. Vouch terminates TLS with a publicly trusted certificate.
+- **Token validation → Enforce single-use tokens (JTI replay protection)** -- leave **on** (the default). Vouch mints a unique `jti` per ID token, so single-use enforcement is safe and prevents replay if a JWT leaks.
+- **Token validation → Maximum token lifetime** -- leave at **1 hour** (the default). Vouch ID tokens are short-lived and well under this ceiling; tighten only if policy demands shorter.
 
-### Step 2 -- Create a service account <span class="role-label">Admin task</span>
+### Step 2 -- Create a service account and workspace <span class="role-label">Admin task</span>
 
-Go to **Settings → Service accounts → Create service account** (for example, `coding-agent` or `ci-deploy`). Add it to each workspace it should act in, and note its ID (`svac_...`).
+Go to **Settings → Service accounts → Create service account** (for example, `coding-agent` or `ci-deploy`) and note its ID (`svac_...`).
+
+`vouch setup anthropic` in Step 4 requires a workspace ID (`wrkspc_...`), and the organization's **Default** workspace does not expose one. If you haven't already, go to **Settings → Workspaces → Create workspace**, add the service account to it, and note the new workspace's ID.
 
 ### Step 3 -- Create a federation rule <span class="role-label">Admin task</span>
 
-Back on **Workload identity → Federation rules**, select **Create rule**, choose the Vouch issuer, and match on the Vouch token's `sub` claim (the user or agent email). Target the service account from Step 2 and set a token lifetime. Note the rule ID (`fdrl_...`).
+Back on **Workload identity → Federation rules**, select **Create rule**. The form has four sections:
 
-A rule matching a single developer's email looks like:
+**Basic info**
 
-```
-Match:   subject_prefix = "developer@example.com"
-Target:  svac_...   (service account)
-Scope:   workspace:developer
-```
+- **Rule name** + optional **Description**.
+- **Issuer** -- pick the Vouch issuer registered in Step 1.
+
+**Match configuration**
+
+Keep the default **Pattern match** mode. Vouch ID tokens carry the human identity in `sub` as the user's email, and the additional Vouch-specific claims (`hd`, `email_verified`, `hardware_verified`, `hardware_aaguid`) are exact strings or booleans that the Pattern match form's **Additional claim conditions** field handles natively.
+
+- **Subject pattern** -- the user's exact email, e.g. `developer@example.com`. Leave blank if you are matching on a claim condition only (see below).
+- **Expected audience** -- `https://{{< instance-url >}}`. Vouch's default `aud` is the issuer URL, so matching that string here means no extra `--audience` flag in Step 4. Anthropic enforces audience even though the field is labeled optional; tokens whose `aud` does not match are rejected with `jwt_audience_mismatch`.
+- **Additional claim conditions** -- for a company-wide allow, set claim key `hd` and expected value `example.com` (your Vouch hosted-domain). To additionally require a hardware-backed token, add `hardware_verified` = `true`.
+
+> **Avoid CEL expression mode** for AI provider federation. In CEL the Expected audience field is hidden and not enforced, and the CEL evaluator handles `claims.aud` in ways that don't match Vouch's tokens reliably (`==` against a string-typed `aud` and `in` against a list-typed `aud` have both been observed to fail). Stay on Pattern match — every Vouch claim worth matching on is a string or boolean and works in **Additional claim conditions**.
+
+**Target**
+
+- **Service account** -- the `svac_...` from Step 2.
+
+**Authorization**
+
+- **Workspaces** -- pick the workspace(s) the service account should act in. Leave "Enable in all workspaces" off unless you genuinely want every current and future workspace included.
+- **OAuth scope** -- e.g. `workspace:developer`. Sets the scope carried on Anthropic tokens minted by this rule.
+- **Token lifetime** -- 10 minutes is the default; choose a value matching the workload (shorter is better).
+
+Two common shapes, both Pattern match, both targeting the service account from Step 2, with `Expected audience: https://{{< instance-url >}}` and scope `workspace:developer`:
+
+- **Single developer** -- Subject pattern: `developer@example.com`.
+- **Company-wide allow** -- Subject pattern: blank. Additional claim conditions: `hd` = `example.com`.
+
+Note the rule ID (`fdrl_...`) -- you will need it in Step 4.
 
 ### Step 4 -- Get a token <span class="role-label">Developer task</span> {#claude-get-a-token}
 
@@ -80,6 +109,8 @@ vouch setup anthropic \
 vouch login                       # YubiKey tap, once per session
 vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
 ```
+
+No `--audience` flag is needed when the rule's Expected audience matches Vouch's default `aud` (the issuer URL `https://{{< instance-url >}}`). Pass `--audience <value>` only if you pinned the rule to a different audience.
 
 `vouch setup anthropic` persists the federation parameters in `~/.vouch/config.json` and also auto-configures Claude Code's credential helper (see [Use it with coding agents](#use-it-with-coding-agents) below). Pass `--force` to overwrite an existing `apiKeyHelper` if Claude Code is already configured.
 
@@ -209,7 +240,16 @@ Because each agent now runs as a hardware-verified identity, you get per-develop
 
 ## Audience matching {#audience-matching}
 
-The Vouch ID token's `aud` defaults to the Vouch issuer URL for cloud federation flows (matching the OIDC provider client-id-list pattern Vouch already uses for AWS). Anthropic audience matching is optional — a rule can match on `sub` alone — so the default works for Claude. When a provider requires the token's `aud` to be a specific value, mint an audience-scoped token using Vouch's [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication), and register that exact value as the expected audience on the provider side.
+Vouch mints federation assertions with `aud` set to its issuer URL (`https://{{< instance-url >}}`) by default. The simplest setup is to match that exact string on the provider side, which is what the Anthropic walkthrough above does — no `--audience` flag, no override.
+
+Standards-purists may notice this puts the *issuer* in `aud` rather than the *recipient*. That's a deliberate tradeoff: Vouch's federation assertions are single-use (`jti` replay protection), 1-hour-capped, and only ever presented point-to-point to the provider's token endpoint in exchange for the provider's own short-lived access token. The audience-binding scenario this argument is meant to defend against — replay of a bearer token to a different audience — doesn't exist for these assertions.
+
+If a provider requires a specific audience (OpenAI configures the audience server-side when you register the issuer), pin that exact string on both sides:
+
+- On the **rule** (Anthropic) or **identity provider** (OpenAI): set the audience to the value the provider expects.
+- On **Vouch**: pass `--audience <same value>` to `vouch setup anthropic` / `vouch setup openai`.
+
+Internally, Vouch mints audience-scoped tokens via [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication); the `--audience` flag is the surface for that.
 
 ## Interactive developers vs. headless agents
 
@@ -226,7 +266,7 @@ For agents that act **on behalf of** a human (preserving the human-identity chai
 
 **Provider cannot fetch JWKS / signature validation fails.** The issuer URL must be `https://{{< instance-url >}}` and reachable from the public internet. Confirm `https://{{< instance-url >}}/.well-known/openid-configuration` resolves and that the `jwks_uri` it advertises is reachable.
 
-**Rule does not match.** The provider matches against the **ID token** that `vouch credential anthropic` / `vouch credential openai` mints internally (its `sub` is your email). Note that `vouch credential token` prints the RFC 9068 *access* token whose `sub` is a stable user UUID — useful for debugging Vouch-protected APIs, but not what the federation rule sees.
+**Rule does not match.** The provider matches against the **ID token** that `vouch credential anthropic` / `vouch credential openai` mints internally (its `sub` is your email). Note that `vouch credential token` prints the RFC 9068 *access* token whose `sub` is a stable user UUID — useful for debugging Vouch-protected APIs, but not what the federation rule sees. The Authentication events tab in the Claude Console shows the decoded JWT for any failed exchange — use it to compare what Vouch minted against what the rule expected.
 
 **Audience mismatch.** If the provider rejects the audience, mint an audience-scoped token (see [Audience matching](#audience-matching)) so `aud` equals the value the provider expects.
 
