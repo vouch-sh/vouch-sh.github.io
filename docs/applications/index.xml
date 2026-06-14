@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Add Hardware-Backed Sign-In to Your Application on Vouch — Hardware-Backed Developer Credentials</title><link>https://vouch.sh/docs/applications/</link><description>Recent content in Add Hardware-Backed Sign-In to Your Application on Vouch — Hardware-Backed Developer Credentials</description><generator>Hugo</generator><language>en-us</language><atom:link href="https://vouch.sh/docs/applications/index.xml" rel="self" type="application/rss+xml"/><item><title>Rails (OmniAuth)</title><link>https://vouch.sh/docs/applications/rails/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/rails/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/omniauth/omniauth_openid_connect" target="_blank" rel="noopener noreferrer" class="external-link">OmniAuth OpenID Connect&lt;/a> provides a standard OIDC strategy for Rails applications. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Install &lt;a href="https://github.com/omniauth/omniauth_openid_connect" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>omniauth-openid-connect&lt;/code>&lt;/a> and &lt;a href="https://github.com/cookpad/omniauth-rails_csrf_protection" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>omniauth-rails_csrf_protection&lt;/code>&lt;/a> gems&lt;/li>
+&lt;li>Enable PKCE in the OmniAuth provider configuration (&lt;code>pkce: true&lt;/code>)&lt;/li>
+&lt;li>CSRF protection is required for the OmniAuth request phase&lt;/li>
+&lt;li>Callback URL: &lt;code>/auth/vouch/callback&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload to read it&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/rails-omniauth" target="_blank" rel="noopener noreferrer" class="external-link">web/rails-omniauth&lt;/a>&lt;/strong> — Complete working example with OmniAuth OIDC strategy, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Django (django-allauth)</title><link>https://vouch.sh/docs/applications/django/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/django/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://docs.allauth.org/" target="_blank" rel="noopener noreferrer" class="external-link">django-allauth&lt;/a> provides OpenID Connect support for Django. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Install &lt;a href="https://docs.allauth.org/en/latest/socialaccount/providers/openid_connect.html" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>django-allauth[openid_connect]&lt;/code>&lt;/a>&lt;/li>
+&lt;li>Set &lt;code>oauth_pkce_enabled: True&lt;/code> and &lt;code>fetch_userinfo: True&lt;/code> in &lt;code>SOCIALACCOUNT_PROVIDERS&lt;/code>&lt;/li>
+&lt;li>Use &lt;code>server_url&lt;/code> (not &lt;code>issuer&lt;/code>) in provider settings&lt;/li>
+&lt;li>Callback URL: &lt;code>/accounts/oidc/vouch/login/callback/&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload to read it&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/django-allauth" target="_blank" rel="noopener noreferrer" class="external-link">web/django-allauth&lt;/a>&lt;/strong> — Complete working example with django-allauth OIDC provider, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Express.js (openid-client)</title><link>https://vouch.sh/docs/applications/express/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/express/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/panva/openid-client" target="_blank" rel="noopener noreferrer" class="external-link">openid-client&lt;/a> provides a certified OpenID Connect client for Node.js. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Use &lt;code>client.discovery()&lt;/code> for automatic issuer metadata, then &lt;code>authorizationCodeGrant()&lt;/code> with PKCE&lt;/li>
+&lt;li>Manual state, nonce, and PKCE code verifier management&lt;/li>
+&lt;li>Store tokens in &lt;code>express-session&lt;/code> with &lt;code>saveUninitialized: false&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT (&lt;a href="https://datatracker.ietf.org/doc/html/rfc9068" target="_blank" rel="noopener noreferrer" class="external-link">RFC 9068&lt;/a>) — decode with &lt;code>Buffer.from(token.split('.')[1], 'base64url')&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/express-openid" target="_blank" rel="noopener noreferrer" class="external-link">web/express-openid&lt;/a>&lt;/strong> — Complete working example with authorization code flow, PKCE, session management, and token introspection.&lt;/p></description></item><item><title>Next.js (NextAuth.js)</title><link>https://vouch.sh/docs/applications/nextjs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/nextjs/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://next-auth.js.org/" target="_blank" rel="noopener noreferrer" class="external-link">NextAuth.js&lt;/a> provides drop-in authentication for Next.js with OIDC auto-discovery. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Configure a custom OAuth provider with &lt;code>wellKnown&lt;/code> discovery URL&lt;/li>
+&lt;li>Set &lt;code>id_token_signed_response_alg: 'ES256'&lt;/code> to match Vouch&amp;rsquo;s signing algorithm&lt;/li>
+&lt;li>Enable PKCE with &lt;code>checks: ['pkce', 'state']&lt;/code> and set &lt;code>idToken: true&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode in the &lt;code>jwt&lt;/code> callback and propagate through the session callback&lt;/li>
+&lt;li>Requires &lt;code>NEXTAUTH_SECRET&lt;/code> environment variable (generate with &lt;code>openssl rand -base64 32&lt;/code>)&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/nextjs-nextauth" target="_blank" rel="noopener noreferrer" class="external-link">web/nextjs-nextauth&lt;/a>&lt;/strong> — Complete working example with NextAuth.js provider, PKCE, and hardware claim propagation through JWT and session callbacks.&lt;/p></description></item><item><title>Laravel (Socialite)</title><link>https://vouch.sh/docs/applications/laravel/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/laravel/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://laravel.com/docs/socialite" target="_blank" rel="noopener noreferrer" class="external-link">Laravel Socialite&lt;/a> with the OIDC driver provides OAuth/OIDC integration. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Install &lt;a href="https://laravel.com/docs/socialite" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>laravel/socialite&lt;/code>&lt;/a>, &lt;a href="https://github.com/Kovah/laravel-socialite-oidc" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>kovah/laravel-socialite-oidc&lt;/code>&lt;/a>, and &lt;a href="https://github.com/SocialiteProviders/Manager" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>socialiteproviders/manager&lt;/code>&lt;/a>&lt;/li>
+&lt;li>Use the &lt;code>'oidc'&lt;/code> driver name with &lt;code>-&amp;gt;enablePKCE()&lt;/code> for PKCE support&lt;/li>
+&lt;li>Register the Socialite service provider and event listener&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload after base64url character replacement&lt;/li>
+&lt;li>Callback URL: &lt;code>/auth/callback&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/laravel-socialite" target="_blank" rel="noopener noreferrer" class="external-link">web/laravel-socialite&lt;/a>&lt;/strong> — Complete working example with Socialite OIDC driver, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Flask (Authlib)</title><link>https://vouch.sh/docs/applications/flask/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/flask/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://authlib.org/" target="_blank" rel="noopener noreferrer" class="external-link">Authlib&lt;/a> provides OAuth and OpenID Connect client support for Flask. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Install &lt;a href="https://authlib.org/" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>authlib&lt;/code>&lt;/a>, &lt;code>flask&lt;/code>, and &lt;code>requests&lt;/code>&lt;/li>
+&lt;li>Register the provider with &lt;code>server_metadata_url&lt;/code> and &lt;code>code_challenge_method='S256'&lt;/code> for PKCE&lt;/li>
+&lt;li>Set &lt;code>client_kwargs={'scope': 'openid email'}&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload with base64url and padding adjustment&lt;/li>
+&lt;li>Callback URL: &lt;code>/callback&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/flask-authlib" target="_blank" rel="noopener noreferrer" class="external-link">web/flask-authlib&lt;/a>&lt;/strong> — Complete working example with authorization code flow, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>FastAPI (Authlib)</title><link>https://vouch.sh/docs/applications/fastapi/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/fastapi/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://authlib.org/" target="_blank" rel="noopener noreferrer" class="external-link">Authlib&lt;/a> provides OAuth and OpenID Connect client support for Starlette-based applications. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Register the provider with &lt;code>server_metadata_url&lt;/code> and &lt;code>code_challenge_method='S256'&lt;/code> for PKCE&lt;/li>
+&lt;li>Add &lt;code>SessionMiddleware&lt;/code> with a secret key before the auth middleware&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload with base64url and padding adjustment&lt;/li>
+&lt;li>Callback URL: &lt;code>/callback&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/fastapi-authlib" target="_blank" rel="noopener noreferrer" class="external-link">web/fastapi-authlib&lt;/a>&lt;/strong> — Complete working example with authorization code flow, PKCE, session middleware, and hardware claim extraction.&lt;/p></description></item><item><title>Spring Boot (Spring Security)</title><link>https://vouch.sh/docs/applications/spring-boot/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/spring-boot/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://docs.spring.io/spring-security/reference/servlet/oauth2/client/index.html" target="_blank" rel="noopener noreferrer" class="external-link">Spring Security OAuth2 Client&lt;/a> provides OIDC auto-discovery. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Add &lt;a href="https://docs.spring.io/spring-boot/reference/web/spring-security.html#web.security.oauth2.client" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>spring-boot-starter-oauth2-client&lt;/code>&lt;/a> dependency&lt;/li>
+&lt;li>Configure &lt;code>spring.security.oauth2.client.provider.vouch.issuer-uri&lt;/code> for auto-discovery&lt;/li>
+&lt;li>Set &lt;code>authorization-grant-type: authorization_code&lt;/code> and &lt;code>scope: openid,email&lt;/code>&lt;/li>
+&lt;li>Enable PKCE with &lt;code>OAuth2AuthorizationRequestCustomizers.withPkce()&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload to read it&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/spring-boot" target="_blank" rel="noopener noreferrer" class="external-link">web/spring-boot&lt;/a>&lt;/strong> — Complete working example with Spring Security OIDC, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Axum (openidconnect-rs)</title><link>https://vouch.sh/docs/applications/axum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/axum/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://crates.io/crates/openidconnect" target="_blank" rel="noopener noreferrer" class="external-link">openidconnect-rs&lt;/a> provides a type-safe OpenID Connect client for Rust. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Use &lt;code>CoreProviderMetadata::discover_async()&lt;/code> for OIDC auto-discovery&lt;/li>
+&lt;li>PKCE is automatic with &lt;code>PkceCodeChallenge::new_random_sha256()&lt;/code>&lt;/li>
+&lt;li>Define a custom claims struct implementing &lt;code>AdditionalClaims&lt;/code> for type-safe access to Vouch-specific fields&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload after token exchange&lt;/li>
+&lt;li>Use tower-sessions for session management (use a persistent store in production)&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/axum-openidconnect" target="_blank" rel="noopener noreferrer" class="external-link">web/axum-openidconnect&lt;/a>&lt;/strong> — Complete working example with type-safe claims, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Go (go-oidc)</title><link>https://vouch.sh/docs/applications/go/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/go/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/coreos/go-oidc" target="_blank" rel="noopener noreferrer" class="external-link">go-oidc&lt;/a> and the standard &lt;a href="https://pkg.go.dev/golang.org/x/oauth2" target="_blank" rel="noopener noreferrer" class="external-link">oauth2&lt;/a> package provide OIDC support for Go. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Initialize the provider with &lt;code>oidc.NewProvider()&lt;/code> for auto-discovery&lt;/li>
+&lt;li>Generate PKCE verifier with &lt;code>oauth2.GenerateVerifier()&lt;/code> and &lt;code>oauth2.S256ChallengeOption()&lt;/code>&lt;/li>
+&lt;li>Manual state, nonce, and PKCE verifier management required&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode the payload into a struct after token exchange&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/go-oidc" target="_blank" rel="noopener noreferrer" class="external-link">web/go-oidc&lt;/a>&lt;/strong> — Complete working example with OIDC discovery, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>ASP.NET Core (OpenID Connect)</title><link>https://vouch.sh/docs/applications/aspnet-core/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/aspnet-core/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>ASP.NET Core includes built-in OpenID Connect middleware. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Requires .NET 10.0 or later with &lt;a href="https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>Microsoft.AspNetCore.Authentication.OpenIdConnect&lt;/code>&lt;/a>&lt;/li>
+&lt;li>Enable PKCE with &lt;code>options.UsePkce = true&lt;/code>&lt;/li>
+&lt;li>Set &lt;code>GetClaimsFromUserInfoEndpoint = true&lt;/code> and &lt;code>SaveTokens = true&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>JsonDocument.Parse()&lt;/code> after base64url decoding with padding adjustment&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/web/aspnet-core" target="_blank" rel="noopener noreferrer" class="external-link">web/aspnet-core&lt;/a>&lt;/strong> — Complete working example with OIDC middleware, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>React (react-oidc-context)</title><link>https://vouch.sh/docs/applications/react/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/react/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/authts/react-oidc-context" target="_blank" rel="noopener noreferrer" class="external-link">react-oidc-context&lt;/a> wraps &lt;a href="https://github.com/authts/oidc-client-ts" target="_blank" rel="noopener noreferrer" class="external-link">oidc-client-ts&lt;/a> in a React context provider. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>No client secret needed (public client with PKCE, enabled by default)&lt;/li>
+&lt;li>Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>atob(token.split('.')[1])&lt;/code> after base64url character replacement&lt;/li>
+&lt;li>Access the token via &lt;code>auth.user.access_token&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/react" target="_blank" rel="noopener noreferrer" class="external-link">spa/react&lt;/a>&lt;/strong> — Complete working example with react-oidc-context, PKCE, and hardware claim extraction from the access token.&lt;/p></description></item><item><title>Vue (oidc-client-ts)</title><link>https://vouch.sh/docs/applications/vue/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/vue/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/authts/oidc-client-ts" target="_blank" rel="noopener noreferrer" class="external-link">oidc-client-ts&lt;/a> provides a &lt;code>UserManager&lt;/code> for managing the OIDC lifecycle in Vue applications. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>No client secret needed (public client with PKCE, enabled by default)&lt;/li>
+&lt;li>Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires&lt;/li>
+&lt;li>Configure &lt;code>UserManager&lt;/code> with &lt;code>authority&lt;/code>, &lt;code>client_id&lt;/code>, &lt;code>redirect_uri&lt;/code>, and &lt;code>scope&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>atob(token.split('.')[1])&lt;/code> after base64url character replacement&lt;/li>
+&lt;li>State persistence uses &lt;code>sessionStorage&lt;/code> by default via &lt;code>WebStorageStateStore&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/vue" target="_blank" rel="noopener noreferrer" class="external-link">spa/vue&lt;/a>&lt;/strong> — Complete working example with oidc-client-ts UserManager, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>SvelteKit (oidc-client-ts)</title><link>https://vouch.sh/docs/applications/sveltekit/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/sveltekit/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/authts/oidc-client-ts" target="_blank" rel="noopener noreferrer" class="external-link">oidc-client-ts&lt;/a> integrates with SvelteKit using Svelte 5 reactivity (&lt;code>$state&lt;/code> and &lt;code>$derived&lt;/code>). Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>No client secret needed (public client with PKCE, enabled by default)&lt;/li>
+&lt;li>Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires&lt;/li>
+&lt;li>Uses &lt;code>sessionStorage&lt;/code> for state persistence&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>atob(token.split('.')[1])&lt;/code> after base64url character replacement&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/sveltekit" target="_blank" rel="noopener noreferrer" class="external-link">spa/sveltekit&lt;/a>&lt;/strong> — Complete working example with oidc-client-ts, Svelte 5 reactivity, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Angular (angular-auth-oidc-client)</title><link>https://vouch.sh/docs/applications/angular/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/angular/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/damienbod/angular-auth-oidc-client" target="_blank" rel="noopener noreferrer" class="external-link">angular-auth-oidc-client&lt;/a> is a certified OpenID Connect library for Angular. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>No client secret needed (public client with PKCE, enabled by default)&lt;/li>
+&lt;li>Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires&lt;/li>
+&lt;li>Set &lt;code>autoUserInfo: true&lt;/code> for automatic userinfo fetching&lt;/li>
+&lt;li>Use &lt;code>OidcSecurityService.checkAuth()&lt;/code> to get &lt;code>{ isAuthenticated, userData, accessToken }&lt;/code>&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>atob(token.split('.')[1])&lt;/code> after base64url character replacement&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/angular" target="_blank" rel="noopener noreferrer" class="external-link">spa/angular&lt;/a>&lt;/strong> — Complete working example with angular-auth-oidc-client, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>Vanilla JavaScript</title><link>https://vouch.sh/docs/applications/vanilla-js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/vanilla-js/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>&lt;a href="https://github.com/authts/oidc-client-ts" target="_blank" rel="noopener noreferrer" class="external-link">oidc-client-ts&lt;/a> works with plain JavaScript — no framework required. It can be loaded via CDN (&lt;code>https://cdn.jsdelivr.net/npm/oidc-client-ts&lt;/code>). Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>No client secret needed (public client with PKCE, enabled by default)&lt;/li>
+&lt;li>Vouch does not issue refresh tokens — redirect the user to sign in again when the token expires&lt;/li>
+&lt;li>Initialize &lt;code>UserManager&lt;/code> and call &lt;code>signinRedirectCallback()&lt;/code> on the callback page&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is in the access token JWT — decode with &lt;code>atob(token.split('.')[1])&lt;/code> after base64url character replacement&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/vanilla-js" target="_blank" rel="noopener noreferrer" class="external-link">spa/vanilla-js&lt;/a>&lt;/strong> — Complete working example with oidc-client-ts, PKCE, and hardware claim extraction.&lt;/p></description></item><item><title>BFF Pattern (Express)</title><link>https://vouch.sh/docs/applications/bff-express/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/bff-express/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>The Backend-for-Frontend (BFF) pattern keeps all OAuth tokens on the server. The browser never sees access tokens or ID tokens — it authenticates via &lt;code>HttpOnly&lt;/code>, &lt;code>SameSite=Strict&lt;/code> session cookies instead. Key configuration:&lt;/p>
+&lt;ul>
+&lt;li>Client secret required (confidential client, since tokens are server-side)&lt;/li>
+&lt;li>PKCE is automatic with &lt;a href="https://github.com/panva/openid-client" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>openid-client&lt;/code>&lt;/a>&lt;/li>
+&lt;li>Set &lt;code>httpOnly: true&lt;/code>, &lt;code>sameSite: 'strict'&lt;/code>, and &lt;code>secure: true&lt;/code> (in production) on session cookies&lt;/li>
+&lt;li>Proxy a &lt;code>/api/me&lt;/code> endpoint so the frontend never handles tokens directly&lt;/li>
+&lt;li>The hardware attestation claim (&lt;code>hardware_verified&lt;/code>) is decoded server-side from the access token JWT&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/spa/bff-express" target="_blank" rel="noopener noreferrer" class="external-link">spa/bff-express&lt;/a>&lt;/strong> — Complete working example with Express BFF server, openid-client, PKCE, and proxied UserInfo endpoint.&lt;/p></description></item><item><title>Device Authorization (CLI)</title><link>https://vouch.sh/docs/applications/device-authorization/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/device-authorization/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>For native desktop applications and CLI tools that cannot open a browser redirect, use the &lt;a href="https://datatracker.ietf.org/doc/html/rfc8628" target="_blank" rel="noopener noreferrer" class="external-link">Device Authorization Grant&lt;/a> (RFC 8628). This flow displays a URL and code that the user enters in a browser on any device.&lt;/p>
+&lt;h2 id="how-it-works">How it works&lt;/h2>
+&lt;ol>
+&lt;li>Your application requests a device code from &lt;code>POST /oauth/device/code&lt;/code>.&lt;/li>
+&lt;li>The user opens the verification URL in a browser and enters the displayed code.&lt;/li>
+&lt;li>The user authenticates with their YubiKey in the browser.&lt;/li>
+&lt;li>Your application polls &lt;code>POST /oauth/token&lt;/code> with the &lt;code>device_code&lt;/code> until the user completes authentication.&lt;/li>
+&lt;li>The token response includes an access token with the hardware attestation claim (&lt;code>hardware_verified&lt;/code>).&lt;/li>
+&lt;/ol>
+&lt;p>Key details:&lt;/p></description></item><item><title>MCP Remote Server (TypeScript)</title><link>https://vouch.sh/docs/applications/mcp-server-ts/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/mcp-server-ts/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>The &lt;a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener noreferrer" class="external-link">Model Context Protocol&lt;/a> (MCP) lets AI assistants call tools on remote servers. This guide covers building an MCP remote server that requires Vouch OIDC bearer tokens, using the official TypeScript SDK and &lt;a href="https://github.com/panva/jose" target="_blank" rel="noopener noreferrer" class="external-link">&lt;code>jose&lt;/code>&lt;/a> for JWT verification.&lt;/p>
+&lt;p>The server validates access tokens against the Vouch JWKS endpoint and extracts the hardware attestation claim (&lt;code>hardware_verified&lt;/code>) from the JWT payload. Tools can gate sensitive operations on hardware key attestation.&lt;/p></description></item><item><title>MCP Remote Server (Python)</title><link>https://vouch.sh/docs/applications/mcp-server-py/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/mcp-server-py/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>The &lt;a href="https://modelcontextprotocol.io/" target="_blank" rel="noopener noreferrer" class="external-link">Model Context Protocol&lt;/a> (MCP) lets AI assistants call tools on remote servers. &lt;a href="https://github.com/PrefectHQ/fastmcp" target="_blank" rel="noopener noreferrer" class="external-link">FastMCP&lt;/a> has built-in support for OAuth-based auth and &lt;a href="https://datatracker.ietf.org/doc/html/rfc9728" target="_blank" rel="noopener noreferrer" class="external-link">RFC 9728&lt;/a> Protected Resource Metadata.&lt;/p>
+&lt;p>The server validates access tokens against the Vouch JWKS endpoint and extracts the hardware attestation claim (&lt;code>hardware_verified&lt;/code>) from the JWT payload. Tools can gate sensitive operations on hardware key attestation.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/mcp/remote-server-py" target="_blank" rel="noopener noreferrer" class="external-link">mcp/remote-server-py&lt;/a>&lt;/strong> &amp;ndash; Complete working example with FastMCP, bearer token verification, and hardware claim extraction.&lt;/p></description></item><item><title>MCP Credential Broker</title><link>https://vouch.sh/docs/applications/mcp-credential-broker/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/mcp-credential-broker/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>An MCP credential broker lets AI assistants obtain temporary cloud credentials on behalf of authenticated users. The broker validates the caller&amp;rsquo;s Vouch access token, then calls the Vouch credential APIs to get:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>AWS&lt;/strong> &amp;ndash; Temporary STS credentials via &lt;code>AssumeRoleWithWebIdentity&lt;/code>&lt;/li>
+&lt;li>&lt;strong>GitHub&lt;/strong> &amp;ndash; Installation access tokens scoped to the user&amp;rsquo;s organization&lt;/li>
+&lt;li>&lt;strong>SSH&lt;/strong> &amp;ndash; Signed certificates tied to the user&amp;rsquo;s identity&lt;/li>
+&lt;/ul>
+&lt;p>All credentials are short-lived and trace back to a hardware-verified human identity.&lt;/p></description></item><item><title>A2A Agent (Python)</title><link>https://vouch.sh/docs/applications/a2a-agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/a2a-agent/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>The &lt;a href="https://a2a-protocol.org/" target="_blank" rel="noopener noreferrer" class="external-link">Agent-to-Agent (A2A)&lt;/a> protocol defines how AI agents discover and communicate with each other. An A2A agent secured with Vouch requires bearer token authentication &amp;ndash; the Agent Card advertises the Vouch OIDC security scheme, and the agent validates access tokens against the Vouch JWKS endpoint.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/a2a/python-agent" target="_blank" rel="noopener noreferrer" class="external-link">a2a/python-agent&lt;/a>&lt;/strong> &amp;ndash; Complete working example with A2A Python SDK, Agent Card with Vouch security scheme, and bearer token verification middleware.&lt;/p></description></item><item><title>Credential Brokering Agents</title><link>https://vouch.sh/docs/applications/credential-brokering-agents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://vouch.sh/docs/applications/credential-brokering-agents/</guid><description>&lt;p>See the &lt;a href="https://vouch.sh/docs/applications/">Applications overview&lt;/a> for prerequisites, configuration endpoints, and available scopes.&lt;/p>
+&lt;p>CLI agents and automation scripts can authenticate with Vouch using the &lt;a href="https://datatracker.ietf.org/doc/html/rfc8628" target="_blank" rel="noopener noreferrer" class="external-link">Device Authorization Grant&lt;/a> (no browser redirect needed), then use the Vouch credential brokering APIs to obtain temporary AWS credentials, GitHub tokens, or SSH certificates &amp;ndash; all tied to the user&amp;rsquo;s hardware-backed identity.&lt;/p>
+&lt;h2 id="examples">Examples&lt;/h2>
+&lt;p>Working examples are available in the examples repository:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/native/python-agent-aws" target="_blank" rel="noopener noreferrer" class="external-link">native/python-agent-aws&lt;/a>&lt;/strong> &amp;ndash; CLI agent that brokers AWS STS credentials&lt;/li>
+&lt;li>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/native/python-agent-github" target="_blank" rel="noopener noreferrer" class="external-link">native/python-agent-github&lt;/a>&lt;/strong> &amp;ndash; CLI agent that brokers GitHub installation tokens&lt;/li>
+&lt;li>&lt;strong>&lt;a href="https://github.com/vouch-sh/examples/tree/main/native/python-agent-multi" target="_blank" rel="noopener noreferrer" class="external-link">native/python-agent-multi&lt;/a>&lt;/strong> &amp;ndash; CLI agent that brokers AWS, GitHub, and SSH credentials&lt;/li>
+&lt;/ul></description></item></channel></rss>
