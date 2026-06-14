@@ -1,7 +1,7 @@
 ---
 title: "SAML Identity Providers"
 linkTitle: "SAML"
-description: "Use SAML 2.0 identity providers with Vouch — Okta, Microsoft Entra ID, Google Workspace, and more."
+description: "Use SAML 2.0 identity providers with Vouch — Microsoft Entra ID, Google Workspace, and more."
 weight: 5
 subtitle: "Connect your SAML identity provider to Vouch"
 params:
@@ -18,7 +18,6 @@ From a developer's perspective, there is no difference -- enrollment and login w
 
 Vouch has been tested with:
 
-- **Okta**
 - **Microsoft Entra ID** (formerly Azure AD)
 - **Google Workspace**
 
@@ -30,7 +29,7 @@ Any SAML 2.0 compliant identity provider that supports HTTP-POST or HTTP-Redirec
 
 1. A developer runs `vouch enroll` or `vouch login`.
 2. The browser opens the Vouch server, which detects the configured SAML identity provider.
-3. The developer is redirected to the IdP's login page (Okta, Entra ID, etc.).
+3. The developer is redirected to the IdP's login page (Google Workspace, Entra ID, etc.).
 4. After authentication, the IdP sends a signed SAML assertion back to Vouch's Assertion Consumer Service (ACS) endpoint.
 5. Vouch validates the assertion signature, extracts the user's identity, and issues a session.
 6. The CLI picks up the session and credential helpers work normally.

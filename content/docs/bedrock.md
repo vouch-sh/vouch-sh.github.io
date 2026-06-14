@@ -65,7 +65,7 @@ Use IAM policies to control which foundation models each role can invoke:
       ],
       "Resource": [
         "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-sonnet-4-20250514",
-        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-haiku-4-20250514"
+        "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-haiku-20241022"
       ]
     }
   ]

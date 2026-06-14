@@ -547,7 +547,7 @@ The IAM role trust policy ensures that *both* the runner's SPIFFE identity and t
       ],
       "Condition": {
         "StringEquals": {
-          "{{< instance-url >}}:aud": "{{< instance-url >}}",
+          "{{< instance-url >}}:aud": "https://{{< instance-url >}}",
           "{{< instance-url >}}:sub": [
             "alice@example.com",
             "bob@example.com"

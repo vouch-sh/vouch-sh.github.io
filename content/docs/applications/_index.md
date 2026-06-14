@@ -242,7 +242,7 @@ The `hardware_aaguid` claim (FIDO2 authenticator AAGUID identifying the key make
 
 ## Token Lifetime
 
-Vouch access tokens are short-lived and Vouch does not issue refresh tokens (by design -- every session requires hardware key interaction). Your application should handle token expiry gracefully:
+Vouch access tokens are short-lived (1 hour, as shown in the `expires_in` field above) and Vouch does not issue refresh tokens (by design -- every session requires hardware key interaction). Your application should handle token expiry gracefully:
 
 - **Server-side applications** -- Check token expiry before using it. If expired, redirect the user through the authorization flow again.
 - **Single-page applications** -- Check `user.expired` before making API calls. If the token has expired, redirect the user through the authorization flow again using `signinRedirect()`.

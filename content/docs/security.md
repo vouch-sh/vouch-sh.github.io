@@ -170,7 +170,7 @@ A successful login requires producing **all** of the following, and each is inde
 | **Brute-force the PIN remotely** | PIN is verified locally by YubiKey hardware, which locks after 8 failed attempts |
 | **Present a certificate-bound token without the matching certificate** | The `x5t#S256` thumbprint in the token's `cnf` claim is validated against the client certificate presented in the TLS handshake; mismatch is rejected |
 | **Authorization server mix-up** | The `iss` parameter in authorization responses ([RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207)) lets clients verify they are communicating with the expected authorization server |
-| **Access the agent socket from another process** | Socket permissions (0600) restrict access; the agent verifies the connecting process has the same UID and PID |
+| **Access the agent socket from another process** | Socket permissions (0600) restrict access; the agent verifies the connecting process has the same UID via OS peer credentials |
 
 ---
 

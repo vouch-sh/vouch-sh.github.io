@@ -48,7 +48,7 @@ Create an IAM role that trusts Vouch tokens and restricts access to authorized d
       ],
       "Condition": {
         "StringEquals": {
-          "{{< instance-url >}}:aud": "{{< instance-url >}}",
+          "{{< instance-url >}}:aud": "https://{{< instance-url >}}",
           "{{< instance-url >}}:sub": [
             "deployer@example.com",
             "release-lead@example.com"
@@ -138,4 +138,4 @@ Vouch JWTs have a limited lifetime. The deployer must generate the token shortly
 
 ### Access denied on AssumeRoleWithWebIdentity
 
-Check that the trust policy's `sub` condition includes the deployer's email and the `aud` matches {{< instance-url >}}.
+Check that the trust policy's `sub` condition includes the deployer's email and the `aud` matches `https://{{< instance-url >}}`.

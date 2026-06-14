@@ -3,7 +3,7 @@ title: "Terms of Service"
 description: "Terms of service for the Vouch authentication service."
 ---
 
-**Last updated: February 2026**
+**Last updated: June 2026**
 
 ## Acceptance of Terms
 
@@ -59,7 +59,7 @@ Smoke Turner, LLC strives to maintain high availability of the Vouch service. Ho
 - During unscheduled outages caused by infrastructure failures, network issues, or other unforeseen events.
 - During security incidents that require the Service to be temporarily taken offline.
 
-Because Vouch issues short-lived credentials, an outage of the Vouch server does not immediately revoke access. Credentials that were issued before the outage remain valid until their natural expiration (up to 8 hours). However, you will not be able to obtain new credentials until the Service is restored.
+Because Vouch issues short-lived credentials, an outage of the Vouch server does not immediately revoke access. Credentials that were issued before the outage remain valid until their natural expiration -- SSH certificates last up to 8 hours, while AWS STS credentials last up to 1 hour. However, you will not be able to obtain new credentials until the Service is restored.
 
 Your organization is responsible for the operational management and availability of its Vouch deployment. Smoke Turner, LLC does not guarantee uptime for individual organization deployments.
 
@@ -92,7 +92,7 @@ Your access to the Vouch service may be terminated:
 Upon termination, regardless of the reason:
 
 - All active sessions will be revoked.
-- You will no longer be able to obtain new credentials. Previously issued short-lived credentials (SSH certificates, AWS STS credentials) will continue to function until their natural expiration (up to 8 hours).
+- You will no longer be able to obtain new credentials. Previously issued short-lived credentials will continue to function until their natural expiration -- SSH certificates last up to 8 hours, while AWS STS credentials last up to 1 hour.
 - Your FIDO2 credential registrations will be removed.
 - You will no longer be able to authenticate or obtain new credentials.
 - Your account data will be retained or deleted according to the organization's data retention policies and the [Privacy Policy](/privacy/).

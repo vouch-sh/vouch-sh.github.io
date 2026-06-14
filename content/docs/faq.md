@@ -133,13 +133,13 @@ Vouch supports standard and China partitions. GovCloud support depends on the in
 
 ### Which identity providers does Vouch support?
 
-Vouch currently supports **Google Workspace** as the primary identity provider for user authentication. For automated user provisioning (SCIM), Vouch works with Google Workspace, Okta, Azure AD (Entra ID), and OneLogin.
+Vouch authenticates users through your organization's OIDC or SAML 2.0 identity provider. It has been tested with **Google Workspace** and **Microsoft Entra ID** (see [SAML](/docs/saml/)). For automated user provisioning (SCIM), Vouch works with Google Workspace, Okta, Azure AD (Entra ID), and OneLogin.
 
 ### What happens when someone leaves the company?
 
 If SCIM is configured: deactivating the user in your identity provider automatically revokes their Vouch sessions. See [SCIM Provisioning](/docs/scim/).
 
-If SCIM is not configured: an administrator must manually remove the user from the Vouch server. Their active session is revoked immediately. Outstanding short-lived credentials expire on their own (within 8 hours at most).
+If SCIM is not configured: an administrator must manually remove the user from the Vouch server. Their active session is revoked immediately. Outstanding short-lived credentials expire on their own (within 12 hours at most for ECR and CodeArtifact tokens; most access ends within 1 hour).
 
 ### Can I restrict which team members can assume specific AWS roles?
 

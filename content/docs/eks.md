@@ -233,7 +233,7 @@ For per-user permissions using session tags from Vouch, you can create separate 
 
 ### Credentials expire during long operations
 
-- STS credentials obtained through Vouch last up to 1 hour. The EKS token itself is valid for 45 seconds, but kubectl re-fetches it automatically via the exec plugin on each command.
+- STS credentials obtained through Vouch last up to 1 hour. The EKS token itself is short-lived, but kubectl re-fetches it automatically via the exec plugin on each command.
 - For long-running operations such as Helm deployments or large-scale rollouts, run `vouch login` beforehand to ensure a fresh 8-hour session.
 - If a command fails mid-operation, run `vouch login` and retry. The kubeconfig exec plugin will automatically pick up the new credentials.
 
