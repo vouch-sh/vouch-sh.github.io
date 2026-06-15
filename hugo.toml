@@ -1,7 +1,13 @@
 baseURL = "https://vouch.sh/"
-languageCode = "en-us"
 title = "Vouch — Hardware-Backed Developer Credentials"
 enableGitInfo = true
+defaultContentLanguage = "en"
+
+[languages]
+  [languages.en]
+    label = "English"
+    locale = "en-US"
+    weight = 1
 
 [params]
   description = "Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access."
@@ -49,43 +55,46 @@ enableGitInfo = true
 [frontmatter]
   lastmod = [":git", "lastmod", "date"]
 
+# Sidebar group labels are translated via i18n keys: sidebar_group_<key>
 [[params.sidebarGroups]]
   key = "infra"
-  label = "Infrastructure"
 
 [[params.sidebarGroups]]
   key = "code"
-  label = "Code & Packages"
 
 [[params.sidebarGroups]]
   key = "admin"
-  label = "Administration"
 
 [[params.sidebarGroups]]
   key = "reference"
-  label = "Reference"
 
+# Menu names are translated via i18n keys referenced by `identifier`.
 [[menus.main]]
+  identifier = "nav_docs"
   name = "Docs"
   url = "/docs/"
   weight = 1
 
 [[menus.main]]
+  identifier = "nav_blog"
   name = "Blog"
   url = "/blog/"
   weight = 2
 
 [[menus.main]]
+  identifier = "nav_about"
   name = "About"
   url = "/about/"
   weight = 3
 
 [[menus.main]]
+  identifier = "nav_compare"
   name = "Compare"
   url = "/compare/"
   weight = 4
 
 [[menus.main]]
+  identifier = "nav_github"
   name = "GitHub"
   url = "https://github.com/vouch-sh/vouch"
   weight = 5

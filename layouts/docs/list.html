@@ -1,7 +1,7 @@
 {{ define "main" }}
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
-    <div class="docs-sidebar-title">Documentation</div>
+    <div class="docs-sidebar-title">{{ i18n "sidebar_title" }}</div>
     <nav>
       {{ partial "docs-sidebar-nav.html" . }}
     </nav>
@@ -14,11 +14,11 @@
     {{ $docsSection := .Site.GetPage "/docs" }}
     {{ $allPages := $docsSection.Pages.ByWeight }}
     {{ $groups := slice
-      (dict "key" "featured" "title" "Start here" "description" "Choose the fastest path for your first Vouch rollout." "featured" true)
-      (dict "key" "infra" "title" "Connect infrastructure" "description" "Access AWS, servers, Kubernetes, databases, and AI services with short-lived, hardware-backed tokens.")
-      (dict "key" "code" "title" "Ship code" "description" "Authenticate to GitHub, container registries, package managers, and AWS developer services with one YubiKey-backed session.")
-      (dict "key" "admin" "title" "Operate Vouch" "description" "Manage users, identity providers, device posture, application sign-in, and deployment approval workflows.")
-      (dict "key" "reference" "title" "Evaluate security" "description" "Review the architecture, threat model, availability behavior, migration approach, FAQ, and CLI reference.")
+      (dict "key" "featured" "title" (i18n "docs_group_featured_title") "description" (i18n "docs_group_featured_desc") "featured" true)
+      (dict "key" "infra" "title" (i18n "docs_group_infra_title") "description" (i18n "docs_group_infra_desc"))
+      (dict "key" "code" "title" (i18n "docs_group_code_title") "description" (i18n "docs_group_code_desc"))
+      (dict "key" "admin" "title" (i18n "docs_group_admin_title") "description" (i18n "docs_group_admin_desc"))
+      (dict "key" "reference" "title" (i18n "docs_group_reference_title") "description" (i18n "docs_group_reference_desc"))
     }}
 
     {{ range $group := $groups }}
@@ -42,7 +42,7 @@
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="{{ i18n "aria_toggle_sidebar" }}">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <line x1="3" y1="6" x2="21" y2="6"/>
     <line x1="3" y1="12" x2="21" y2="12"/>

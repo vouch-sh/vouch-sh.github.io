@@ -1,7 +1,7 @@
 {{ define "main" }}
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
-    <div class="docs-sidebar-title">Documentation</div>
+    <div class="docs-sidebar-title">{{ i18n "sidebar_title" }}</div>
     <nav>
       {{ partial "docs-sidebar-nav.html" . }}
     </nav>
@@ -17,8 +17,8 @@
     {{ with .Params.subtitle }}<p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">{{ . }}</p>{{ end }}
     {{ .Content }}
 
-    <h2>Server-Side Frameworks</h2>
-    <p>Integrate Vouch with popular server-side web frameworks using the authorization code flow.</p>
+    <h2>{{ i18n "apps_server_heading" }}</h2>
+    <p>{{ i18n "apps_server_desc" }}</p>
     <div class="framework-grid">
       {{ range where .Pages.ByWeight ".Params.category" "server" }}
       <a href="{{ .Permalink }}" class="framework-card">
@@ -29,8 +29,8 @@
       {{ end }}
     </div>
 
-    <h2>Single Page Applications</h2>
-    <p>Client-side applications using the authorization code flow with PKCE.</p>
+    <h2>{{ i18n "apps_spa_heading" }}</h2>
+    <p>{{ i18n "apps_spa_desc" }}</p>
     <div class="framework-grid">
       {{ range where .Pages.ByWeight ".Params.category" "spa" }}
       <a href="{{ .Permalink }}" class="framework-card">
@@ -41,8 +41,8 @@
       {{ end }}
     </div>
 
-    <h2>Native &amp; CLI Applications</h2>
-    <p>Desktop applications and CLI tools using the Device Authorization Grant.</p>
+    <h2>{{ i18n "apps_native_heading" }}</h2>
+    <p>{{ i18n "apps_native_desc" }}</p>
     <div class="framework-grid">
       {{ range where .Pages.ByWeight ".Params.category" "native" }}
       <a href="{{ .Permalink }}" class="framework-card">
@@ -55,8 +55,8 @@
 
     {{ $mcpPages := where .Pages.ByWeight ".Params.category" "mcp" }}
     {{ if $mcpPages }}
-    <h2>MCP Servers</h2>
-    <p>Protect MCP tool servers with Vouch OIDC bearer token authentication.</p>
+    <h2>{{ i18n "apps_mcp_heading" }}</h2>
+    <p>{{ i18n "apps_mcp_desc" }}</p>
     <div class="framework-grid">
       {{ range $mcpPages }}
       <a href="{{ .Permalink }}" class="framework-card">
@@ -70,8 +70,8 @@
 
     {{ $agentPages := where .Pages.ByWeight ".Params.category" "agent" }}
     {{ if $agentPages }}
-    <h2>Agent-to-Agent (A2A)</h2>
-    <p>Secure agent-to-agent communication with hardware-backed OIDC tokens.</p>
+    <h2>{{ i18n "apps_agent_heading" }}</h2>
+    <p>{{ i18n "apps_agent_desc" }}</p>
     <div class="framework-grid">
       {{ range $agentPages }}
       <a href="{{ .Permalink }}" class="framework-card">
@@ -86,7 +86,7 @@
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="{{ i18n "aria_toggle_sidebar" }}">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <line x1="3" y1="6" x2="21" y2="6"/>
     <line x1="3" y1="12" x2="21" y2="12"/>

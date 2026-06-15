@@ -87,6 +87,37 @@ Dark theme using CSS custom properties defined in `assets/css/main.css`:
 
 - `{{</* instance-url */>}}` — Renders the configured instance URL (default: `https://us.vouch.sh`). Configured via `params.usInstance` in `hugo.toml`.
 
+## Internationalization (i18n)
+
+The site runs in Hugo multilingual mode with English (`en`) as the only language
+today. It is **translation-ready**: all reusable UI strings are extracted, so a
+new language requires no template edits.
+
+Where translatable text lives:
+- **Reusable UI strings** (nav, footer, sidebar labels, breadcrumbs, buttons,
+  aria-labels, JS button states, blog meta, applications/docs section headings)
+  → `i18n/en.toml`, referenced in templates with `{{ i18n "key" }}`. Nav menu
+  names map via each menu entry's `identifier` in `hugo.toml`; sidebar group
+  labels resolve to `sidebar_group_<key>`.
+- **Page-specific prose** → content front matter and bodies. The homepage copy
+  lives in `content/_index.md` front matter (`hero`, `problem`, `howItWorks`,
+  `integrations`, `agents`, `openSource`, `regions`); `layouts/index.html`
+  renders it via `.Params`.
+
+To add a language (e.g. Japanese), no template changes are needed:
+1. Add a block to `hugo.toml`: `[languages.ja]` with `label`, `locale`, `weight`
+   (English stays at `/`; new languages render under `/ja/`).
+2. Copy `i18n/en.toml` → `i18n/ja.toml` and translate the `other` values.
+3. Add translated content as sibling files: `content/_index.ja.md`,
+   `content/docs/aws.ja.md`, etc. Untranslated pages fall back to English.
+4. When ≥2 languages exist, add a language-switcher partial (iterate
+   `.Translations`) and include it in `layouts/_default/baseof.html`.
+
+Not yet i18n-keyed (revisit when adding a language): the JSON-LD FAQ block in
+`layouts/partials/structured-data.html` (mirrors `content/docs/faq.md`) and
+internal link paths in `layouts/index.html` (use `relLangURL` for per-language
+prefixes).
+
 ## Deployment
 
 Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/hugo.yml`) which builds with Hugo v0.142.0 (pinned in the workflow) and force-pushes the built output to the `gh-pages` branch. The `static/CNAME` file maps the custom domain `vouch.sh`.

@@ -1,0 +1,200 @@
+# UI string table (English). Reusable interface strings only — page prose lives
+# in content files. To add a language, copy this file to i18n/<lang>.toml and
+# translate the `other` values.
+
+# --- Navigation (menu identifiers in hugo.toml map to these keys) ---
+[nav_docs]
+other = "Docs"
+
+[nav_blog]
+other = "Blog"
+
+[nav_about]
+other = "About"
+
+[nav_compare]
+other = "Compare"
+
+[nav_github]
+other = "GitHub"
+
+# --- Footer ---
+[footer_instances_label]
+other = "Instances:"
+
+[footer_instance_us]
+other = "US"
+
+[footer_instance_eu]
+other = "EU (coming soon)"
+
+[footer_instance_apac]
+other = "APAC (coming soon)"
+
+[footer_about]
+other = "About"
+
+[footer_security]
+other = "Security"
+
+[footer_privacy]
+other = "Privacy"
+
+[footer_terms]
+other = "Terms"
+
+[footer_github]
+other = "GitHub"
+
+[footer_status]
+other = "Status"
+
+# --- ARIA labels ---
+[aria_toggle_nav]
+other = "Toggle navigation"
+
+[aria_copy_clipboard]
+other = "Copy to clipboard"
+
+[aria_page_actions]
+other = "Page actions"
+
+[aria_copy_markdown]
+other = "Copy this page as Markdown for pasting into an LLM"
+
+[aria_view_md]
+other = "View this page as raw Markdown"
+
+[aria_toggle_sidebar]
+other = "Toggle sidebar"
+
+[aria_toggle_section]
+other = "Toggle section"
+
+# --- Buttons / shared labels ---
+[btn_copy_markdown]
+other = "Copy as Markdown"
+
+[btn_view_md]
+other = "View as .md"
+
+[btn_get_started]
+other = "Get Started"
+
+[btn_view_github]
+other = "View on GitHub"
+
+[btn_learn_more]
+other = "Learn more"
+
+# --- JS button states ---
+[js_copied]
+other = "Copied!"
+
+[js_copy_failed]
+other = "Copy failed"
+
+# --- Docs sidebar ---
+[sidebar_title]
+other = "Documentation"
+
+[breadcrumb_docs]
+other = "Docs"
+
+[sidebar_start_here]
+other = "Start Here"
+
+[sidebar_group_infra]
+other = "Infrastructure"
+
+[sidebar_group_code]
+other = "Code & Packages"
+
+[sidebar_group_admin]
+other = "Administration"
+
+[sidebar_group_reference]
+other = "Reference"
+
+# --- Applications list section headings + descriptions ---
+[apps_server_heading]
+other = "Server-Side Frameworks"
+
+[apps_server_desc]
+other = "Integrate Vouch with popular server-side web frameworks using the authorization code flow."
+
+[apps_spa_heading]
+other = "Single Page Applications"
+
+[apps_spa_desc]
+other = "Client-side applications using the authorization code flow with PKCE."
+
+[apps_native_heading]
+other = "Native & CLI Applications"
+
+[apps_native_desc]
+other = "Desktop applications and CLI tools using the Device Authorization Grant."
+
+[apps_mcp_heading]
+other = "MCP Servers"
+
+[apps_mcp_desc]
+other = "Protect MCP tool servers with Vouch OIDC bearer token authentication."
+
+[apps_agent_heading]
+other = "Agent-to-Agent (A2A)"
+
+[apps_agent_desc]
+other = "Secure agent-to-agent communication with hardware-backed OIDC tokens."
+
+# --- Docs landing group cards (titles + descriptions) ---
+[docs_group_featured_title]
+other = "Start here"
+
+[docs_group_featured_desc]
+other = "Choose the fastest path for your first Vouch rollout."
+
+[docs_group_infra_title]
+other = "Connect infrastructure"
+
+[docs_group_infra_desc]
+other = "Access AWS, servers, Kubernetes, databases, and AI services with short-lived, hardware-backed tokens."
+
+[docs_group_code_title]
+other = "Ship code"
+
+[docs_group_code_desc]
+other = "Authenticate to GitHub, container registries, package managers, and AWS developer services with one YubiKey-backed session."
+
+[docs_group_admin_title]
+other = "Operate Vouch"
+
+[docs_group_admin_desc]
+other = "Manage users, identity providers, device posture, application sign-in, and deployment approval workflows."
+
+[docs_group_reference_title]
+other = "Evaluate security"
+
+[docs_group_reference_desc]
+other = "Review the architecture, threat model, availability behavior, migration approach, FAQ, and CLI reference."
+
+# --- Blog ---
+[blog_title]
+other = "Blog"
+
+[blog_empty_title]
+other = "No posts yet"
+
+[blog_empty_body]
+other = "Check back soon for updates on Vouch development, security best practices, and engineering insights."
+
+[blog_by]
+other = "By"
+
+[blog_min_read]
+other = "min read"
+
+# Go reference layout for human-readable dates; month names localize via the
+# site language when rendered with time.Format.
+[date_format]
+other = "January 2, 2006"

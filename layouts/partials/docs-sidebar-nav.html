@@ -6,7 +6,7 @@
   {{ $featuredPages := where $allPages ".Params.docsGroup" "featured" }}
   {{ with $featuredPages }}
     <li class="sidebar-section-group">
-      <span class="sidebar-section-label">Start Here</span>
+      <span class="sidebar-section-label">{{ i18n "sidebar_start_here" }}</span>
       <ul>
         {{ range . }}
           {{ if not .IsSection }}
@@ -26,7 +26,7 @@
     {{ $groupPages := where $allPages ".Params.docsGroup" $group.key }}
     {{ with $groupPages }}
       <li class="sidebar-section-group">
-        <span class="sidebar-section-label">{{ $group.label }}</span>
+        <span class="sidebar-section-label">{{ i18n (printf "sidebar_group_%s" $group.key) }}</span>
         <ul>
           {{ range . }}
             {{ if .IsSection }}
@@ -38,7 +38,7 @@
                   <a href="{{ .Permalink }}" {{ if $isActive }}class="active"{{ end }}>
                     {{ .LinkTitle }}
                   </a>
-                  <button class="sidebar-chevron" onclick="this.closest('.sidebar-group').classList.toggle('open')" aria-label="Toggle section">
+                  <button class="sidebar-chevron" onclick="this.closest('.sidebar-group').classList.toggle('open')" aria-label="{{ i18n "aria_toggle_section" }}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>

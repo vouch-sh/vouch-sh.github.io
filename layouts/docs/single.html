@@ -1,7 +1,7 @@
 {{ define "main" }}
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
-    <div class="docs-sidebar-title">Documentation</div>
+    <div class="docs-sidebar-title">{{ i18n "sidebar_title" }}</div>
     <nav>
       {{ partial "docs-sidebar-nav.html" . }}
     </nav>
@@ -9,18 +9,18 @@
 
   <article class="docs-content">
     <div class="docs-breadcrumb">
-      {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}Docs{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator">/</span>{{ end }}{{ end }}
+      {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}{{ i18n "breadcrumb_docs" }}{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator">/</span>{{ end }}{{ end }}
       {{ .Title }}
     </div>
     {{ with .OutputFormats.Get "markdown" }}
-    <div class="docs-actions" role="group" aria-label="Page actions">
-      <button type="button" class="docs-action-btn" data-md-url="{{ .Permalink }}" aria-label="Copy this page as Markdown for pasting into an LLM">
+    <div class="docs-actions" role="group" aria-label="{{ i18n "aria_page_actions" }}">
+      <button type="button" class="docs-action-btn" data-md-url="{{ .Permalink }}" aria-label="{{ i18n "aria_copy_markdown" }}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        <span>Copy as Markdown</span>
+        <span>{{ i18n "btn_copy_markdown" }}</span>
       </button>
-      <a class="docs-action-btn" href="{{ .Permalink }}" aria-label="View this page as raw Markdown">
+      <a class="docs-action-btn" href="{{ .Permalink }}" aria-label="{{ i18n "aria_view_md" }}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span>View as .md</span>
+        <span>{{ i18n "btn_view_md" }}</span>
       </a>
     </div>
     {{ end }}
@@ -31,7 +31,7 @@
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="{{ i18n "aria_toggle_sidebar" }}">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <line x1="3" y1="6" x2="21" y2="6"/>
     <line x1="3" y1="12" x2="21" y2="12"/>
@@ -40,6 +40,8 @@
 </button>
 
 <script>
+var I18N_COPIED = {{ i18n "js_copied" }};
+var I18N_COPY_FAILED = {{ i18n "js_copy_failed" }};
 function toggleSidebar() {
   document.getElementById('docs-sidebar').classList.toggle('open');
   document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -58,11 +60,11 @@ document.querySelectorAll('.docs-action-btn[data-md-url]').forEach(function(btn)
       .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
       .then(function(text) { return navigator.clipboard.writeText(text); })
       .then(function() {
-        if (label) label.textContent = 'Copied!';
+        if (label) label.textContent = I18N_COPIED;
         setTimeout(function() { if (label) label.textContent = original; }, 1500);
       })
       .catch(function() {
-        if (label) label.textContent = 'Copy failed';
+        if (label) label.textContent = I18N_COPY_FAILED;
         setTimeout(function() { if (label) label.textContent = original; }, 2000);
       });
   });
