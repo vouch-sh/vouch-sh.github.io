@@ -328,14 +328,10 @@ The same `vouch credential aws` and `vouch setup aws` commands drive this path; 
 
 <span class="role-label">Admin task</span>
 
-Register Vouch as a **trusted token issuer** and create a **customer-managed application** in your Identity Center management account. Terraform covers the trusted token issuer, the application, and its access scope; the jwt-bearer **grant** has no Terraform resource yet, so that one step uses the AWS CLI.
+Register Vouch as a **trusted token issuer** and create a **customer-managed application** in your Identity Center management account. Terraform covers the trusted token issuer, the application, and its access scope. The two remaining steps -- the jwt-bearer **grant** (which registers the audience) and the **authentication method** that authorizes `CreateTokenWithIAM` (Step B) -- have no Terraform or CloudFormation resource, so they use the AWS CLI.
 
 ```hcl
 data "aws_ssoadmin_instances" "this" {}
-
-locals {
-  identity_center_audience = "vouch-identity-center"
-}
 
 # Trust Vouch-issued RS256 tokens, mapping the token's email claim to the
 # Identity Store user.
@@ -369,59 +365,52 @@ resource "aws_ssoadmin_application_access_scope" "portal" {
 }
 ```
 
-Then authorize the jwt-bearer grant, binding the application to the trusted token issuer and the audience Vouch requests. Replace the audience with the `local.identity_center_audience` value above:
+Then authorize the jwt-bearer grant, binding the application to the trusted token issuer and the **audience**. Vouch sets the RS256 token's `aud` to its **issuer URL**, `https://{{< instance-url >}}` -- the same audience it uses for the STS web-identity path -- so the grant's `AuthorizedAudiences` must be that URL, and each developer's `identity_center_audience` (Step C) is the same URL. Substitute your application and trusted-token-issuer ARNs:
 
 ```bash
 aws sso-admin put-application-grant \
-  --application-arn "$APPLICATION_ARN" \
+  --application-arn arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx \
   --grant-type "urn:ietf:params:oauth:grant-type:jwt-bearer" \
-  --grant 'JwtBearer={AuthorizedTokenIssuers=[{TrustedTokenIssuerArn="'"$TTI_ARN"'",AuthorizedAudiences=["vouch-identity-center"]}]}'
+  --grant 'JwtBearer={AuthorizedTokenIssuers=[{TrustedTokenIssuerArn=arn:aws:sso::111111111111:trustedTokenIssuer/ssoins-xxxx/tti-xxxx,AuthorizedAudiences=["https://{{< instance-url >}}"]}]}'
 ```
 
-> **CloudFormation note:** CloudFormation has no trusted-token-issuer resource type, and `AWS::SSO::Application` does not expose the jwt-bearer grant or access scope, so the steps above must use Terraform or the AWS CLI. CloudFormation *can* manage the IAM policy in Step B.
+> **CloudFormation note:** CloudFormation has no resource for the trusted token issuer, the jwt-bearer grant, the access scope, or the authentication method -- `AWS::SSO::Application` only creates the application shell (name, provider, portal options). Use Terraform (issuer, application, scope) and the AWS CLI (grant, authentication method) as shown.
 
-Record the **application ARN** and the **audience** value -- developers need both in Step C.
+Record the **application ARN** -- developers need it in Step C (the audience is always your Vouch issuer URL).
 
 ### Step B -- Allow the management role to exchange tokens
 
 <span class="role-label">Admin task</span>
 
-The Vouch **management role** (the role Vouch federates into via `AssumeRoleWithWebIdentity`, from [Pattern C](/docs/aws/#pattern-c--stsassumerole-only)) performs the SigV4 `CreateTokenWithIAM` call. Grant it that action on the application. This policy is the one piece of the setup that works in both CloudFormation and Terraform.
+The Vouch **management role** (the role Vouch federates into via `AssumeRoleWithWebIdentity`, from [Pattern C](/docs/aws/#pattern-c--stsassumerole-only)) is the SigV4 caller for `CreateTokenWithIAM`. Authorization is **not** an IAM policy on the role -- it is a resource-based **actor policy on the application** that names the role as principal. Set it with the AWS CLI (there is no Terraform or CloudFormation resource for the application authentication method):
 
-#### CloudFormation
-
-```yaml
-Resources:
-  VouchCreateTokenPolicy:
-    Type: AWS::IAM::RolePolicy
-    Properties:
-      RoleName: VouchManagement
-      PolicyName: VouchCreateTokenWithIAM
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: "sso-oauth:CreateTokenWithIAM"
-            Resource: "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx"
+```bash
+aws sso-admin put-application-authentication-method \
+  --application-arn arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx \
+  --authentication-method-type IAM \
+  --authentication-method file://actor-policy.json
 ```
 
-#### Terraform
+Where `actor-policy.json` is:
 
-```hcl
-resource "aws_iam_role_policy" "vouch_create_token" {
-  name = "VouchCreateTokenWithIAM"
-  role = "VouchManagement"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "sso-oauth:CreateTokenWithIAM"
-        Resource = aws_ssoadmin_application.vouch.application_arn
-      }
-    ]
-  })
+```json
+{
+  "Iam": {
+    "ActorPolicy": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "AllowVouchManagementRole",
+          "Effect": "Allow",
+          "Principal": {
+            "AWS": "arn:aws:iam::111111111111:role/VouchManagement"
+          },
+          "Action": "sso-oauth:CreateTokenWithIAM",
+          "Resource": "*"
+        }
+      ]
+    }
+  }
 }
 ```
 
@@ -429,9 +418,9 @@ resource "aws_iam_role_policy" "vouch_create_token" {
 <p><strong>You are done with the AWS-side setup when...</strong></p>
 <ul>
   <li>Vouch is a trusted token issuer pointing at <code>https://{{< instance-url >}}</code>.</li>
-  <li>A customer-managed application exists with the <code>sso:account:access</code> scope and a jwt-bearer grant bound to that issuer and your audience.</li>
-  <li>The management role may call <code>sso-oauth:CreateTokenWithIAM</code> on the application.</li>
-  <li>You have written down the application ARN and the audience value.</li>
+  <li>A customer-managed application exists with the <code>sso:account:access</code> scope and a jwt-bearer grant whose <code>AuthorizedAudiences</code> is your Vouch issuer URL.</li>
+  <li>The application's actor policy names the management role for <code>sso-oauth:CreateTokenWithIAM</code>.</li>
+  <li>You have written down the application ARN.</li>
 </ul>
 </div>
 
@@ -448,14 +437,14 @@ Identity Center connection details (start URL, region, scopes) come from the `[s
       "my-sso": {
         "management_role": "arn:aws:iam::111111111111:role/VouchManagement",
         "identity_center_application_arn": "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx",
-        "identity_center_audience": "vouch-identity-center"
+        "identity_center_audience": "https://{{< instance-url >}}"
       }
     }
   }
 }
 ```
 
-Both `identity_center_application_arn` and `identity_center_audience` must be set together. When they are, a single `vouch login` is enough -- Vouch performs the exchange for you. If they are omitted, the Identity Center path still works, but you must run `vouch aws login` first so Vouch can use the cached device token instead.
+`identity_center_audience` is your Vouch issuer URL (`https://{{< instance-url >}}`), matching the grant's `AuthorizedAudiences` from Step A. Both `identity_center_application_arn` and `identity_center_audience` must be set together. When they are, a single `vouch login` is enough -- Vouch performs the exchange for you. If they are omitted, the Identity Center path still works, but you must run `vouch aws login` first so Vouch can use the cached device token instead.
 
 ### Step D -- Use it
 
