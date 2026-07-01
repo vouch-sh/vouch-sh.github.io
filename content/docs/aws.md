@@ -33,6 +33,8 @@ AWS provides two built-in CLI authentication commands. Here is how they compare 
 
 If you already use IAM Identity Center, `aws sso login` may cover your AWS needs. Vouch is a better fit when you want a single authentication event to cover AWS and everything else your team uses, with the guarantee that every credential traces back to a physical hardware key.
 
+> **Already on IAM Identity Center?** Vouch can also issue credentials *through* your Identity Center permission-set assignments -- reaching every assigned account directly, with no per-account OIDC provider and no role chaining. This page covers the OIDC web-identity model; for the Identity Center model, see [AWS Identity Center](/docs/aws-identity-center/).
+
 ## How it works
 
 1. The developer runs `vouch login` and authenticates with their YubiKey.

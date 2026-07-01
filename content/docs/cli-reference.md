@@ -169,18 +169,18 @@ Setup commands configure credential helpers for each integration. Run these once
 Configure the AWS credential process for an IAM role, or auto-discover accounts and roles from IAM Identity Center.
 
 ```
-vouch setup aws (--role <ROLE_ARN> | --discover) [--profile <PROFILE>] [--prefix <PREFIX>] [--region <REGION>]
+vouch setup aws [--role <ROLE_ARN> | --discover] [--profile <PROFILE>] [--prefix <PREFIX>] [--region <REGION>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume (required unless `--discover` is used) |
-| `--discover` | Auto-discover accounts and roles from IAM Identity Center SSO (alternative to `--role`) |
+| `--role` | The IAM role ARN to assume (optional). When omitted (and without `--discover`), runs interactive IAM Identity Center setup -- pick an account and permission set -- if the SSO session is configured for it. |
+| `--discover` | Auto-discover accounts and roles and write a profile for each. Uses the IAM Identity Center portal when the session is configured for it, otherwise STS role-chaining discovery. |
 | `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
 | `--prefix` | Prefix for auto-generated profile names when using `--discover` |
 | `--region` | AWS region to set in the profile |
 
-See [AWS Integration](/docs/aws/) for full details.
+See [AWS Integration](/docs/aws/) for STS federation, [Multi-Account AWS](/docs/aws-multi-account/) for role chaining, and [AWS Identity Center](/docs/aws-identity-center/) for permission-set access.
 
 ### `vouch setup ssh`
 
@@ -374,15 +374,20 @@ Credential commands obtain service-specific credentials from your active session
 
 ### `vouch credential aws`
 
-Obtain temporary AWS STS credentials.
+Obtain temporary AWS credentials. Called automatically by the `credential_process` entries that `vouch setup aws` writes; runs non-interactively.
 
 ```
 vouch credential aws --role <ROLE_ARN>
+vouch credential aws --account <ACCOUNT_ID> --role <PERMISSION_SET> [--sso-session <NAME>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume (required) |
+| `--role` | STS role ARN to assume. When `--account` is set, this is instead the IAM Identity Center **permission-set name**. (Required.) |
+| `--account` | AWS account ID. Switches to the IAM Identity Center portal (`GetRoleCredentials`) for a permission-set role instead of STS `AssumeRoleWithWebIdentity`. |
+| `--sso-session` | Named SSO session from `~/.aws/config` used for the Identity Center path (optional). |
+
+Without `--account`, the `--role` ARN is used with STS `AssumeRoleWithWebIdentity` (chaining through the configured management role when set). See [AWS Identity Center](/docs/aws-identity-center/) for the permission-set path.
 
 ### `vouch credential ssh`
 

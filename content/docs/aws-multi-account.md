@@ -312,6 +312,8 @@ vouch setup aws --discover --prefix vouch --region us-east-1
 
 The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
 
+> **Skip role chaining entirely?** If your organization runs an IAM Identity Center **organization instance**, Vouch can issue credentials straight from your permission-set assignments -- no hub/spoke roles and no per-account OIDC provider. When the SSO session is configured for it, `vouch setup aws --discover` writes permission-set profiles instead of role-chaining ones. See [AWS Identity Center](/docs/aws-identity-center/).
+
 ---
 
 ## Restricting federation with SCPs
