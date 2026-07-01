@@ -312,11 +312,183 @@ vouch setup aws --discover --prefix vouch --region us-east-1
 
 The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
 
-> **Skip role chaining entirely?** If your organization runs an IAM Identity Center **organization instance**, Vouch can issue credentials straight from your permission-set assignments -- no hub/spoke roles and no per-account OIDC provider. When the SSO session is configured for it, `vouch setup aws --discover` writes permission-set profiles instead of role-chaining ones. See [AWS Identity Center](/docs/aws-identity-center/).
+> **Skip role chaining entirely?** If your organization runs an IAM Identity Center **organization instance**, Vouch can issue credentials straight from your permission-set assignments -- no hub/spoke roles and no per-account OIDC provider. See [Reach accounts through IAM Identity Center](#reach-accounts-through-iam-identity-center) below.
 
 ---
 
-## Restricting federation with SCPs
+## Reach accounts through IAM Identity Center
+
+Role chaining (above) is one way to reach many accounts. If you already run **AWS IAM Identity Center** with an **organization instance**, there is a second option: Vouch can exchange a hardware-backed session for an Identity Center token and issue credentials directly for any **permission set** the developer is assigned -- no hub/spoke roles, no per-account OIDC provider, and no per-role IAM trust policy. Access is governed entirely by your existing Identity Center assignments.
+
+The same `vouch credential aws` and `vouch setup aws` commands drive this path; it is selected by per-`[sso-session]` configuration (Step C). Under the hood, Vouch mints a short-lived **RS256** token, exchanges it via `sso-oidc:CreateTokenWithIAM` for an Identity Center token, and calls the SSO Portal `GetRoleCredentials` API.
+
+> **Requires an organization instance of Identity Center.** The trusted token issuer used below is available only on Identity Center organization instances, not account instances.
+
+### Step A -- Register the trusted token issuer and application
+
+<span class="role-label">Admin task</span>
+
+Register Vouch as a **trusted token issuer** and create a **customer-managed application** in your Identity Center management account. Terraform covers the trusted token issuer, the application, and its access scope; the jwt-bearer **grant** has no Terraform resource yet, so that one step uses the AWS CLI.
+
+```hcl
+data "aws_ssoadmin_instances" "this" {}
+
+locals {
+  identity_center_audience = "vouch-identity-center"
+}
+
+# Trust Vouch-issued RS256 tokens, mapping the token's email claim to the
+# Identity Store user.
+resource "aws_ssoadmin_trusted_token_issuer" "vouch" {
+  name                      = "vouch"
+  instance_arn              = tolist(data.aws_ssoadmin_instances.this.arns)[0]
+  trusted_token_issuer_type = "OIDC_JWT"
+
+  trusted_token_issuer_configuration {
+    oidc_jwt_configuration {
+      issuer_url                    = "https://{{< instance-url >}}"
+      claim_attribute_path          = "email"
+      identity_store_attribute_path = "emails.value"
+      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
+    }
+  }
+}
+
+# The customer-managed application developers exchange tokens against.
+resource "aws_ssoadmin_application" "vouch" {
+  name                     = "vouch"
+  instance_arn             = tolist(data.aws_ssoadmin_instances.this.arns)[0]
+  application_provider_arn = "arn:aws:sso::aws:applicationProvider/custom"
+}
+
+# Allow the exchanged token to drive the SSO Portal (ListAccounts /
+# ListAccountRoles / GetRoleCredentials).
+resource "aws_ssoadmin_application_access_scope" "portal" {
+  application_arn = aws_ssoadmin_application.vouch.application_arn
+  scope           = "sso:account:access"
+}
+```
+
+Then authorize the jwt-bearer grant, binding the application to the trusted token issuer and the audience Vouch requests. Replace the audience with the `local.identity_center_audience` value above:
+
+```bash
+aws sso-admin put-application-grant \
+  --application-arn "$APPLICATION_ARN" \
+  --grant-type "urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  --grant 'JwtBearer={AuthorizedTokenIssuers=[{TrustedTokenIssuerArn="'"$TTI_ARN"'",AuthorizedAudiences=["vouch-identity-center"]}]}'
+```
+
+> **CloudFormation note:** CloudFormation has no trusted-token-issuer resource type, and `AWS::SSO::Application` does not expose the jwt-bearer grant or access scope, so the steps above must use Terraform or the AWS CLI. CloudFormation *can* manage the IAM policy in Step B.
+
+Record the **application ARN** and the **audience** value -- developers need both in Step C.
+
+### Step B -- Allow the management role to exchange tokens
+
+<span class="role-label">Admin task</span>
+
+The Vouch **management role** (the role Vouch federates into via `AssumeRoleWithWebIdentity`, from [Pattern C](/docs/aws/#pattern-c--stsassumerole-only)) performs the SigV4 `CreateTokenWithIAM` call. Grant it that action on the application. This policy is the one piece of the setup that works in both CloudFormation and Terraform.
+
+#### CloudFormation
+
+```yaml
+Resources:
+  VouchCreateTokenPolicy:
+    Type: AWS::IAM::RolePolicy
+    Properties:
+      RoleName: VouchManagement
+      PolicyName: VouchCreateTokenWithIAM
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "sso-oauth:CreateTokenWithIAM"
+            Resource: "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx"
+```
+
+#### Terraform
+
+```hcl
+resource "aws_iam_role_policy" "vouch_create_token" {
+  name = "VouchCreateTokenWithIAM"
+  role = "VouchManagement"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sso-oauth:CreateTokenWithIAM"
+        Resource = aws_ssoadmin_application.vouch.application_arn
+      }
+    ]
+  })
+}
+```
+
+<div class="checkpoint">
+<p><strong>You are done with the AWS-side setup when...</strong></p>
+<ul>
+  <li>Vouch is a trusted token issuer pointing at <code>https://{{< instance-url >}}</code>.</li>
+  <li>A customer-managed application exists with the <code>sso:account:access</code> scope and a jwt-bearer grant bound to that issuer and your audience.</li>
+  <li>The management role may call <code>sso-oauth:CreateTokenWithIAM</code> on the application.</li>
+  <li>You have written down the application ARN and the audience value.</li>
+</ul>
+</div>
+
+### Step C -- Configure the SSO session
+
+<span class="role-label">Developer task</span>
+
+Identity Center connection details (start URL, region, scopes) come from the `[sso-session]` block in `~/.aws/config`, exactly as for `vouch aws login`. Vouch stores the two extra values in `$XDG_CONFIG_HOME/vouch/config.json` (`~/.config/vouch/config.json`), keyed by SSO session name:
+
+```json
+{
+  "aws": {
+    "sso_sessions": {
+      "my-sso": {
+        "management_role": "arn:aws:iam::111111111111:role/VouchManagement",
+        "identity_center_application_arn": "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx",
+        "identity_center_audience": "vouch-identity-center"
+      }
+    }
+  }
+}
+```
+
+Both `identity_center_application_arn` and `identity_center_audience` must be set together. When they are, a single `vouch login` is enough -- Vouch performs the exchange for you. If they are omitted, the Identity Center path still works, but you must run `vouch aws login` first so Vouch can use the cached device token instead.
+
+### Step D -- Use it
+
+<span class="role-label">Developer task</span>
+
+`vouch setup aws` writes `~/.aws/config` profiles whose `credential_process` calls `vouch credential aws`. With Identity Center configured, it has three modes:
+
+```bash
+# Interactive: pick one account and permission set
+vouch setup aws
+
+# Discover: write a profile for every assigned account + permission set
+vouch setup aws --discover --region us-east-1
+```
+
+Both write the same shape of profile, so you can also add one by hand. In Identity Center mode the `credential_process` passes `--account` and a permission-set **name** (not a role ARN) as `--role`:
+
+```ini
+[profile prod-admin]
+credential_process = vouch credential aws --sso-session "my-sso" --account 111111111111 --role "AdministratorAccess"
+region = us-east-1
+```
+
+Test it:
+
+```bash
+vouch login   # or `vouch aws login` if you did not configure the token issuer in Step C
+aws sts get-caller-identity --profile prod-admin
+```
+
+The issued session carries the same [session tags](/docs/aws/#session-tags) (`vouch:Email`, `vouch:Domain`, and the AI-agent tags) as the STS path, so your ABAC conditions and CloudTrail attribution work identically.
+
+---
 
 Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html) to ensure that only the Vouch OIDC provider can federate into your accounts. This prevents anyone from registering a rogue OIDC provider:
 
