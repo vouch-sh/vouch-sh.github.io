@@ -180,7 +180,7 @@ vouch setup aws [--role <ROLE_ARN> | --discover] [--profile <PROFILE>] [--prefix
 | `--prefix` | Prefix for auto-generated profile names when using `--discover` |
 | `--region` | AWS region to set in the profile |
 
-See [AWS Integration](/docs/aws/) for STS federation, [Multi-Account AWS](/docs/aws-multi-account/) for role chaining, and [IAM Identity Center](/docs/aws-multi-account/#reach-accounts-through-iam-identity-center) for permission-set access.
+See [AWS Integration](/docs/aws/) for STS federation, [Multi-Account AWS](/docs/aws-multi-account/) for role chaining, and [IAM Identity Center](/docs/aws-multi-account/#access-accounts-through-iam-identity-center) for permission-set access.
 
 ### `vouch setup ssh`
 
@@ -387,7 +387,7 @@ vouch credential aws --account <ACCOUNT_ID> --role <PERMISSION_SET> [--sso-sessi
 | `--account` | AWS account ID. Switches to the IAM Identity Center portal (`GetRoleCredentials`) for a permission-set role instead of STS `AssumeRoleWithWebIdentity`. |
 | `--sso-session` | Named SSO session from `~/.aws/config` used for the Identity Center path (optional). |
 
-Without `--account`, the `--role` ARN is used with STS `AssumeRoleWithWebIdentity` (chaining through the configured management role when set). See [IAM Identity Center](/docs/aws-multi-account/#reach-accounts-through-iam-identity-center) for the permission-set path.
+Without `--account`, the `--role` ARN is used with STS `AssumeRoleWithWebIdentity` (chaining through the configured management role when set). See [IAM Identity Center](/docs/aws-multi-account/#access-accounts-through-iam-identity-center) for the permission-set path.
 
 ### `vouch credential ssh`
 
