@@ -365,7 +365,7 @@ resource "aws_ssoadmin_application_access_scope" "portal" {
 }
 ```
 
-Then authorize the jwt-bearer grant, binding the application to the trusted token issuer and the **audience**. Vouch sets the RS256 token's `aud` to its **issuer URL**, `https://{{< instance-url >}}` -- the same audience it uses for the STS web-identity path -- so the grant's `AuthorizedAudiences` must be that URL, and each developer's `identity_center_audience` (Step C) is the same URL. Substitute your application and trusted-token-issuer ARNs:
+Then authorize the jwt-bearer grant, binding the application to the trusted token issuer and the **audience**. Vouch always sets the RS256 token's `aud` to its own server URL, `https://{{< instance-url >}}` (the same audience it uses for the STS web-identity path), so the grant's `AuthorizedAudiences` -- the application's Aud claim -- must be that URL. There is nothing to configure on the developer side. Substitute your application and trusted-token-issuer ARNs:
 
 ```bash
 aws sso-admin put-application-grant \
@@ -436,15 +436,14 @@ Identity Center connection details (start URL, region, scopes) come from the `[s
     "sso_sessions": {
       "my-sso": {
         "management_role": "arn:aws:iam::111111111111:role/VouchManagement",
-        "identity_center_application_arn": "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx",
-        "identity_center_audience": "https://{{< instance-url >}}"
+        "identity_center_application_arn": "arn:aws:sso::111111111111:application/ssoins-xxxx/apl-xxxx"
       }
     }
   }
 }
 ```
 
-`identity_center_audience` is your Vouch issuer URL (`https://{{< instance-url >}}`), matching the grant's `AuthorizedAudiences` from Step A. Both `identity_center_application_arn` and `identity_center_audience` must be set together. When they are, a single `vouch login` is enough -- Vouch performs the exchange for you. If they are omitted, the Identity Center path still works, but you must run `vouch aws login` first so Vouch can use the cached device token instead.
+`identity_center_application_arn` is the only field the Identity Center path needs -- there is no audience to configure here. Vouch always sets the token's `aud` to its own server URL, which is why the application's Aud claim (Step A) must be that same URL. When `identity_center_application_arn` is set, a single `vouch login` is enough -- Vouch performs the exchange for you. If it is omitted, the Identity Center path still works, but you must run `vouch aws login` first so Vouch can use the cached device token instead.
 
 ### Step D -- Use it
 
