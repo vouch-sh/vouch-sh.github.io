@@ -87,7 +87,7 @@ As long as they authenticate with the same Google Workspace domain, they join th
 
 ## Step 3 -- Deploy AWS federation
 
-Follow the [AWS integration guide](/docs/aws/), choosing **[Pattern A -- Managed policy](/docs/aws/#pattern-a--managed-policy)** with `PowerUserAccess` and a `*@yourcompany.com` email-domain trust condition. That is the recommended starting configuration for a startup; you can tighten it later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
+Follow the [AWS integration guide](/docs/aws/) to register the OIDC provider and deploy a role with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
 
 When the role exists, copy its ARN -- you'll need it in Step 4.
 

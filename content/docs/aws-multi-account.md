@@ -8,9 +8,9 @@ params:
   docsGroup: infra
 ---
 
-Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives:
+Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Most teams start with role chaining**; choose Identity Center if you already run it.
 
-- **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below; picks up where [AWS / Step 3 / Pattern C](/docs/aws/#pattern-c--stsassumerole-only) leaves off.
+- **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below.
 - **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
 
 We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One management account plus per-account access covers the same use cases with less surface area.
@@ -20,13 +20,15 @@ We don't recommend deploying separate OIDC providers in every account -- it mult
 ## Architecture
 
 ```
-Vouch (OIDC) ──▶ Management Account ──▶ Member Account
-                  VouchAccess (hub)        VouchAccess (spoke)
-                AssumeRoleWithWebIdentity     AssumeRole + SourceIdentity
+Vouch (OIDC) ──▶ Management account ──▶ Member account
+                  hub role                spoke role
+                  (federate in)           (chain into the account)
 ```
 
+You don't need to follow the STS calls to deploy this: put the OIDC provider and one hub role in the management account, and a spoke role in each member account.
+
 - The Vouch OIDC provider lives in the **management account only**.
-- The **hub role** uses [Pattern C](/docs/aws/#pattern-c--stsassumerole-only) -- its identity policy is `sts:AssumeRole` only.
+- The **hub role** is defined in [Step 1](#step-1--deploy-the-hub-role) -- its identity policy is `sts:AssumeRole` only.
 - Each **spoke role** trusts the hub through a plain AWS-principal trust (no OIDC).
 - The developer's verified email propagates through the chain as [`SourceIdentity`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html): set to `alice@example.com` at `AssumeRoleWithWebIdentity`, carried forward through each `AssumeRole`, recorded in CloudTrail in every member account.
 - All session tags are [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), so conditions like `aws:PrincipalTag/vouch:Domain` and `aws:PrincipalTag/vouch:Email` work in spoke trust policies just as they do in the hub.
@@ -39,12 +41,63 @@ Every developer uses the same `vouch login` session. The AWS profile they select
 
 <span class="role-label">Admin task</span>
 
-Deploy the hub role in your management account using [Pattern C from the AWS guide](/docs/aws/#pattern-c--stsassumerole-only). Two specifics for the hub-and-spoke topology:
+Deploy the hub role in your management account. Developers federate into it with `vouch login`, and it can do nothing in this account except assume spoke roles in member accounts.
 
-- The trust policy's `sub` condition uses your email domain (e.g. `*@example.com`).
-- The identity policy's `Resource` must match the spoke role ARNs you'll deploy in Step 2: `arn:aws:iam::*:role/vouch/VouchAccess`.
+Its **trust policy** is the shared Vouch OIDC trust -- the `sub` condition uses your email domain:
 
-Replace the `aws:PrincipalOrgId` placeholder with your AWS Organization ID, and record the hub role ARN (e.g. `arn:aws:iam::999999999999:role/vouch/VouchAccess`) -- every spoke role's trust policy references it.
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/{{< instance-url >}}"
+      },
+      "Action": [
+        "sts:AssumeRoleWithWebIdentity",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "{{< instance-url >}}:aud": "https://{{< instance-url >}}"
+        },
+        "StringLike": {
+          "{{< instance-url >}}:sub": "*@example.com",
+          "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+        }
+      }
+    }
+  ]
+}
+```
+
+Its **identity policy** grants `sts:AssumeRole` only, scoped to the spoke role ARNs you'll deploy in Step 2. The `aws:ResourceOrgID` condition restricts the hub to assuming roles only inside your AWS Organization -- it matches the org of the role being assumed against your own:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity",
+        "sts:TagSession"
+      ],
+      "Resource": "arn:aws:iam::*:role/vouch/VouchAccess",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceOrgID": "${aws:PrincipalOrgID}"
+        }
+      }
+    }
+  ]
+}
+```
+
+`${aws:PrincipalOrgID}` resolves to your organization automatically, so there's nothing to hand-edit -- and no account IDs to maintain as the org grows. Record the hub role ARN (e.g. `arn:aws:iam::999999999999:role/vouch/VouchAccess`) -- every spoke role's trust policy references it.
 
 ---
 

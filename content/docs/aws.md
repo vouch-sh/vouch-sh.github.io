@@ -12,63 +12,15 @@ params:
 
 Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail.
 
-## How Vouch compares to `aws login` and `aws sso login`
-
-AWS provides two built-in CLI authentication commands. Here is how they compare to Vouch:
-
-- **[`aws login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-local-development)** -- New in AWS CLI v2.32+. Opens a browser to authenticate with your AWS Console credentials (IAM user, root, or federated identity) and issues temporary credentials for up to 12 hours. It requires the `SignInLocalDevelopmentAccess` managed policy and only covers AWS -- it does not provide credentials for SSH, GitHub, Docker registries, or other services.
-
-- **[`aws sso login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-sso)** -- Authenticates through AWS IAM Identity Center (formerly AWS SSO). It requires an Identity Center instance and an SSO-configured profile (`aws configure sso`). Like `aws login`, it only covers AWS services.
-
-- **`vouch login`** -- Authenticates with a FIDO2 hardware key (YubiKey) and provides credentials for AWS, SSH, GitHub, Docker registries, Cargo registries, AWS CodeCommit, AWS CodeArtifact, databases, and any OIDC-compatible application -- all from a single session. Every credential is tied to a hardware-verified human identity, and authentication is phishing-resistant by design.
-
-| | `aws login` | `aws sso login` | `vouch login` |
-|---|---|---|---|
-| **Authentication** | Browser + console credentials | Browser + Identity Center | YubiKey tap (FIDO2) |
-| **Phishing-resistant** | Depends on IdP | Depends on IdP | Yes (hardware-bound) |
-| **AWS credentials** | Yes (up to 12h) | Yes | Yes (up to 1h) |
-| **SSH, GitHub, Docker, etc.** | No | No | Yes |
-| **Identity in CloudTrail** | IAM user or role | SSO user | Hardware-verified user |
-| **Requires AWS-managed service** | No | IAM Identity Center | No |
-
-If you already use IAM Identity Center, `aws sso login` may cover your AWS needs. Vouch is a better fit when you want a single authentication event to cover AWS and everything else your team uses, with the guarantee that every credential traces back to a physical hardware key.
-
 ## How it works
 
-1. The developer runs `vouch login` and authenticates with their YubiKey.
-2. The Vouch server issues a short-lived **OIDC ID token** signed with **ES256** (ECDSA over P-256). The user's identity is carried in the `sub` claim (the developer's email address), which AWS exposes as `${<instance>:sub}` in IAM trust policies.
-3. When the developer runs an AWS command (or `vouch credential aws`), the CLI calls **AWS STS AssumeRoleWithWebIdentity**, presenting the ID token.
-4. AWS validates the token signature against the Vouch server's JWKS endpoint, checks the audience and issuer, and returns temporary credentials (access key, secret key, session token) valid for up to 1 hour.
-5. The developer's AWS CLI, SDK, or Terraform session uses these credentials transparently.
+`vouch login` authenticates the developer with their YubiKey, and the Vouch server issues a short-lived OIDC ID token carrying their email in the `sub` claim. When the developer runs an AWS command, the CLI calls **AWS STS AssumeRoleWithWebIdentity** with that token; AWS validates it against the Vouch server and returns temporary credentials valid for up to 1 hour. Because the token is scoped to the authenticated user and short-lived, credentials cannot be shared or reused after expiry.
 
-Because the ID token is scoped to the authenticated user and is short-lived, credentials cannot be shared or reused after expiry.
-
-## Step 1 -- Choose your topology
+## Step 1 -- Register the Vouch OIDC provider
 
 <span class="role-label">Admin task</span>
 
-Vouch uses **exactly one OIDC provider per organization**. Where it lives depends on your AWS layout:
-
-<div class="journey-grid">
-  <div class="journey-card">
-    <h3>Single AWS account</h3>
-    <p>One AWS account for everything (or you'll deal with multiple accounts later). Register the OIDC provider in that account and continue with Steps 2--5 below.</p>
-  </div>
-  <div class="journey-card">
-    <h3>AWS Organization</h3>
-    <p>An AWS Organization with a management account and member accounts. Register the OIDC provider in the <strong>management account</strong> only, then follow <a href="/docs/aws-multi-account/">Multi-Account AWS</a>. You have two options there: <strong>role chaining</strong> (a hub role assumes spoke roles via <code>sts:AssumeRole</code>) or <strong>IAM Identity Center</strong> (Vouch is registered as a trusted-token-issuer application that maps to your permission sets).</p>
-  </div>
-</div>
-
-We don't recommend deploying multiple OIDC providers across independent accounts. In practice, you either have one account or you have an Organization, and the Organization case is best served by chaining through a single hub.
-
----
-
-## Step 2 -- Register the Vouch OIDC provider
-
-<span class="role-label">Admin task</span>
-
-Before any user can assume a role, an administrator must register the Vouch server as an OIDC identity provider. Run this once in the AWS account you chose in Step 1 (single account, or the management account of an Organization).
+Vouch uses **exactly one OIDC provider per organization**. Register it once -- in your single AWS account, or in the **management account** if you use AWS Organizations. An administrator does this before any user can assume a role.
 
 ### AWS CLI
 
@@ -108,17 +60,29 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 ---
 
-## Step 3 -- Deploy a Vouch role
+## Choose your setup
 
 <span class="role-label">Admin task</span>
 
-The role you deploy here is the entry point for `vouch login` -- the role developers federate into directly from their YubiKey-backed session. Its trust policy is the same regardless of what the role is allowed to do; only the **identity policy** changes based on how you want to use it. Pick one of three patterns:
+How your team accesses AWS decides what you deploy next. This is the same question the `vouch setup aws` wizard asks each developer -- **"How do you access AWS?"** -- so admins and developers stay aligned:
 
-- **Pattern A -- Managed policy** -- Attach an AWS-managed policy like `PowerUserAccess` or `ReadOnlyAccess`. Best for getting started.
-- **Pattern B -- Explicit actions** -- Attach a custom least-privilege policy listing specific actions. Best when you know what your team needs.
-- **Pattern C -- `sts:AssumeRole` only** -- The role can do nothing in this account except assume roles in other accounts. This is the management-account hub for an [AWS Organization](/docs/aws-multi-account/); spoke roles in member accounts use a different trust policy and are covered in [Multi-Account AWS](/docs/aws-multi-account/).
+| Your AWS layout | What to deploy | Guide |
+|---|---|---|
+| **Single account — one IAM role** | One role in this account | Continue to Step 2 below |
+| **Multiple accounts — a management role that assumes into member roles** | A hub role here, plus a spoke role per account | [Role chaining](/docs/aws-multi-account/) |
+| **Identity Center (SSO) — permission sets** | Register Vouch as a trusted token issuer | [Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) |
 
-All three patterns share the trust policy below. The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
+If you have an Organization, everything anchors in the management account. Single-account setup continues below.
+
+---
+
+## Step 2 -- Deploy a role
+
+<span class="role-label">Admin task</span>
+
+This is the role developers federate into with `vouch login`. Its **trust policy** is the same no matter what the role can do; only the **permissions policy** changes -- and *what the role is allowed to do is your team's decision.* Deploy the shared trust policy below, then attach a permissions policy one of two ways.
+
+The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
 
 ### Shared trust policy
 
@@ -150,9 +114,11 @@ All three patterns share the trust policy below. The `*@example.com` condition l
 }
 ```
 
-### Pattern A -- Managed policy
+The `sub` and `sts:RoleSessionName` conditions bind the session to the authenticated user; see [Tips for restricting access](#tips-for-restricting-access) for what each does.
 
-Attach an AWS-managed policy. This is the fastest way to get a working role.
+### Managed policy
+
+Attach an AWS-managed policy. Start with `ReadOnlyAccess` and broaden to exactly what your team needs -- don't reach for `PowerUserAccess` by default. See AWS's [job-function managed policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_job-functions.html) for options.
 
 #### CloudFormation
 
@@ -179,7 +145,8 @@ Resources:
                 "{{< instance-url >}}:sub": "*@example.com"
                 "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
       ManagedPolicyArns:
-        - !Sub "arn:${AWS::Partition}:iam::aws:policy/PowerUserAccess"
+        # Start safe. Attach the permissions your team needs.
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
 ```
 
 #### Terraform
@@ -222,13 +189,14 @@ resource "aws_iam_role" "vouch_developer" {
     ]
   })
 
-  managed_policy_arns = ["arn:${local.aws_partition}:iam::aws:policy/PowerUserAccess"]
+  # Start safe. Attach the permissions your team needs.
+  managed_policy_arns = ["arn:${local.aws_partition}:iam::aws:policy/ReadOnlyAccess"]
 }
 ```
 
-### Pattern B -- Explicit actions
+### Explicit actions
 
-Attach a custom inline policy listing only the actions your team needs. Use the same trust policy and role definition as Pattern A; replace the `ManagedPolicyArns` block with an inline policy. Example -- read/write a specific S3 bucket and read CloudWatch logs:
+Attach a custom inline policy listing only the actions your team needs. Use the same trust policy and role definition as the managed-policy example; replace the `ManagedPolicyArns` block with an inline policy. Example -- read/write a specific S3 bucket and read CloudWatch logs:
 
 ```json
 {
@@ -262,46 +230,101 @@ Attach a custom inline policy listing only the actions your team needs. Use the 
 
 In CloudFormation, use [`Policies`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-iam-role.html#cfn-iam-role-policies) on the role; in Terraform, use [`aws_iam_role_policy`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy).
 
-### Pattern C -- `sts:AssumeRole` only
-
-Use this pattern when the role is the **management-account hub** for an AWS Organization. The role itself can do nothing in this account except assume roles in member accounts.
-
-Use the same shared trust policy as Pattern A (with `*@example.com` matching your domain). Replace the identity policy with:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sts:AssumeRole",
-        "sts:SetSourceIdentity",
-        "sts:TagSession"
-      ],
-      "Resource": "arn:aws:iam::*:role/vouch/VouchAccess",
-      "Condition": {
-        "StringEquals": {
-          "aws:PrincipalOrgId": "o-xxxxxxxxx"
-        }
-      }
-    }
-  ]
-}
-```
-
-The `aws:PrincipalOrgId` condition restricts the hub to assuming roles only inside your AWS Organization. Replace `o-xxxxxxxxx` with your organization ID.
-
-Continue with [Multi-Account AWS](/docs/aws-multi-account/) to deploy the spoke roles in member accounts and configure chaining.
-
 <div class="checkpoint">
 <p><strong>You are done with role deployment when...</strong></p>
 <ul>
-  <li>You picked one pattern (A, B, or C) for this role's identity policy.</li>
   <li>The role uses the shared trust policy with your email domain in the <code>sub</code> condition.</li>
-  <li>You have the role ARN written down -- developers will need it in Step 4.</li>
+  <li>You attached a permissions policy your team is comfortable with (start with <code>ReadOnlyAccess</code>).</li>
+  <li>You have the role ARN written down -- developers need it in Step 3.</li>
 </ul>
 </div>
+
+---
+
+## Step 3 -- Configure the Vouch CLI
+
+<span class="role-label">Developer task</span>
+
+Each developer runs the wizard -- it asks the same **"How do you access AWS?"** question and writes the AWS profile for you:
+
+```bash
+vouch setup aws
+```
+
+For single-account access you can skip the prompts by passing the role directly:
+
+```bash
+vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
+```
+
+This command accepts the following flags:
+
+- `--role` -- The ARN of the IAM role from Step 2. Omit all flags to launch the interactive wizard.
+- `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
+
+For multi-account setups, `vouch setup aws` also accepts `--management-role`, `--identity-center-application`, `--region`, and `--discover` -- see [Multi-Account AWS](/docs/aws-multi-account/).
+
+The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
+
+```ini
+[profile vouch]
+credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/VouchDeveloper
+```
+
+> **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
+
+---
+
+## Step 4 -- Test
+
+<span class="role-label">Developer task</span>
+
+Verify that everything is working:
+
+```bash
+# Make sure you are logged in
+vouch login
+
+# Check your identity
+aws sts get-caller-identity --profile vouch
+```
+
+Expected output:
+
+```json
+{
+  "UserId": "AROA...:alice@example.com",
+  "Account": "123456789012",
+  "Arn": "arn:aws:sts::123456789012:assumed-role/VouchDeveloper/alice@example.com"
+}
+```
+
+Try running a command against a real AWS service:
+
+```bash
+aws s3 ls --profile vouch
+```
+
+<div class="checkpoint">
+<p><strong>You are done when...</strong></p>
+<ul>
+  <li><code>aws sts get-caller-identity --profile vouch</code> returns an assumed-role ARN for the expected AWS account.</li>
+  <li>The role session name matches the authenticated Vouch user.</li>
+  <li>A real AWS command succeeds without static credentials in <code>~/.aws/credentials</code>.</li>
+</ul>
+</div>
+
+---
+
+## Console access
+
+Open the AWS Management Console directly from the CLI without entering credentials in a browser:
+
+```bash
+vouch aws console
+```
+
+This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile. For [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) access, pass `--account <id> --permission-set <name>` (add `--idc-application <arn>` when more than one instance is configured); use `--via <management-role-arn>` to select a management role when multiple organizations are configured.
 
 ---
 
@@ -435,89 +458,6 @@ Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/lat
 
 ---
 
-## Step 4 -- Configure the Vouch CLI
-
-<span class="role-label">Developer task</span>
-
-Each developer needs to tell the CLI which IAM role to assume and in which AWS profile to store the credentials. For a single account, run:
-
-```bash
-vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
-```
-
-Or run `vouch setup aws` with no flags to launch an interactive wizard that walks you through single-account, management-role chaining, or Identity Center setup.
-
-This command accepts the following flags:
-
-- `--role` -- The ARN of the IAM role created in Step 3. Optional; omit all flags to launch the interactive wizard.
-- `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
-
-For multi-account setups, `vouch setup aws` also accepts `--management-role`, `--identity-center-application`, `--region`, and `--discover` -- see [Multi-Account AWS](/docs/aws-multi-account/).
-
-The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
-
-```ini
-[profile vouch]
-credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/VouchDeveloper
-```
-
-> **Note:** If you need a specific region for this profile, add a `region` line manually (e.g., `region = us-east-1`).
-
----
-
-## Step 5 -- Test
-
-<span class="role-label">Developer task</span>
-
-Verify that everything is working:
-
-```bash
-# Make sure you are logged in
-vouch login
-
-# Check your identity
-aws sts get-caller-identity --profile vouch
-```
-
-Expected output:
-
-```json
-{
-  "UserId": "AROA...:alice@example.com",
-  "Account": "123456789012",
-  "Arn": "arn:aws:sts::123456789012:assumed-role/VouchDeveloper/alice@example.com"
-}
-```
-
-Try running a command against a real AWS service:
-
-```bash
-aws s3 ls --profile vouch
-```
-
-<div class="checkpoint">
-<p><strong>You are done when...</strong></p>
-<ul>
-  <li><code>aws sts get-caller-identity --profile vouch</code> returns an assumed-role ARN for the expected AWS account.</li>
-  <li>The role session name matches the authenticated Vouch user.</li>
-  <li>A real AWS command succeeds without static credentials in <code>~/.aws/credentials</code>.</li>
-</ul>
-</div>
-
----
-
-## Console access
-
-Open the AWS Management Console directly from the CLI without entering credentials in a browser:
-
-```bash
-vouch aws console
-```
-
-This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile. For [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) access, pass `--account <id> --permission-set <name>` (add `--idc-application <arn>` when more than one instance is configured); use `--via <management-role-arn>` to select a management role when multiple organizations are configured.
-
----
-
 ## AI agent safety
 
 When `vouch credential aws` runs inside an AI coding agent, Vouch automatically restricts the returned credentials to read-only access. No configuration is required -- the CLI detects the agent environment and applies the restriction transparently.
@@ -552,6 +492,23 @@ If your agent is not listed, it will be detected if it sets the `AGENT` or `AI_A
 ### Role chaining with agents
 
 When using [role chaining](/docs/aws-multi-account/#architecture) with an AI agent, Vouch applies an additional inline session policy to the management-account hop that restricts it to STS actions only (`sts:AssumeRole`, `sts:TagSession`, `sts:SetSourceIdentity`). The final role hop receives the `ReadOnlyAccess` session policy.
+
+---
+
+## How Vouch compares to `aws login` and `aws sso login`
+
+AWS's built-in [`aws login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-local-development) and [`aws sso login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-sso) cover AWS only. `vouch login` covers AWS *and* SSH, GitHub, Docker, Cargo, CodeCommit, CodeArtifact, and databases -- from one phishing-resistant hardware-key session where every credential traces back to a physical key.
+
+| | `aws login` | `aws sso login` | `vouch login` |
+|---|---|---|---|
+| **Authentication** | Browser + console credentials | Browser + Identity Center | YubiKey tap (FIDO2) |
+| **Phishing-resistant** | Depends on IdP | Depends on IdP | Yes (hardware-bound) |
+| **AWS credentials** | Yes (up to 12h) | Yes | Yes (up to 1h) |
+| **SSH, GitHub, Docker, etc.** | No | No | Yes |
+| **Identity in CloudTrail** | IAM user or role | SSO user | Hardware-verified user |
+| **Requires AWS-managed service** | No | IAM Identity Center | No |
+
+If you already use IAM Identity Center, `aws sso login` may cover your AWS needs. Vouch fits when you want one authentication event to cover AWS and everything else your team uses.
 
 ---
 
