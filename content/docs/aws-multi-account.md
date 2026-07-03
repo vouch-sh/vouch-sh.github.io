@@ -8,9 +8,12 @@ params:
   docsGroup: infra
 ---
 
-Multi-account AWS layouts use **role chaining**: the Vouch OIDC provider lives only in the management account, developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. This page picks up where [AWS / Step 3 / Pattern C](/docs/aws/#pattern-c--stsassumerole-only) leaves off.
+Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives:
 
-We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One hub plus per-account spokes covers the same use cases with less surface area.
+- **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below; picks up where [AWS / Step 3 / Pattern C](/docs/aws/#pattern-c--stsassumerole-only) leaves off.
+- **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
+
+We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One management account plus per-account access covers the same use cases with less surface area.
 
 ---
 
@@ -244,37 +247,44 @@ module "vouch" {
 
 <span class="role-label">Developer task</span>
 
-Each developer configures a named AWS profile per account. The role ARN points to the spoke role (`/vouch/VouchAccess`) in the target account; the Vouch CLI handles the chain through the hub:
+Each developer configures a named AWS profile per account. Point `--role` at the spoke role (`/vouch/VouchAccess`) in the target account and `--management-role` at the hub role; the Vouch CLI stores the hub as an organization anchor and handles the chain through it:
 
 ```bash
 # Development account
 vouch setup aws \
+  --management-role arn:aws:iam::999999999999:role/vouch/VouchAccess \
   --role arn:aws:iam::111111111111:role/vouch/VouchAccess \
   --profile vouch-dev
 
 # Staging account
 vouch setup aws \
+  --management-role arn:aws:iam::999999999999:role/vouch/VouchAccess \
   --role arn:aws:iam::333333333333:role/vouch/VouchAccess \
   --profile vouch-staging
 
 # Production account
 vouch setup aws \
+  --management-role arn:aws:iam::999999999999:role/vouch/VouchAccess \
   --role arn:aws:iam::222222222222:role/vouch/VouchAccess \
   --profile vouch-prod
 ```
 
-This produces the following `~/.aws/config`:
+Running `vouch setup aws` with no flags launches an interactive wizard that captures the management role and target roles for you.
+
+This produces the following `~/.aws/config`. Each profile chains through the hub via `--via`:
 
 ```ini
 [profile vouch-dev]
-credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/vouch/VouchAccess
+credential_process = vouch credential aws --role arn:aws:iam::111111111111:role/vouch/VouchAccess --via arn:aws:iam::999999999999:role/vouch/VouchAccess
 
 [profile vouch-staging]
-credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/vouch/VouchAccess
+credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/vouch/VouchAccess --via arn:aws:iam::999999999999:role/vouch/VouchAccess
 
 [profile vouch-prod]
-credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchAccess
+credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchAccess --via arn:aws:iam::999999999999:role/vouch/VouchAccess
 ```
+
+> **Note:** Passing `--management-role` stores the hub as an organization anchor and writes `--via` into each profile, so chaining is explicit and unambiguous. Once the anchor is stored, later profiles can drop `--management-role` -- `vouch credential aws --role <spoke-arn>` resolves the management role from your stored organization automatically (pass `--via <management-role-arn>` to pick one when several organizations are configured).
 
 Use profiles per command:
 
@@ -292,25 +302,164 @@ Or set a default:
 export AWS_PROFILE=vouch-dev
 ```
 
-### Auto-discovery with SSO
+---
 
-If your organization uses AWS IAM Identity Center, developers can skip the manual per-account configuration entirely:
+## AWS IAM Identity Center
 
-```bash
-# Authenticate with IAM Identity Center
-vouch aws login
+Instead of role chaining, you can register Vouch as a **trusted token issuer** in AWS IAM Identity Center. Developers then get credentials for exactly the accounts and permission sets they are assigned in Identity Center -- no spoke roles to deploy. Vouch signs a short-lived RS256 token, exchanges it for an Identity Center access token via `CreateTokenWithIAM`, and calls the SSO portal (`ListAccounts`, `ListAccountRoles`, `GetRoleCredentials`) on the developer's behalf.
 
-# See which accounts are available
-vouch aws accounts
+This model requires an [organization instance](https://docs.aws.amazon.com/singlesignon/latest/userguide/organization-instances-identity-center.html) of IAM Identity Center and users provisioned so their email matches the Vouch identity (the token `sub`). If you provision Identity Center from the same identity provider Vouch uses, [SCIM](/docs/scim/) keeps them in sync.
 
-# See which roles are available in a specific account
-vouch aws roles --account 111111111111
+> **AI agents cannot use this path.** Permission-set credentials cannot be constrained with a `ReadOnlyAccess` session policy, so Vouch **refuses to issue them to a detected AI coding agent** rather than downscoping. If your workflows include AI agents that need AWS access, use the [role-chaining](#step-1--deploy-the-hub-role) model above, where Vouch enforces read-only automatically.
 
-# Auto-discover all accounts and roles, configure all profiles at once
-vouch setup aws --discover --prefix vouch --region us-east-1
+### IdC Step 1 -- Deploy the management role
+
+<span class="role-label">Admin task</span>
+
+Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call, so its identity policy grants `sso-oauth:CreateTokenWithIAM` rather than `sts:AssumeRole`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sso-oauth:CreateTokenWithIAM",
+      "Resource": "*"
+    }
+  ]
+}
 ```
 
-The `--discover` flag queries IAM Identity Center for every account and role the developer can access, and writes a `credential_process` profile for each one into `~/.aws/config`. This is especially useful in organizations with many accounts where maintaining per-account setup commands is impractical.
+### IdC Step 2 -- Register the trusted token issuer and application
+
+<span class="role-label">Admin task</span>
+
+Register Vouch as a **trusted token issuer** and add an OAuth 2.0 [customer managed application](https://docs.aws.amazon.com/singlesignon/latest/userguide/customermanagedapps.html) so it can exchange tokens and read your account assignments. The trusted token issuer, the application, and its account-access scope are managed in Terraform. The JWT-bearer grant (which binds the issuer and sets the `aud` claim) and the application credentials (the resource policy that lets the management role call `CreateTokenWithIAM`) have no Terraform resource yet, so apply those two with the AWS CLI.
+
+#### Terraform
+
+```hcl
+data "aws_ssoadmin_instances" "this" {}
+
+locals {
+  instance_arn = tolist(data.aws_ssoadmin_instances.this.arns)[0]
+}
+
+# Trust Vouch's RS256 tokens. Vouch carries the user's email in `sub`;
+# match it to the Identity Center user's email.
+resource "aws_ssoadmin_trusted_token_issuer" "vouch" {
+  name                      = "Vouch"
+  instance_arn              = local.instance_arn
+  trusted_token_issuer_type = "OIDC_JWT"
+
+  trusted_token_issuer_configuration {
+    oidc_jwt_configuration {
+      issuer_url                    = "https://{{< instance-url >}}"
+      claim_attribute_path          = "sub"
+      identity_store_attribute_path = "emails.value"
+      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
+    }
+  }
+}
+
+# Customer managed OAuth 2.0 application.
+resource "aws_ssoadmin_application" "vouch" {
+  name                     = "Vouch"
+  instance_arn             = local.instance_arn
+  application_provider_arn = "arn:aws:sso::aws:applicationProvider/custom"
+}
+
+# Let the application list accounts/roles and fetch credentials for the
+# authenticated user's own assignments.
+resource "aws_ssoadmin_application_access_scope" "vouch" {
+  application_arn = aws_ssoadmin_application.vouch.arn
+  scope           = "sso:account:access"
+}
+
+output "vouch_application_arn" {
+  value = aws_ssoadmin_application.vouch.arn
+}
+
+output "vouch_trusted_token_issuer_arn" {
+  value = aws_ssoadmin_trusted_token_issuer.vouch.arn
+}
+```
+
+#### Grant and credentials (AWS CLI)
+
+The AWS Terraform provider does not yet expose the JWT-bearer grant or the application authentication method, so set them with `aws sso-admin` after `terraform apply`:
+
+```bash
+APP_ARN=$(terraform output -raw vouch_application_arn)
+TTI_ARN=$(terraform output -raw vouch_trusted_token_issuer_arn)
+MGMT_ROLE_ARN=arn:aws:iam::999999999999:role/vouch/VouchAccess
+
+# Bind the trusted token issuer and require aud = the Vouch issuer.
+aws sso-admin put-application-grant \
+  --application-arn "$APP_ARN" \
+  --grant-type urn:ietf:params:oauth:grant-type:jwt-bearer \
+  --grant "{\"JwtBearer\":{\"AuthorizedTokenIssuers\":[{\"TrustedTokenIssuerArn\":\"$TTI_ARN\",\"AuthorizedAudiences\":[\"https://{{< instance-url >}}\"]}]}}"
+
+# Let the management role call CreateTokenWithIAM.
+aws sso-admin put-application-authentication-method \
+  --application-arn "$APP_ARN" \
+  --authentication-method-type IAM \
+  --authentication-method "{\"Iam\":{\"ActorPolicy\":{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"$MGMT_ROLE_ARN\"},\"Action\":\"sso-oauth:CreateTokenWithIAM\",\"Resource\":\"*\"}]}}}"
+```
+
+Both calls are idempotent -- re-running updates the grant or credentials in place. Record the application ARN (`terraform output -raw vouch_application_arn`); developers pass it to `vouch setup aws`.
+
+#### Console alternative
+
+Prefer the console? In the [IAM Identity Center console](https://console.aws.amazon.com/singlesignon):
+
+1. Under **Settings**, add a trusted token issuer with **Issuer URL** `https://{{< instance-url >}}`, mapping the token's identity claim to the Identity Center user's email.
+2. Under **Applications** -> **Customer managed** -> **Add application**, choose **I have an application I want to set up**, then **OAuth 2.0**.
+3. On **Specify authentication settings**, select the trusted token issuer and set the **Aud claim** to `https://{{< instance-url >}}` (Vouch sets the audience equal to its issuer).
+4. On **Specify application credentials**, name the management role from Step 1 as the principal allowed to call `sso-oauth:CreateTokenWithIAM`.
+5. Open the application and turn on **Enable AWS account access** (the `sso:account:access` scope). This must be done from the management or a delegated administrator account. See [Enable AWS account access for customer managed applications](https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-account-access-customer-managed-apps.html).
+
+> **Note:** The `sso:account:access` scope grants the application access to every account and permission set assigned to the authenticated user; you cannot scope it to a subset. Access is still bounded by each user's own Identity Center assignments.
+
+### IdC Step 3 -- Discover accounts and permission sets
+
+<span class="role-label">Developer task</span>
+
+With the application registered, developers run a single command to enumerate every account and permission set they are assigned and write one profile per assignment:
+
+```bash
+vouch setup aws \
+  --management-role arn:aws:iam::999999999999:role/vouch/VouchAccess \
+  --identity-center-application arn:aws:sso::999999999999:application/ssoins-1111/apl-2222 \
+  --region us-east-1 \
+  --discover
+```
+
+No `aws sso login` is required -- `vouch login` is the only authentication, because Vouch is the trusted token issuer. The `--discover` run writes profiles named `vouch-<account>-<permission-set>`:
+
+```ini
+[profile vouch-production-administratoraccess]
+credential_process = vouch credential aws --idc-application arn:aws:sso::999999999999:application/ssoins-1111/apl-2222 --account 222222222222 --permission-set "AdministratorAccess"
+output = json
+```
+
+Use them like any other profile:
+
+```bash
+aws s3 ls --profile vouch-production-administratoraccess
+```
+
+Re-run `vouch setup aws --discover` at any time to pick up newly assigned accounts and permission sets; existing profiles are left untouched.
+
+<div class="checkpoint">
+<p><strong>You are done with Identity Center setup when...</strong></p>
+<ul>
+  <li>The management role's identity policy grants <code>sso-oauth:CreateTokenWithIAM</code>, and it is named as the principal on the customer managed application.</li>
+  <li>The trusted token issuer's <strong>Issuer URL</strong> and the application's <strong>Aud claim</strong> are both <code>https://{{< instance-url >}}</code>.</li>
+  <li><code>vouch setup aws --discover</code> writes a profile per assignment, and <code>aws sts get-caller-identity</code> against one returns the expected account.</li>
+</ul>
+</div>
 
 ---
 

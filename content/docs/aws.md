@@ -56,7 +56,7 @@ Vouch uses **exactly one OIDC provider per organization**. Where it lives depend
   </div>
   <div class="journey-card">
     <h3>AWS Organization</h3>
-    <p>An AWS Organization with a management account and member accounts. Register the OIDC provider in the <strong>management account</strong> only, then follow <a href="/docs/aws-multi-account/">Multi-Account AWS</a> to deploy spoke roles in member accounts.</p>
+    <p>An AWS Organization with a management account and member accounts. Register the OIDC provider in the <strong>management account</strong> only, then follow <a href="/docs/aws-multi-account/">Multi-Account AWS</a>. You have two options there: <strong>role chaining</strong> (a hub role assumes spoke roles via <code>sts:AssumeRole</code>) or <strong>IAM Identity Center</strong> (Vouch is registered as a trusted-token-issuer application that maps to your permission sets).</p>
   </div>
 </div>
 
@@ -439,16 +439,20 @@ Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/lat
 
 <span class="role-label">Developer task</span>
 
-Each developer needs to tell the CLI which IAM role to assume and in which AWS profile to store the credentials. Run:
+Each developer needs to tell the CLI which IAM role to assume and in which AWS profile to store the credentials. For a single account, run:
 
 ```bash
 vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 ```
 
+Or run `vouch setup aws` with no flags to launch an interactive wizard that walks you through single-account, management-role chaining, or Identity Center setup.
+
 This command accepts the following flags:
 
-- `--role` -- The ARN of the IAM role created in Step 3 (required).
+- `--role` -- The ARN of the IAM role created in Step 3. Optional; omit all flags to launch the interactive wizard.
 - `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
+
+For multi-account setups, `vouch setup aws` also accepts `--management-role`, `--identity-center-application`, `--region`, and `--discover` -- see [Multi-Account AWS](/docs/aws-multi-account/).
 
 The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
 
@@ -510,13 +514,15 @@ Open the AWS Management Console directly from the CLI without entering credentia
 vouch aws console
 ```
 
-This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile.
+This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser. Pass `--role` to specify a role, or omit it to use the role from your configured AWS profile. For [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) access, pass `--account <id> --permission-set <name>` (add `--idc-application <arn>` when more than one instance is configured); use `--via <management-role-arn>` to select a management role when multiple organizations are configured.
 
 ---
 
 ## AI agent safety
 
 When `vouch credential aws` runs inside an AI coding agent, Vouch automatically restricts the returned credentials to read-only access. No configuration is required -- the CLI detects the agent environment and applies the restriction transparently.
+
+> **Note:** This read-only downscoping applies to the STS credential paths (`--role`, including role chaining). On the [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) path (`--account`/`--permission-set`), Vouch **refuses to issue credentials to a detected agent** rather than downscoping them -- permission-set credentials cannot be constrained with a session policy, so there is no way to enforce read-only access. Agent workflows that need AWS access should use the STS role-chaining model.
 
 ### How it works
 
