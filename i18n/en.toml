@@ -15,6 +15,9 @@ other = "About"
 [nav_compare]
 other = "Compare"
 
+[nav_changelog]
+other = "Changelog"
+
 [nav_github]
 other = "GitHub"
 
