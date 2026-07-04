@@ -71,7 +71,7 @@ Vouch operates across three trust boundaries:
 
 - The Vouch agent runs as a user-level process and holds session material in memory.
 - Communication between the CLI and agent uses a Unix domain socket with filesystem permissions restricting access to the owning user. Every incoming connection is verified using OS-level peer credentials (`SO_PEERCRED` on Linux, `getpeereid` on macOS) to confirm the connecting process runs as the same UID as the agent. Connections from a different UID are rejected and audit-logged.
-- On startup, the agent validates that `~/.vouch/` is not a symlink and is owned by the current user, preventing symlink-based directory hijacking attacks.
+- On startup, the agent validates that its XDG directories (`~/.config/vouch/`, `~/.local/state/vouch/`, and `$XDG_RUNTIME_DIR/vouch/`) are not symlinks and are owned by the current user, preventing symlink-based directory hijacking attacks.
 - No credentials are persisted to disk. If the agent process stops, sessions must be re-established with a new `vouch login`.
 
 ### 3. Vouch server

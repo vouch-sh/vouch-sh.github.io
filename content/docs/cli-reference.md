@@ -38,7 +38,7 @@ These flags are available on all commands.
 
 ### Configuration file
 
-The Vouch CLI stores its configuration at `~/.vouch/config.json`. This file is created automatically during enrollment and contains the server URL and session state.
+The Vouch CLI follows the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/latest/): configuration lives at `~/.config/vouch/config.json` (`$XDG_CONFIG_HOME/vouch/config.json` if set), session state under `~/.local/state/vouch/` (`$XDG_STATE_HOME`), and the agent socket under `$XDG_RUNTIME_DIR/vouch/`. The configuration file is created automatically during enrollment and contains the server URL and session state.
 
 | Field | Description |
 |---|---|
@@ -313,7 +313,7 @@ See [Kubernetes](/docs/kubernetes/) for full details.
 
 ### `vouch setup anthropic`
 
-Configure Anthropic (Claude) Workload Identity Federation. Persists federation parameters to `~/.vouch/config.json` and auto-merges `~/.claude/settings.json` to set `apiKeyHelper` → `vouch credential anthropic` plus `env.CLAUDE_CODE_API_KEY_HELPER_TTL_MS` so Claude Code re-runs the helper before the token expires.
+Configure Anthropic (Claude) Workload Identity Federation. Persists federation parameters to `~/.config/vouch/config.json` and auto-merges `~/.claude/settings.json` to set `apiKeyHelper` → `vouch credential anthropic` plus `env.CLAUDE_CODE_API_KEY_HELPER_TTL_MS` so Claude Code re-runs the helper before the token expires.
 
 ```
 vouch setup anthropic --federation-rule-id <ID> --organization-id <UUID> --service-account-id <ID> --workspace-id <ID> [--audience <AUD>] [--token-endpoint <URL>] [--force]
@@ -333,7 +333,7 @@ See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
 
 ### `vouch setup openai`
 
-Configure OpenAI Workload Identity Federation. Persists federation parameters to `~/.vouch/config.json` and auto-merges `~/.codex/config.toml` to add a `[model_providers.vouch]` block (with a refreshing `auth` command) and set the top-level `model_provider = "vouch"`.
+Configure OpenAI Workload Identity Federation. Persists federation parameters to `~/.config/vouch/config.json` and auto-merges `~/.codex/config.toml` to add a `[model_providers.vouch]` block (with a refreshing `auth` command) and set the top-level `model_provider = "vouch"`.
 
 ```
 vouch setup openai --identity-provider-id <ID> --service-account-id <ID> [--audience <AUD>] [--token-endpoint <URL>] [--force]
@@ -718,7 +718,7 @@ This checks:
 - Agent connectivity
 - Server reachability
 - Integration configurations (SSH, AWS, SSM, EKS, Git, Docker, Cargo)
-- Claude / OpenAI federation (cross-checks `~/.vouch/config.json` against Claude Code's `apiKeyHelper` and Codex's `model_provider`)
+- Claude / OpenAI federation (cross-checks `~/.config/vouch/config.json` against Claude Code's `apiKeyHelper` and Codex's `model_provider`)
 
 ### `vouch completions`
 

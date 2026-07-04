@@ -45,7 +45,7 @@ Then create a SCIM token:
 
 ```bash
 curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.vouch/cookie.txt \
+  -b ~/.local/state/vouch/cookie.txt \
   -H "Content-Type: application/json" \
   -d '{"description": "Google Workspace SCIM", "expires_in_days": 365}'
 ```
@@ -224,7 +224,7 @@ Retrieve all active SCIM tokens for your organization:
 
 ```bash
 curl -s https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.vouch/cookie.txt \
+  -b ~/.local/state/vouch/cookie.txt \
   | jq .
 ```
 
@@ -234,7 +234,7 @@ The response includes token metadata (ID, description, creation date, expiration
 
 ```bash
 curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.vouch/cookie.txt \
+  -b ~/.local/state/vouch/cookie.txt \
   -H "Content-Type: application/json" \
   -d '{"description": "Okta SCIM Integration", "expires_in_days": 180}'
 ```
@@ -247,7 +247,7 @@ Revoke a SCIM token by its ID to immediately disable it:
 
 ```bash
 curl -X DELETE https://{{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_abc123 \
-  -b ~/.vouch/cookie.txt
+  -b ~/.local/state/vouch/cookie.txt
 ```
 
 After revocation, any identity provider using this token will receive `401 Unauthorized` responses and provisioning will stop until a new token is configured.
@@ -262,7 +262,7 @@ To rotate a SCIM token without interrupting provisioning, follow this four-step 
 
    ```bash
    curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-     -b ~/.vouch/cookie.txt \
+     -b ~/.local/state/vouch/cookie.txt \
      -H "Content-Type: application/json" \
      -d '{"description": "Google Workspace SCIM (rotated 2026-02)", "expires_in_days": 365}'
    ```
@@ -281,7 +281,7 @@ To rotate a SCIM token without interrupting provisioning, follow this four-step 
 
    ```bash
    curl -X DELETE {{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_OLD_ID \
-     -b ~/.vouch/cookie.txt
+     -b ~/.local/state/vouch/cookie.txt
    ```
 
 By creating the new token before revoking the old one, you ensure there is no window during which provisioning is interrupted.
