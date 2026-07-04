@@ -23,8 +23,8 @@ Vouch replaces static developer secrets (SSH keys, AWS access keys, GitHub PATs)
 
 ## Step 1 -- Install the CLI
 
-### macOS
-
+{{< tabs >}}
+{{< tab "macOS" >}}
 Install with Homebrew:
 
 ```
@@ -36,9 +36,8 @@ After installing, start the Vouch background service:
 ```
 brew services start vouch
 ```
-
-### Debian / Ubuntu
-
+{{< /tab >}}
+{{< tab "Debian / Ubuntu" >}}
 ```bash
 # Import GPG key
 curl -fsSL https://packages.vouch.sh/gpg/vouch.asc \
@@ -52,9 +51,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/vouch
 # Install
 sudo apt-get update && sudo apt-get install -y vouch
 ```
-
-### Fedora / RHEL
-
+{{< /tab >}}
+{{< tab "Fedora / RHEL" >}}
 ```bash
 sudo tee /etc/yum.repos.d/vouch.repo << 'EOF'
 [vouch]
@@ -67,9 +65,8 @@ EOF
 
 sudo dnf install -y vouch
 ```
-
-### Windows
-
+{{< /tab >}}
+{{< tab "Windows" >}}
 Install with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
 
 ```
@@ -77,6 +74,8 @@ winget install SmokeTurner.Vouch
 ```
 
 > **Note:** Windows support is limited. The SSH agent and SSH integration are not available on Windows. Only basic authentication and credential exchange commands are supported: `enroll`, `login`, `credential aws`, and `credential github`.
+{{< /tab >}}
+{{< /tabs >}}
 
 ### Verify the installation
 

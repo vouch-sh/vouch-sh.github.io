@@ -32,8 +32,8 @@ vouch login → vouch exec --type redshift -- psql
 
 ## RDS / Aurora PostgreSQL
 
-### Using Vouch CLI
-
+{{< tabs >}}
+{{< tab "Vouch CLI" >}}
 The simplest approach is `vouch exec`, which generates the token and injects PostgreSQL environment variables (`PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE=require`) automatically:
 
 ```bash
@@ -59,9 +59,8 @@ TOKEN=$(vouch credential rds \
   --hostname mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
   --username mydbuser)
 ```
-
-### Using AWS CLI
-
+{{< /tab >}}
+{{< tab "AWS CLI" >}}
 You can also use the AWS CLI with Vouch's `credential_process` integration:
 
 ```bash
@@ -80,6 +79,8 @@ PGPASSWORD="$TOKEN" psql \
   -d mydb \
   "sslmode=require"
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 **Database setup:** The database user must be configured for IAM authentication. For PostgreSQL, grant the `rds_iam` role:
 
@@ -93,8 +94,8 @@ GRANT rds_iam TO mydbuser;
 
 MySQL requires the `--enable-cleartext-plugin` flag because the IAM token is sent as a cleartext password over TLS.
 
-### Using Vouch CLI
-
+{{< tabs >}}
+{{< tab "Vouch CLI" >}}
 Generate the token with `vouch credential rds` and pass it to the MySQL client:
 
 ```bash
@@ -112,9 +113,8 @@ mysql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
 ```
 
 > **Note:** `vouch exec --type rds` and `vouch env --type rds` inject PostgreSQL-style environment variables (`PGPASSWORD`, `PGHOST`, etc.), so MySQL users should use `vouch credential rds` to get the token and pass it manually.
-
-### Using AWS CLI
-
+{{< /tab >}}
+{{< tab "AWS CLI" >}}
 ```bash
 # Generate an IAM auth token
 TOKEN=$(aws rds generate-db-auth-token \
@@ -131,6 +131,8 @@ mysql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
   --ssl-mode=REQUIRED \
   --enable-cleartext-plugin
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 **Database setup:** Create the user with the `AWSAuthenticationPlugin`:
 

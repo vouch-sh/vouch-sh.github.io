@@ -111,8 +111,8 @@ Your session lasts for 8 hours. All AWS CodeArtifact operations during that wind
 
 ## Step 3 -- Use your package manager normally
 
-### Cargo
-
+{{< tabs >}}
+{{< tab "Cargo" >}}
 ```bash
 # Build a project that depends on private crates
 cargo build
@@ -122,9 +122,8 @@ cargo publish --registry my-codeartifact-registry
 ```
 
 Cargo tokens are fetched dynamically on each operation via the credential provider. No token refresh is needed.
-
-### pip
-
+{{< /tab >}}
+{{< tab "pip" >}}
 ```bash
 # Install a package from your AWS CodeArtifact repository
 pip install my-package --index-url https://my-domain-123456789012.d.codeartifact.us-east-1.amazonaws.com/pypi/my-repo/simple/
@@ -134,9 +133,8 @@ pip install -r requirements.txt
 ```
 
 pip tokens are fetched dynamically by embedding the credential helper in the index URL. No token refresh is needed.
-
-### npm
-
+{{< /tab >}}
+{{< tab "npm" >}}
 ```bash
 # Install packages
 npm install
@@ -146,9 +144,8 @@ npm publish
 ```
 
 npm uses a static token written to `.npmrc`. The token is automatically refreshed each time you run `vouch login`, so you do not need to re-run setup commands.
-
-### pnpm
-
+{{< /tab >}}
+{{< tab "pnpm" >}}
 ```bash
 vouch setup codeartifact --tool pnpm --repository my-repo
 ```
@@ -162,9 +159,8 @@ pnpm install
 # Publish a package
 pnpm publish
 ```
-
-### uv
-
+{{< /tab >}}
+{{< tab "uv" >}}
 ```bash
 vouch setup codeartifact --tool uv --repository my-repo
 ```
@@ -180,6 +176,8 @@ uv sync
 ```
 
 uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact --tool pip` separately.
+{{< /tab >}}
+{{< /tabs >}}
 
 ---
 

@@ -1,0 +1,15 @@
+{{- /*
+  Clean a page's RawContent for markdown / llms exports:
+  substitute the instance-url shortcode and flatten {{< tabs >}}/{{< tab >}}
+  into plain "#### Label" sections so the export is portable markdown.
+  Call with the raw content string as context: {{ partial "clean-md-export.html" .RawContent }}
+*/ -}}
+{{- $c := . -}}
+{{- $instance := site.Params.usInstance -}}
+{{- $c = replace $c "{{< instance-url >}}" $instance -}}
+{{- $c = replace $c "{{<instance-url>}}" $instance -}}
+{{- $c = replace $c "{{% instance-url %}}" $instance -}}
+{{- $c = replaceRE `\{\{<\s*/?tabs\s*>\}\}` "" $c -}}
+{{- $c = replaceRE `\{\{<\s*tab\s+"([^"]+)"\s*>\}\}` "#### $1\n" $c -}}
+{{- $c = replaceRE `\{\{<\s*/tab\s*>\}\}` "" $c -}}
+{{- $c -}}

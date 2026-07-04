@@ -109,8 +109,8 @@ Each member account needs a `VouchAccess` role that trusts the hub role and gran
 
 Pick one of the deployment options below. Both produce the same result.
 
-### Option A -- CloudFormation StackSets
-
+{{< tabs >}}
+{{< tab "CloudFormation StackSets" >}}
 StackSets deploy a single template across every account in your AWS Organization (or a chosen OU).
 
 ```yaml
@@ -202,9 +202,8 @@ aws cloudformation create-stack-instances \
     ParameterKey=EmailDomain,ParameterValue=example.com \
     ParameterKey=ManagedPolicyArn,ParameterValue=arn:aws:iam::aws:policy/ReadOnlyAccess
 ```
-
-### Option B -- Terraform
-
+{{< /tab >}}
+{{< tab "Terraform" >}}
 Create a reusable module for the spoke role:
 
 ```hcl
@@ -284,6 +283,8 @@ module "vouch" {
   policy_arns           = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 <div class="checkpoint">
 <p><strong>You are done with role deployment when...</strong></p>
@@ -518,23 +519,26 @@ Re-run `vouch setup aws --discover` at any time to pick up newly assigned accoun
 
 ## Restricting federation with SCPs
 
-Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html) to ensure that only the Vouch OIDC provider can federate into your accounts. This prevents anyone from registering a rogue OIDC provider:
+Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html) to lock down who can register or change an OIDC provider, so a developer can't add a rogue identity provider that federates into your accounts. This denies every OIDC-provider change except from your deployment principal:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "DenyNonVouchOIDCProviders",
+      "Sid": "DenyUnauthorizedOIDCProviders",
       "Effect": "Deny",
       "Action": [
         "iam:CreateOpenIDConnectProvider",
-        "iam:DeleteOpenIDConnectProvider"
+        "iam:DeleteOpenIDConnectProvider",
+        "iam:UpdateOpenIDConnectProviderThumbprint",
+        "iam:AddClientIDToOpenIDConnectProvider",
+        "iam:RemoveClientIDFromOpenIDConnectProvider"
       ],
       "Resource": "*",
       "Condition": {
-        "StringNotEquals": {
-          "aws:PrincipalOrgID": "${aws:PrincipalOrgID}"
+        "ArnNotLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:role/VouchDeploymentRole"
         }
       }
     }
@@ -542,7 +546,7 @@ Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/
 }
 ```
 
-> **Note:** Adjust this SCP to allow your management account or deployment pipeline to manage OIDC providers. The goal is to prevent individual developers from creating unauthorized OIDC providers in member accounts.
+> **Note:** Replace `VouchDeploymentRole` with the principal your CloudFormation StackSet, Terraform pipeline, or platform team uses to manage the Vouch OIDC provider -- the same one referenced in [Deny deletion with an SCP](#deny-deletion-with-an-scp). Every other principal, including developers, is then blocked from creating or modifying OIDC providers.
 
 ---
 

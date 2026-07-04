@@ -22,20 +22,17 @@ Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an 
 
 Vouch uses **exactly one OIDC provider per organization**. Register it once -- in your single AWS account, or in the **management account** if you use AWS Organizations. An administrator does this before any user can assume a role.
 
-### AWS CLI
-
 > For background on OIDC identity providers in AWS, see [Creating OpenID Connect (OIDC) identity providers](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html) in the AWS documentation.
 
+{{< tabs >}}
+{{< tab "AWS CLI" >}}
 ```bash
 aws iam create-open-id-connect-provider \
   --url "https://{{< instance-url >}}" \
   --client-id-list "https://{{< instance-url >}}"
 ```
-
-> **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/oauth/jwks` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
-
-### CloudFormation
-
+{{< /tab >}}
+{{< tab "CloudFormation" >}}
 ```yaml
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Vouch OIDC Identity Provider
@@ -48,15 +45,18 @@ Resources:
       ClientIdList:
         - "https://{{< instance-url >}}"
 ```
-
-### Terraform
-
+{{< /tab >}}
+{{< tab "Terraform" >}}
 ```hcl
 resource "aws_iam_openid_connect_provider" "vouch" {
   url            = "https://{{< instance-url >}}"
   client_id_list = ["https://{{< instance-url >}}"]
 }
 ```
+{{< /tab >}}
+{{< /tabs >}}
+
+> **Note:** AWS fetches the JWKS from `https://{{< instance-url >}}/oauth/jwks` at runtime to verify token signatures. A `ThumbprintList` is no longer required -- AWS obtains the root CA thumbprint automatically.
 
 ---
 
@@ -120,8 +120,8 @@ The `sub` and `sts:RoleSessionName` conditions bind the session to the authentic
 
 Attach an AWS-managed policy. Start with `ReadOnlyAccess` and broaden to exactly what your team needs -- don't reach for `PowerUserAccess` by default. See AWS's [job-function managed policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_job-functions.html) for options.
 
-#### CloudFormation
-
+{{< tabs >}}
+{{< tab "CloudFormation" >}}
 ```yaml
 Resources:
   VouchDeveloperRole:
@@ -148,9 +148,8 @@ Resources:
         # Start safe. Attach the permissions your team needs.
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
 ```
-
-#### Terraform
-
+{{< /tab >}}
+{{< tab "Terraform" >}}
 ```hcl
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -193,6 +192,8 @@ resource "aws_iam_role" "vouch_developer" {
   managed_policy_arns = ["arn:${local.aws_partition}:iam::aws:policy/ReadOnlyAccess"]
 }
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 ### Explicit actions
 

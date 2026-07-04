@@ -110,8 +110,8 @@ All authentication happens transparently. If your session expires (after 8 hours
 
 EKS Access Entries map IAM principals (users or roles) to Kubernetes permissions. An administrator must create an Access Entry for the IAM role used by Vouch.
 
-### AWS CLI
-
+{{< tabs >}}
+{{< tab "AWS CLI" >}}
 ```bash
 # Create the Access Entry for the Vouch IAM role
 aws eks create-access-entry \
@@ -136,9 +136,8 @@ aws eks associate-access-policy \
   --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy \
   --access-scope '{"type": "namespace", "namespaces": ["default", "staging"]}'
 ```
-
-### Terraform
-
+{{< /tab >}}
+{{< tab "Terraform" >}}
 ```hcl
 resource "aws_eks_access_entry" "vouch_developer" {
   cluster_name  = aws_eks_cluster.main.name
@@ -171,6 +170,8 @@ resource "aws_eks_access_policy_association" "vouch_developer_edit" {
   }
 }
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 ---
 

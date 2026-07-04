@@ -85,8 +85,8 @@ Save the output -- you will need it for each method below.
 
 ---
 
-### CLI (manual)
-
+{{< tabs >}}
+{{< tab "CLI (manual)" >}}
 On each server, add the CA public key and create a drop-in `sshd` configuration file:
 
 ```bash
@@ -108,11 +108,8 @@ echo "alice@example.com" | sudo tee /etc/ssh/auth_principals/alice
 # Restart sshd
 sudo systemctl restart sshd
 ```
-
----
-
-### Ansible
-
+{{< /tab >}}
+{{< tab "Ansible" >}}
 ```yaml
 - name: Configure Vouch SSH CA trust
   hosts: all
@@ -154,11 +151,8 @@ sudo systemctl restart sshd
         name: sshd
         state: restarted
 ```
-
----
-
-### Terraform (AWS EC2 user data)
-
+{{< /tab >}}
+{{< tab "Terraform (AWS EC2 user data)" >}}
 ```hcl
 resource "aws_instance" "example" {
   ami           = "ami-0abcdef1234567890"
@@ -188,6 +182,8 @@ resource "aws_instance" "example" {
   }
 }
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 ---
 

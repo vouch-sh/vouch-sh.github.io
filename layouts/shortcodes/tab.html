@@ -1,0 +1,6 @@
+{{- /* One tab inside {{< tabs >}}. Label is positional or label="...". Inner is rendered
+       as markdown so fenced code keeps syntax highlighting. */ -}}
+{{- $key := printf "codeTabs-%d" .Parent.Ordinal -}}
+{{- $label := or (.Get 0) (.Get "label") -}}
+{{- $existing := .Page.Scratch.Get $key | default slice -}}
+{{- .Page.Scratch.Set $key ($existing | append (dict "label" $label "content" (.Inner | markdownify))) -}}

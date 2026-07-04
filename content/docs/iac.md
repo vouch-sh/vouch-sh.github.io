@@ -10,26 +10,20 @@ params:
 
 If a tool reads `~/.aws/config`, it already works with Vouch. The `credential_process` setting in your Vouch AWS profile is picked up by the AWS SDK, so every IaC tool that uses the SDK gets hardware-verified credentials automatically.
 
-## AWS CDK
-
+{{< tabs >}}
+{{< tab "AWS CDK" >}}
 ```bash
 cdk deploy --profile vouch
 ```
 
 CDK has known issues with SSO credential discovery ([#23520](https://github.com/aws/aws-cdk/issues/23520), [#21328](https://github.com/aws/aws-cdk/issues/21328)) that `credential_process` avoids entirely.
-
----
-
-## AWS SAM
-
+{{< /tab >}}
+{{< tab "AWS SAM" >}}
 ```bash
 sam deploy --profile vouch
 ```
-
----
-
-## Terraform
-
+{{< /tab >}}
+{{< tab "Terraform" >}}
 ```bash
 # Set the AWS profile for the session
 export AWS_PROFILE=vouch
@@ -38,35 +32,28 @@ terraform apply
 ```
 
 This works for the AWS provider's authentication. Terraform Cloud registry auth is separate and not handled by Vouch.
-
----
-
-## AWS Copilot
-
+{{< /tab >}}
+{{< tab "AWS Copilot" >}}
 ```bash
 export AWS_PROFILE=vouch
 copilot deploy
 ```
-
----
-
-## AWS Amplify
-
+{{< /tab >}}
+{{< tab "AWS Amplify" >}}
 ```bash
 export AWS_PROFILE=vouch
 amplify push
 ```
 
 With Vouch, you can skip `amplify configure` entirely -- there is no need to generate long-lived IAM access keys for local development. The `credential_process` in your Vouch profile provides credentials on demand.
-
----
-
-## Pulumi
-
+{{< /tab >}}
+{{< tab "Pulumi" >}}
 ```bash
 export AWS_PROFILE=vouch
 pulumi up
 ```
+{{< /tab >}}
+{{< /tabs >}}
 
 ---
 

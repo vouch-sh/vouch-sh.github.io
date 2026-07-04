@@ -13,9 +13,4 @@ Source: {{ .Permalink }}
 {{ end }}
 ---
 
-{{ $content := .RawContent -}}
-{{ $instance := .Site.Params.usInstance -}}
-{{ $content = replace $content "{{< instance-url >}}" $instance -}}
-{{ $content = replace $content "{{<instance-url>}}" $instance -}}
-{{ $content = replace $content "{{% instance-url %}}" $instance -}}
-{{- $content -}}
+{{- partial "clean-md-export.html" .RawContent -}}

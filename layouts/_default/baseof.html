@@ -147,6 +147,24 @@
       });
     });
   });
+
+  document.querySelectorAll('.code-tabs').forEach(function(group) {
+    var btns = group.querySelectorAll('.code-tabs__btn');
+    var panels = group.querySelectorAll('.code-tabs__panel');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = btn.getAttribute('data-tab-index');
+        btns.forEach(function(b) {
+          var active = b.getAttribute('data-tab-index') === idx;
+          b.classList.toggle('is-active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        panels.forEach(function(p) {
+          p.classList.toggle('is-active', p.getAttribute('data-tab-index') === idx);
+        });
+      });
+    });
+  });
   </script>
 </body>
 </html>

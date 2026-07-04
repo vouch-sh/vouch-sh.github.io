@@ -1375,6 +1375,63 @@ tr:hover td {
   background: var(--border);
 }
 
+/* ===== Code tabs ===== */
+.code-tabs {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-tabs__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem 0;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-tabs__btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.75rem;
+}
+
+.code-tabs__btn:hover {
+  color: var(--text);
+}
+
+.code-tabs__btn.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.code-tabs__panel {
+  display: none;
+}
+
+.code-tabs__panel.is-active {
+  display: block;
+}
+
+.code-tabs__panel .highlight,
+.code-tabs__panel pre {
+  margin: 0;
+}
+
+.code-tabs__panel pre {
+  border: 0;
+  border-radius: 0;
+}
+
 /* ===== Responsive Hero ===== */
 @media (max-width: 768px) {
   .hero {

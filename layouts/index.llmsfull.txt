@@ -15,7 +15,7 @@ Note: Throughout this documentation, references to `{{ site.Params.usInstance }}
 
 Source: {{ .Permalink }}
 
-{{ .RawContent }}
+{{ partial "clean-md-export.html" .RawContent }}
 {{ range .Pages.ByWeight }}
 ---
 
@@ -23,7 +23,7 @@ Source: {{ .Permalink }}
 
 Source: {{ .Permalink }}
 
-{{ .RawContent }}
+{{ partial "clean-md-export.html" .RawContent }}
 {{ end }}{{ else }}
 ---
 
@@ -31,5 +31,5 @@ Source: {{ .Permalink }}
 
 Source: {{ .Permalink }}
 
-{{ .RawContent }}
+{{ partial "clean-md-export.html" .RawContent }}
 {{ end }}{{ end }}

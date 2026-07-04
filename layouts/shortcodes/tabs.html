@@ -1,0 +1,19 @@
+{{- /* Tabbed code group. Wraps one or more {{< tab "Label" >}}...{{< /tab >}} children.
+       Collected per-group via a scratch key namespaced by this shortcode's ordinal. */ -}}
+{{- $key := printf "codeTabs-%d" .Ordinal -}}
+{{- $trigger := .Inner -}}
+{{- $tabs := .Page.Scratch.Get $key -}}
+{{- if $tabs -}}
+<div class="code-tabs">
+  <div class="code-tabs__nav" role="tablist">
+    {{- range $i, $t := $tabs -}}
+    <button type="button" class="code-tabs__btn{{ if eq $i 0 }} is-active{{ end }}" role="tab" data-tab-index="{{ $i }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}">{{ $t.label }}</button>
+    {{- end -}}
+  </div>
+  {{- range $i, $t := $tabs -}}
+  <div class="code-tabs__panel{{ if eq $i 0 }} is-active{{ end }}" role="tabpanel" data-tab-index="{{ $i }}">
+{{ $t.content }}
+  </div>
+  {{- end -}}
+</div>
+{{- end -}}
