@@ -1,5 +1,7 @@
 ---
 title: "Access Amazon Bedrock with Hardware-Verified Credentials"
+aliases:
+  - "/blog/hardware-backed-bedrock/"
 linkTitle: "Amazon Bedrock"
 description: "Connect to Amazon Bedrock foundation models using short-lived credentials with full audit trails."
 weight: 8

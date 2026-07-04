@@ -1,5 +1,7 @@
 ---
 title: "Documentation"
+aliases:
+  - "/blog/"
 description: "Guides for replacing long-lived secrets — AWS keys, SSH keys, GitHub PATs, registry tokens — with short-lived, hardware-backed credentials."
 sitemap:
   priority: 0.8

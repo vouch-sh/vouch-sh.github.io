@@ -1,5 +1,8 @@
 ---
 title: "Vouch for Startups"
+aliases:
+  - "/blog/your-startup-doesnt-need-iam-users/"
+  - "/blog/google-workspace-to-aws/"
 linkTitle: "Startups"
 description: "Skip IAM users, access keys, and IAM Identity Center. Go from Google Workspace to AWS in minutes with OIDC federation."
 weight: 2
