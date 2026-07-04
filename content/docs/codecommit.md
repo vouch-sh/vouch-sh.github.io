@@ -133,15 +133,7 @@ Use `codecommit://` URLs when:
 
 ## Cross-partition support
 
-Vouch supports AWS CodeCommit across all AWS partitions:
-
-| Partition | URL Suffix | Region Examples |
-|---|---|---|
-| **Standard** (`aws`) | `.amazonaws.com` | `us-east-1`, `eu-west-1`, `ap-southeast-1` |
-| **China** (`aws-cn`) | `.amazonaws.com.cn` | `cn-north-1`, `cn-northwest-1` |
-| **European Sovereign Cloud** (`aws-eusc`) | `.amazonaws.eu` | `eusc-de-east-1` |
-
-The credential helper is configured for all three partitions automatically during setup.
+All AWS partitions -- standard (`aws`), China (`aws-cn`), and European Sovereign Cloud (`aws-eusc`) -- are configured automatically during setup, as the `~/.gitconfig` entries in Step 1 show.
 
 ---
 

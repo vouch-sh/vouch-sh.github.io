@@ -142,7 +142,8 @@ What expires on its own:
 |---|---|
 | Vouch session (new credentials) | immediately on deactivation |
 | Cached AWS STS credentials | up to 1 hour |
-| SSH certificate, GitHub/registry tokens | up to 8 hours (end of session) |
+| SSH certificate, GitHub tokens | up to 8 hours (end of session) |
+| ECR / CodeArtifact authorization tokens | up to 12 hours |
 
 There are no access keys to hunt down, no `authorized_keys` to scrub, no PATs to revoke. Full failure-mode detail (including **break-glass access** if the Vouch server is ever unreachable) is in [Availability](/docs/availability/).
 
