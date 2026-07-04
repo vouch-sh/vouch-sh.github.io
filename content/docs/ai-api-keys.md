@@ -8,15 +8,19 @@ params:
   docsGroup: integrations
 ---
 
-Both [Anthropic](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) support **Workload Identity Federation (WIF)**: a workload presents a short-lived OIDC token from an issuer you operate, and the provider exchanges it for a minutes-long access token. WIF is workload-shaped, not workforce-shaped — there is no console login flow for an end user. It's a way to authenticate *something running somewhere* without giving it a static API key.
+Both [Anthropic](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) support **Workload Identity Federation (WIF)**: a workload presents a short-lived OIDC token from an issuer you operate, and the provider exchanges it for a minutes-long access token — no static API key.
 
-In production, that "something running somewhere" is usually a GitHub Actions runner, an AWS Lambda, or a GKE pod — and the right issuer is the native OIDC token those platforms already mint (see [Anthropic's](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI's](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) WIF docs).
-
-This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is pasting an `sk-ant-...` or `sk-...` key into a `.env` file and forgetting about it. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it the same way they'd point at any other IdP, and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
+In production the workload is usually a GitHub Actions runner, an AWS Lambda, or a GKE pod, and the right issuer is the native OIDC token those platforms already mint. This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is pasting an `sk-ant-...` or `sk-...` key into a `.env` file and forgetting about it. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it like any other IdP and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
 
 ```
 vouch login → Vouch OIDC JWT → jwt-bearer exchange → short-lived provider token → Claude / OpenAI API
 ```
+
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
+- **Admin, once:** register Vouch as an OIDC identity provider in the [Anthropic](#claude-api-anthropic) (Steps 1-3) / [OpenAI](#openai-api) (Step 1) console.
+- **Each developer:** `vouch setup anthropic` / `vouch setup openai` once, then `vouch credential anthropic` / `vouch credential openai` -- SDKs work without an `sk-` key.
+{{< /tldr >}}
 
 > Vouch must be reachable from the public internet so the provider can fetch the JWKS endpoint to validate token signatures. See [Architecture](/docs/architecture/) for network requirements.
 
@@ -92,11 +96,11 @@ vouch login                       # once per session
 vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
 ```
 
-No `--audience` flag is needed when the rule's Expected audience matches Vouch's default `aud` (the issuer URL). Pass `--audience <value>` only if you pinned the rule to a different audience.
+No `--audience` flag is needed unless the rule's Expected audience differs from Vouch's default (see [Audience matching](#audience-matching)).
 
-`vouch setup anthropic` persists the federation parameters in `~/.vouch/config.json` so subsequent `vouch credential anthropic` invocations know which rule, service account, and workspace to use.
+`vouch setup anthropic` persists these parameters in `~/.vouch/config.json` for subsequent `vouch credential anthropic` invocations.
 
-`vouch credential anthropic` mints a fresh OIDC ID token from your active Vouch session, exchanges it via the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` grant against Anthropic's token endpoint, and caches the returned `sk-ant-oat01-...` until just before it expires — the same caching pattern as [`vouch credential aws`](/docs/cli-reference/) and `vouch credential k8s`. Use it inline:
+`vouch credential anthropic` mints a fresh OIDC ID token from your active Vouch session, exchanges it via the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` grant, and caches the returned `sk-ant-oat01-...` until just before it expires (the same caching as [`vouch credential aws`](/docs/cli-reference/)). Use it inline:
 
 ```bash
 curl -sS https://api.anthropic.com/v1/messages \
@@ -154,26 +158,30 @@ curl -sS https://api.openai.com/v1/responses \
   -d '{"model":"gpt-5","input":"hello"}'
 ```
 
-Ensure no static `OPENAI_API_KEY` is left in your shell profile to shadow federation.
+Static keys shadow federation here too: as with [`ANTHROPIC_API_KEY` above](#claude-get-a-token), unset any `OPENAI_API_KEY`.
 
 ---
 
 ## Audience matching {#audience-matching}
 
-Vouch mints federation assertions with `aud` set to its issuer URL (`https://{{< instance-url >}}`) by default. The simplest setup is to match that exact string on the provider side, which is what the Anthropic walkthrough above does — no `--audience` flag, no override.
+Vouch mints federation assertions with `aud` set to its issuer URL (`https://{{< instance-url >}}`) by default. The simplest setup is to match that exact string on the provider side, which is what the Anthropic walkthrough above does.
 
 If a provider requires a specific audience (OpenAI configures the audience server-side when you register the issuer), pin that exact string on both sides:
 
 - On the **rule** (Anthropic) or **identity provider** (OpenAI): set the audience to the value the provider expects.
 - On **Vouch**: pass `--audience <same value>` to `vouch setup anthropic` / `vouch setup openai`.
 
-Internally, Vouch mints audience-scoped tokens via [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication); the `--audience` flag is the surface for that.
-
 ## Beyond local development
 
-For workloads that run somewhere other than a developer laptop, prefer the native OIDC issuer of the platform they run on — GitHub Actions, AWS, GCP, and Kubernetes all mint their own workload tokens that Anthropic and OpenAI accept directly. Vouch is the right issuer when the workload is *you*, at a terminal, running a script.
+For workloads that run somewhere other than a developer laptop, prefer the native OIDC issuer of the platform they run on — GitHub Actions, AWS, GCP, and Kubernetes all mint their own workload tokens that Anthropic and OpenAI accept directly.
 
 For an unattended job that does need to federate through Vouch (a scheduled task on a server you control, for example), use Vouch's [client-credentials flow](/docs/applications/#client-credentials-machine-to-machine) to obtain a Vouch token without an interactive login, then run the same federation exchange.
+
+## Background
+
+WIF is workload-shaped, not workforce-shaped — there is no console login flow for an end user. It's a way to authenticate *something running somewhere* without giving it a static API key.
+
+Internally, Vouch mints audience-scoped tokens via [RFC 8707 resource indicators](https://datatracker.ietf.org/doc/html/rfc8707) or [RFC 8693 token exchange](/docs/applications/#service-to-service-m2m-authentication); the `--audience` flag is the surface for that.
 
 ## Troubleshooting
 

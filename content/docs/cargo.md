@@ -8,36 +8,26 @@ params:
   docsGroup: integrations
 ---
 
-Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked when your session ends.
+Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked when your session ends. Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html), so it works with any registry that supports Bearer token authentication.
 
-## How it works
-
-Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html). When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:
-
-1. **Cargo requests a token** -- Cargo calls the Vouch credential provider binary when it needs to authenticate to a configured private registry.
-2. **Vouch exchanges your session** -- The credential provider contacts the Vouch server and exchanges your active hardware-backed session for a registry-scoped Bearer token.
-3. **Token derived from your session** -- The token is derived from your Vouch session and is scoped to the specific registry. It is short-lived and never written to disk.
-4. **Cargo authenticates** -- The Bearer token is sent to the registry as part of the HTTP request, and the operation proceeds.
-
-Key characteristics:
-
-- **Short-lived tokens** -- Tokens are derived from your Vouch session and expire when the session ends.
-- **No stored secrets** -- There are no tokens in `~/.cargo/credentials.toml` or environment variables to manage.
-- **Standard protocol** -- Vouch uses Cargo's official credential provider protocol, so it works with any registry that supports Bearer token authentication.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
+- **Admin, once:** confirm your private registry meets the [registry server requirements](#registry-server-requirements) (Bearer token authentication).
+- **Each developer:** `vouch setup cargo --configure`, then `cargo build` and `cargo publish` just work.
+{{< /tldr >}}
 
 ## Prerequisites
 
 Before configuring the Cargo integration, make sure you have:
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
 - **Cargo** installed via [rustup](https://rustup.rs/) (version **1.74** or later, which includes credential provider protocol support)
 - A **private Cargo registry** that supports Bearer token authentication
 
 ---
 
 ## Step 1 -- Configure Cargo Credential Provider
+
+{{< role developer >}}
 
 Run the setup command to install the Vouch credential provider for Cargo:
 
@@ -72,19 +62,11 @@ The `global-credential-providers` setting registers Vouch as the default credent
 
 ---
 
-## Step 2 -- Authenticate
+## Step 2 -- Use Cargo normally
 
-If you have not already logged in today, authenticate with your YubiKey:
+{{< role developer >}}
 
-```
-vouch login
-```
-
-Your session lasts for 8 hours. All Cargo operations during that window use the session automatically.
-
----
-
-## Step 3 -- Use Cargo normally
+{{< session-note >}}
 
 With the credential provider configured and an active session, Cargo commands work without any extra flags or manual token management:
 
@@ -127,6 +109,8 @@ Cargo will automatically call the Vouch credential provider when it needs to fet
 
 ### Registry server requirements
 
+{{< role admin >}}
+
 The private registry must support:
 
 - **Sparse index protocol** (recommended) or Git index protocol
@@ -134,6 +118,17 @@ The private registry must support:
 - The token format issued by Vouch (a signed JWT)
 
 Consult your registry server's documentation to confirm Bearer token support.
+
+---
+
+## How it works
+
+When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:
+
+1. **Cargo requests a token** -- Cargo calls the Vouch credential provider binary when it needs to authenticate to a configured private registry.
+2. **Vouch exchanges your session** -- The credential provider contacts the Vouch server and exchanges your active hardware-backed session for a registry-scoped Bearer token.
+3. **Token derived from your session** -- The token (a signed JWT) is scoped to the specific registry, expires when your session ends, and is never written to disk.
+4. **Cargo authenticates** -- The Bearer token is sent to the registry as part of the HTTP request, and the operation proceeds.
 
 ---
 

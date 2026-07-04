@@ -8,29 +8,37 @@ params:
   docsGroup: aws
 ---
 
-Vouch's OIDC attests *human presence* -- a verified human authorized this action with their YubiKey. This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
+Vouch's OIDC attests *human presence*, so production deployments can require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.
 
-> **Fully automated pipelines:** If your pipeline does not need a human approval gate and should run unattended, use the [client credentials grant](/docs/applications/#client-credentials-machine-to-machine) instead. This lets CI/CD systems authenticate with a client ID and secret without requiring a YubiKey tap.
+> **Fully automated pipelines:** If your pipeline does not need a human approval gate and should run unattended, use the [client credentials grant](/docs/applications/#client-credentials-machine-to-machine) instead -- CI/CD systems authenticate with a client ID and secret, no YubiKey tap.
+
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once (this whole page):** create the deployment role and add the token-exchange step to the workflow.
+- **Each deploy:** the pipeline waits for a JWT an authorized deployer mints locally with `vouch credential aws --role <ROLE_ARN>`.
+{{< /tldr >}}
 
 ## How it works
 
-1. A deployer authenticates with Vouch on their local machine (`vouch login`).
-2. The deployer generates a short-lived JWT (`vouch credential aws --role <ROLE_ARN>`).
-3. The JWT is passed to the CI/CD pipeline (as a workflow input, secret, or environment variable).
-4. The pipeline exchanges the JWT for AWS credentials using `AssumeRoleWithWebIdentity`.
-5. The deployment proceeds with credentials tied to the deployer's hardware-verified identity.
+1. A deployer runs `vouch login` locally, then mints a short-lived JWT with `vouch credential aws --role <ROLE_ARN>`.
+2. The JWT is passed to the pipeline as a workflow input, secret, or environment variable.
+3. The pipeline exchanges it for AWS credentials via `AssumeRoleWithWebIdentity` and deploys with credentials tied to the deployer's hardware-verified identity.
 
 ---
 
 ## Step 1 -- Register Vouch as an IAM OIDC Provider
 
-If you have not already, create the OIDC provider in your AWS account. See the [AWS setup guide](/docs/aws/) for full details.
+{{< role admin >}}
+
+Create the OIDC provider in your AWS account if you have not already -- see the [AWS setup guide](/docs/aws/).
 
 ---
 
 ## Step 2 -- Create a Deployment Role
 
-Create an IAM role that trusts Vouch tokens and restricts access to authorized deployers:
+{{< role admin >}}
+
+This is [the shared trust policy](/docs/aws/#shared-trust-policy) from the AWS guide, plus a `sub` condition restricting which Vouch users can assume the role:
 
 ```json
 {
@@ -60,13 +68,13 @@ Create an IAM role that trusts Vouch tokens and restricts access to authorized d
 }
 ```
 
-The `sub` condition restricts which Vouch users can assume this role.
-
 ---
 
 ## Step 3 -- GitHub Actions Workflow
 
-In this pattern, a deployer authenticates with Vouch on their local machine, and the resulting JWT is passed to the GitHub Actions workflow as an input, which exchanges it for AWS credentials.
+{{< role admin >}}
+
+The workflow takes the deployer's JWT as an input:
 
 ```yaml
 name: Deploy to Production
@@ -108,7 +116,7 @@ jobs:
 
 ## Audit trail
 
-When Vouch tokens are exchanged for STS credentials, the deployer's `email` and `domain` are embedded as STS session tags. These appear in CloudTrail under `userIdentity.sessionContext.webIdFederationData`, providing a clear chain from YubiKey tap to deployment action:
+The deployer's `email` and `domain` are embedded as STS session tags and appear in CloudTrail under `userIdentity.sessionContext.webIdFederationData`, providing a clear chain from YubiKey tap to deployment action:
 
 ```json
 {
@@ -134,7 +142,7 @@ When Vouch tokens are exchanged for STS credentials, the deployer's `email` and 
 
 ### Token expired in pipeline
 
-Vouch JWTs have a limited lifetime. The deployer must generate the token shortly before triggering the workflow. If the token expires during deployment, the deployer needs to re-authenticate and re-trigger.
+Vouch JWTs have a limited lifetime -- generate the token shortly before triggering the workflow. If it expires during deployment, the deployer needs to re-authenticate and re-trigger.
 
 ### Access denied on AssumeRoleWithWebIdentity
 

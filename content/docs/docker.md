@@ -10,22 +10,11 @@ params:
 
 Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline/login/#credential-helpers) generates registry tokens on demand -- no stored passwords, no refresh scripts, and no `docker login`. After a single `vouch login`, Docker pulls and pushes to supported registries authenticate automatically.
 
-## How it works
-
-When Docker needs to authenticate to a container registry, it calls the Vouch credential helper instead of looking up stored passwords:
-
-1. **Docker requests credentials** -- The Docker daemon calls the `docker-credential-vouch` helper when it needs to authenticate to a configured registry.
-2. **Vouch exchanges your session** -- The credential helper contacts the Vouch server and exchanges your active hardware-backed session for registry-specific credentials.
-3. **Short-lived token issued** -- The Vouch server returns a temporary token appropriate for the target registry (an AWS STS token for ECR, or a GitHub token for GHCR).
-4. **Docker authenticates** -- The token is passed back to Docker and used for the current pull or push operation.
-
-Key characteristics:
-
-- **Short-lived tokens** -- Credentials are generated on demand and expire quickly. They are never persisted to disk.
-- **No `docker login` required** -- The credential helper handles authentication transparently.
-- **Multiple registries** -- You can configure Vouch for multiple registries simultaneously.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page; the ECR path also requires the [AWS integration](/docs/aws/).
+- **Admin, once:** grant the [registry-specific permissions](#registry-specific-setup) -- ECR actions on the Vouch IAM role, or `packages:read` on the GitHub App.
+- **Each developer:** `vouch setup docker --configure <registry>`, then `docker pull` and `docker push` just work.
+{{< /tldr >}}
 
 ## Supported Registries
 
@@ -38,18 +27,20 @@ Key characteristics:
 
 ## Prerequisites
 
-Before configuring the Docker integration, make sure you have:
+{{< role admin >}}
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- **Docker** installed and running
-- For **ECR**: Your organization administrator has configured AWS IAM to trust the Vouch OIDC provider (see [AWS Integration](/docs/aws/))
-- For **GHCR**: Your organization administrator has connected a GitHub organization to the Vouch server (see [GitHub Integration](/docs/github/))
+Before developers can configure the Docker integration:
+
+- For **ECR**: AWS IAM must be configured to trust the Vouch OIDC provider (see [AWS Integration](/docs/aws/))
+- For **GHCR**: A GitHub organization must be connected to the Vouch server (see [GitHub Integration](/docs/github/))
 
 ---
 
 ## Step 1 -- Configure Docker Credential Helper
 
-Run the setup command to install the Vouch Docker credential helper:
+{{< role developer >}}
+
+With Docker installed and running, run the setup command to install the Vouch Docker credential helper:
 
 ```
 vouch setup docker
@@ -80,19 +71,11 @@ You can configure multiple registries by running the command once for each regis
 
 ---
 
-## Step 2 -- Authenticate
+## Step 2 -- Use Docker normally
 
-If you have not already logged in today, authenticate with your YubiKey:
+{{< role developer >}}
 
-```
-vouch login
-```
-
-Your session lasts for 8 hours. All Docker operations during that window use the session automatically.
-
----
-
-## Step 3 -- Use Docker normally
+{{< session-note >}}
 
 With the credential helper configured and an active session, Docker commands work without any extra flags or manual login:
 
@@ -115,6 +98,8 @@ Vouch handles authentication transparently. You do not need to run `docker login
 ---
 
 ## Registry-Specific Setup
+
+{{< role admin >}}
 
 ### AWS ECR
 
@@ -164,6 +149,15 @@ For GHCR authentication, Vouch uses the same GitHub App integration used for Git
 **Token scope** -- The GitHub App must have the `packages:read` permission (and `packages:write` if you need push access). Your organization administrator can configure this when installing the Vouch GitHub App.
 
 See the [GitHub Integration](/docs/github/) guide for GitHub App setup details.
+
+---
+
+## How it works
+
+1. **Docker requests credentials** -- The Docker daemon calls the `docker-credential-vouch` helper when it needs to authenticate to a configured registry.
+2. **Vouch exchanges your session** -- The credential helper contacts the Vouch server and exchanges your active hardware-backed session for registry-specific credentials.
+3. **Short-lived token issued** -- The Vouch server returns a temporary token appropriate for the target registry (an AWS STS token for ECR, or a GitHub token for GHCR). Tokens are generated on demand and never persisted to disk.
+4. **Docker authenticates** -- The token is passed back to Docker and used for the current pull or push operation.
 
 ---
 

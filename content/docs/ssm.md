@@ -8,35 +8,32 @@ params:
   docsGroup: aws
 ---
 
-AWS Systems Manager Session Manager connects to EC2 instances without opening SSH ports -- connections route through the Systems Manager service and every session is logged in CloudTrail. With Vouch, the underlying AWS credentials are hardware-verified and short-lived.
+AWS Systems Manager Session Manager connects to EC2 instances without opening SSH ports, and every session is logged in CloudTrail. With Vouch, the underlying AWS credentials are hardware-verified and short-lived.
 
-## How it works
-
-1. **`vouch login`** -- The developer authenticates with their YubiKey and receives an OIDC ID token.
-2. **`credential_process`** -- The AWS CLI calls Vouch to exchange the OIDC token for temporary STS credentials.
-3. **`aws ssm start-session`** -- The AWS CLI uses the STS credentials to start an AWS SSM Session Manager session with the target instance.
-4. **CloudTrail** -- Every session start is recorded with the Vouch user's identity via STS session tags.
-
-```
-vouch login → credential_process → STS → AWS SSM start-session → CloudTrail
-```
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once:** add [`ssm:StartSession` permissions](#iam-permissions) to the Vouch IAM role and give instances an SSM instance profile.
+- **Each developer:** `vouch setup ssm`, then `ssh i-0abc123def456` just works.
+{{< /tldr >}}
 
 ## Prerequisites
 
-Before using AWS Systems Manager Session Manager with Vouch, ensure you have:
+{{< role admin >}}
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- The **[AWS integration](/docs/aws/)** configured (OIDC provider and IAM role)
-- The **[Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)** installed for the AWS CLI
-- EC2 instances with the **AWS SSM Agent** installed and an instance profile that allows AWS SSM connections
+Before developers can start AWS SSM sessions:
+
+- The **[AWS integration](/docs/aws/)** must be configured (OIDC provider and IAM role)
+- EC2 instances need the **AWS SSM Agent** installed and an instance profile that allows AWS SSM connections
 
 ---
 
 ## Step 1 -- Start a session
 
-With an active Vouch session, connect to an instance:
+{{< role developer >}}
+
+{{< session-note >}}
+
+Install the **[Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)** for the AWS CLI, then connect to an instance:
 
 ```bash
 aws ssm start-session \
@@ -50,7 +47,9 @@ This opens an interactive shell session on the target instance without SSH.
 
 ## Step 2 -- SSH over AWS SSM
 
-You can also use AWS SSM as a transport for standard SSH connections. This lets you use familiar SSH tooling (scp, rsync, port forwarding) while routing traffic through AWS SSM instead of direct TCP connections.
+{{< role developer >}}
+
+You can also use AWS SSM as a transport for standard SSH connections, so familiar SSH tooling (scp, rsync, port forwarding) works without direct TCP connections.
 
 ### Automated setup (recommended)
 
@@ -82,7 +81,7 @@ Host i-* mi-*
 
 ### Manual setup
 
-Alternatively, add the following to your `~/.ssh/config` manually:
+Or add it to your `~/.ssh/config` yourself:
 
 ```
 Host i-* mi-*
@@ -93,19 +92,21 @@ Replace `<YOUR_REGION>` with your AWS region (e.g., `us-east-1`).
 
 ### Connect
 
-With either setup method, connect with SSH as usual:
+Then connect with SSH as usual:
 
 ```bash
 ssh i-0abc123def456
 ```
 
-Because Vouch configures the SSH agent with a certificate, the SSH session is authenticated with both your Vouch SSH certificate and your hardware-backed AWS credentials.
+The session is authenticated with both your Vouch SSH certificate and your hardware-backed AWS credentials.
 
 ---
 
 ## Port forwarding
 
-AWS SSM supports port forwarding to access services on private instances. This is useful for reaching databases (such as RDS) through a bastion instance without exposing them to the internet:
+{{< role developer >}}
+
+AWS SSM supports port forwarding to access services on private instances -- for example, reaching RDS through a bastion instance without exposing it to the internet:
 
 ```bash
 # Forward local port 5432 to an RDS instance through an EC2 bastion
@@ -121,6 +122,8 @@ Then connect to `localhost:5432` with your database client.
 ---
 
 ## IAM permissions
+
+{{< role admin >}}
 
 The IAM role assumed by Vouch needs AWS SSM session permissions:
 
@@ -151,9 +154,22 @@ You can restrict access to specific instances using resource ARNs or tag-based c
 
 ## Session identity and audit
 
-When Vouch exchanges an OIDC token for STS credentials, the user's email and domain are embedded as session tags. These appear in CloudTrail under `userIdentity.sessionContext.webIdFederationData`, providing a clear chain from YubiKey tap to AWS SSM session.
+When Vouch exchanges an OIDC token for STS credentials, the user's email and domain are embedded as session tags. These appear in CloudTrail under `userIdentity.sessionContext.webIdFederationData`.
 
-AWS SSM also records session activity. With [Session Manager logging](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-logging.html) enabled, you get a complete record of commands executed during each session.
+With [Session Manager logging](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-logging.html) enabled, every command executed during a session is also recorded.
+
+---
+
+## How it works
+
+1. **`vouch login`** -- The developer authenticates with their YubiKey and receives an OIDC ID token.
+2. **`credential_process`** -- The AWS CLI calls Vouch to exchange the OIDC token for temporary STS credentials.
+3. **`aws ssm start-session`** -- The AWS CLI uses the STS credentials to start a session with the target instance.
+4. **CloudTrail** -- Every session start is recorded with the Vouch user's identity via STS session tags.
+
+```
+vouch login → credential_process → STS → AWS SSM start-session → CloudTrail
+```
 
 ---
 

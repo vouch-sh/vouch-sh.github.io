@@ -8,33 +8,21 @@ params:
   docsGroup: aws
 ---
 
-[IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static database passwords with short-lived tokens generated from IAM credentials. With Vouch, those IAM credentials are hardware-backed -- every database connection traces back to a verified human identity.
+[IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static database passwords with short-lived tokens generated from IAM credentials -- with Vouch, hardware-backed ones.
 
-## How it works
-
-1. **`vouch login`** -- The developer authenticates with their YubiKey.
-2. **`vouch credential rds`** or **`vouch credential redshift`** -- Vouch generates a short-lived database authentication token or temporary credentials directly.
-3. **Database client** -- The token is passed as the password to `psql`, `mysql`, or another database client.
-
-```
-vouch login → vouch credential rds → database client
-vouch login → vouch credential redshift → database client
-```
-
-Or use `vouch exec` to skip manual token handling entirely:
-
-```
-vouch login → vouch exec --type rds -- psql
-vouch login → vouch exec --type redshift -- psql
-```
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once:** grant [`rds-db:connect`](#required-iam-permissions) on the Vouch IAM role and enable IAM auth on the database user.
+- **Each developer:** `vouch exec --type rds --rds-hostname <host> --rds-username <user> -- psql`, then `psql` just works — the 15-minute token is injected automatically.
+{{< /tldr >}}
 
 ## RDS / Aurora PostgreSQL
 
+{{< role developer >}}
+
 {{< tabs >}}
 {{< tab "Vouch CLI" >}}
-The simplest approach is `vouch exec`, which generates the token and injects PostgreSQL environment variables (`PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE=require`) automatically:
+`vouch exec` generates the token and injects PostgreSQL environment variables (`PGPASSWORD`, `PGHOST`, `PGPORT`, `PGUSER`, `PGSSLMODE=require`) automatically:
 
 ```bash
 vouch exec --type rds \
@@ -43,7 +31,7 @@ vouch exec --type rds \
   -- psql -d mydb
 ```
 
-To set the variables in your current shell instead:
+Or set them in your current shell:
 
 ```bash
 eval "$(vouch env --type rds \
@@ -52,7 +40,7 @@ eval "$(vouch env --type rds \
 psql -d mydb
 ```
 
-To generate just the token (e.g., for scripts or non-PostgreSQL clients):
+To generate just the token (for scripts or non-PostgreSQL clients):
 
 ```bash
 TOKEN=$(vouch credential rds \
@@ -61,7 +49,7 @@ TOKEN=$(vouch credential rds \
 ```
 {{< /tab >}}
 {{< tab "AWS CLI" >}}
-You can also use the AWS CLI with Vouch's `credential_process` integration:
+Or use the AWS CLI with Vouch's `credential_process` integration:
 
 ```bash
 # Generate an IAM auth token (valid for 15 minutes)
@@ -82,7 +70,9 @@ PGPASSWORD="$TOKEN" psql \
 {{< /tab >}}
 {{< /tabs >}}
 
-**Database setup:** The database user must be configured for IAM authentication. For PostgreSQL, grant the `rds_iam` role:
+{{< role admin >}}
+
+**Database setup:** grant the PostgreSQL user the `rds_iam` role:
 
 ```sql
 GRANT rds_iam TO mydbuser;
@@ -92,11 +82,13 @@ GRANT rds_iam TO mydbuser;
 
 ## RDS / Aurora MySQL
 
-MySQL requires the `--enable-cleartext-plugin` flag because the IAM token is sent as a cleartext password over TLS.
+{{< role developer >}}
+
+MySQL requires `--enable-cleartext-plugin` because the IAM token is sent as a cleartext password over TLS.
 
 {{< tabs >}}
 {{< tab "Vouch CLI" >}}
-Generate the token with `vouch credential rds` and pass it to the MySQL client:
+Generate the token and pass it to the MySQL client:
 
 ```bash
 TOKEN=$(vouch credential rds \
@@ -112,7 +104,7 @@ mysql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
   --enable-cleartext-plugin
 ```
 
-> **Note:** `vouch exec --type rds` and `vouch env --type rds` inject PostgreSQL-style environment variables (`PGPASSWORD`, `PGHOST`, etc.), so MySQL users should use `vouch credential rds` to get the token and pass it manually.
+> **Note:** `vouch exec` and `vouch env --type rds` inject PostgreSQL-style variables; MySQL users should use `vouch credential rds` and pass the token manually.
 {{< /tab >}}
 {{< tab "AWS CLI" >}}
 ```bash
@@ -134,6 +126,8 @@ mysql -h mydb.cluster-abc123.us-east-1.rds.amazonaws.com \
 {{< /tab >}}
 {{< /tabs >}}
 
+{{< role admin >}}
+
 **Database setup:** Create the user with the `AWSAuthenticationPlugin`:
 
 ```sql
@@ -144,11 +138,13 @@ CREATE USER 'mydbuser'@'%' IDENTIFIED WITH AWSAuthenticationPlugin AS 'RDS';
 
 ## Amazon Redshift
 
-Redshift generates temporary database credentials with a configurable lifetime (15--60 minutes). Vouch supports both provisioned clusters and Redshift Serverless workgroups.
+{{< role developer >}}
+
+Redshift issues temporary credentials with a configurable lifetime (15--60 minutes); Vouch supports provisioned clusters and Redshift Serverless workgroups.
 
 ### Using Vouch CLI (provisioned cluster)
 
-The simplest approach is `vouch exec`, which generates credentials and injects PostgreSQL environment variables (`PGPASSWORD`, `PGUSER`, `PGSSLMODE=require`) automatically:
+`vouch exec` generates credentials and injects PostgreSQL environment variables (`PGPASSWORD`, `PGUSER`, `PGSSLMODE=require`) automatically:
 
 ```bash
 vouch exec --type redshift \
@@ -157,7 +153,7 @@ vouch exec --type redshift \
   -- psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
 ```
 
-To set the variables in your current shell:
+Or set them in your current shell:
 
 ```bash
 eval "$(vouch env --type redshift \
@@ -219,6 +215,8 @@ PGPASSWORD="$DB_PASS" psql \
 
 ## Required IAM permissions
 
+{{< role admin >}}
+
 Your Vouch IAM role needs permission to generate database auth tokens and credentials.
 
 **RDS / Aurora:**
@@ -264,6 +262,19 @@ Your Vouch IAM role needs permission to generate database auth tokens and creden
     }
   ]
 }
+```
+
+---
+
+## How it works
+
+1. **`vouch login`** -- The developer authenticates with their YubiKey.
+2. **`vouch credential rds`** or **`vouch credential redshift`** -- Vouch generates a short-lived auth token or temporary credentials.
+3. **Database client** -- The token is passed as the password to `psql`, `mysql`, or another client; `vouch exec` handles this automatically.
+
+```
+vouch login → vouch credential rds|redshift → database client
+vouch login → vouch exec --type rds|redshift -- psql
 ```
 
 ---
