@@ -2,10 +2,10 @@
 title: "Authenticate to AWS CodeArtifact without Stored Tokens"
 linkTitle: "AWS CodeArtifact"
 description: "Pull and publish packages from AWS CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
-weight: 7
+weight: 5
 subtitle: "Authenticate to AWS CodeArtifact repositories using Vouch"
 params:
-  docsGroup: code
+  docsGroup: aws
 ---
 
 Vouch authenticates to [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html) using hardware-backed IAM credentials. After a single `vouch login`, Cargo, pip, npm, pnpm, and uv can pull and publish packages without manual token management.

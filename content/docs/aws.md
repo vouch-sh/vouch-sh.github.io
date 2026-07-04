@@ -2,12 +2,12 @@
 title: "Replace AWS Access Keys with Short-Lived Credentials"
 linkTitle: "AWS"
 description: "Stop distributing long-lived AWS access keys. Use OIDC federation to get temporary STS credentials backed by a YubiKey."
-weight: 2
+weight: 1
 subtitle: "Configure AWS IAM to trust Vouch as an OIDC identity provider"
 sitemap:
   priority: 0.8
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail.

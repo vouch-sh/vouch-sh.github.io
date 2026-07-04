@@ -2,10 +2,10 @@
 title: "Authenticate to Amazon EKS without Static Credentials"
 linkTitle: "Amazon EKS"
 description: "Access EKS clusters using OIDC-federated IAM credentials instead of long-lived kubeconfig tokens."
-weight: 5
+weight: 3
 subtitle: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 > **Not using EKS?** For standard Kubernetes clusters (self-hosted, GKE, AKS, k3s, etc.) that use OIDC authentication, see [Kubernetes](/docs/kubernetes/).

@@ -2,10 +2,10 @@
 title: "Short-Lived Credentials for the Claude & OpenAI APIs"
 linkTitle: "Claude & OpenAI APIs"
 description: "Use Vouch as the OIDC issuer for Anthropic and OpenAI Workload Identity Federation, so local development and one-off scripts don't need a long-lived sk-ant- or sk- key."
-weight: 17
+weight: 7
 subtitle: "Stop pasting sk-ant- and sk- keys into your shell for local development"
 params:
-  docsGroup: infra
+  docsGroup: integrations
 ---
 
 Both [Anthropic](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) support **Workload Identity Federation (WIF)**: a workload presents a short-lived OIDC token from an issuer you operate, and the provider exchanges it for a minutes-long access token. WIF is workload-shaped, not workforce-shaped — there is no console login flow for an end user. It's a way to authenticate *something running somewhere* without giving it a static API key.

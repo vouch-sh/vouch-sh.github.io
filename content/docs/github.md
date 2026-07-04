@@ -2,10 +2,10 @@
 title: "Access GitHub Repos without Personal Access Tokens"
 linkTitle: "GitHub"
 description: "Replace GitHub PATs with short-lived tokens generated from your hardware-backed Vouch session."
-weight: 5
+weight: 2
 subtitle: "Access private GitHub repositories using Vouch authentication"
 params:
-  docsGroup: code
+  docsGroup: integrations
 ---
 
 Vouch replaces GitHub PATs and deploy keys with short-lived tokens (valid for up to 1 hour) issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization. Tokens are automatically scoped to the right repositories and tied to a hardware-verified identity.

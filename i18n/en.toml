@@ -104,11 +104,11 @@ other = "Docs"
 [sidebar_start_here]
 other = "Start Here"
 
-[sidebar_group_infra]
-other = "Infrastructure"
+[sidebar_group_aws]
+other = "AWS"
 
-[sidebar_group_code]
-other = "Code & Packages"
+[sidebar_group_integrations]
+other = "Integrations"
 
 [sidebar_group_admin]
 other = "Administration"
@@ -154,17 +154,17 @@ other = "Start here"
 [docs_group_featured_desc]
 other = "Choose the fastest path for your first Vouch rollout."
 
-[docs_group_infra_title]
-other = "Connect infrastructure"
+[docs_group_aws_title]
+other = "AWS"
 
-[docs_group_infra_desc]
-other = "Access AWS, servers, Kubernetes, databases, and AI services with short-lived, hardware-backed tokens."
+[docs_group_aws_desc]
+other = "One OIDC provider and one role unlock STS, EKS, CodeCommit, CodeArtifact, SSM, databases, Bedrock, and IaC tooling."
 
-[docs_group_code_title]
-other = "Ship code"
+[docs_group_integrations_title]
+other = "Integrations"
 
-[docs_group_code_desc]
-other = "Authenticate to GitHub, container registries, package managers, and AWS developer services with one YubiKey-backed session."
+[docs_group_integrations_desc]
+other = "Authenticate to SSH, GitHub, container registries, package managers, Kubernetes, and AI APIs with the same YubiKey-backed session."
 
 [docs_group_admin_title]
 other = "Operate Vouch"
@@ -177,6 +177,19 @@ other = "Evaluate security"
 
 [docs_group_reference_desc]
 other = "Review the architecture, threat model, availability behavior, migration approach, FAQ, and CLI reference."
+
+# --- Docs page building blocks (shortcodes) ---
+[tldr_title]
+other = "TL;DR"
+
+[role_admin]
+other = "Admin task"
+
+[role_developer]
+other = "Developer task"
+
+[session_note]
+other = "Not logged in yet? Run `vouch login` — one YubiKey tap starts an 8-hour session that every command below uses automatically."
 
 # --- Blog ---
 [blog_title]

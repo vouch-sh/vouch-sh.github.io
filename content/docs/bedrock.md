@@ -2,10 +2,10 @@
 title: "Access Amazon Bedrock with Hardware-Verified Credentials"
 linkTitle: "Amazon Bedrock"
 description: "Connect to Amazon Bedrock foundation models using short-lived credentials with full audit trails."
-weight: 16
+weight: 8
 subtitle: "Hardware-verified access to Amazon Bedrock"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html) uses standard AWS SigV4 authentication. Vouch's `credential_process` provides STS credentials backed by FIDO2 verification, so every Bedrock API call is tied to a hardware-verified human identity.

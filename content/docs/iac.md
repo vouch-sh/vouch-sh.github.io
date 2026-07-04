@@ -2,10 +2,10 @@
 title: "Use Terraform and CDK with Hardware-Verified Credentials"
 linkTitle: "Infrastructure as Code"
 description: "Run CDK, Terraform, SAM, and other IaC tools using short-lived AWS credentials from Vouch."
-weight: 14
+weight: 9
 subtitle: "Use CDK, Terraform, SAM, and other IaC tools with Vouch"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 If a tool reads `~/.aws/config`, it already works with Vouch. The `credential_process` setting in your Vouch AWS profile is picked up by the AWS SDK, so every IaC tool that uses the SDK gets hardware-verified credentials automatically.

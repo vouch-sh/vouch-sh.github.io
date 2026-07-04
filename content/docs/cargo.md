@@ -2,10 +2,10 @@
 title: "Authenticate to Private Cargo Registries"
 linkTitle: "Cargo"
 description: "Use Vouch as a Cargo credential provider for private registries — no tokens in .cargo/config.toml."
-weight: 9
+weight: 4
 subtitle: "Authenticate to private Cargo registries using Vouch"
 params:
-  docsGroup: code
+  docsGroup: integrations
 ---
 
 Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked when your session ends.

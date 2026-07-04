@@ -2,10 +2,10 @@
 title: "Access AWS CodeCommit without Git Credentials"
 linkTitle: "AWS CodeCommit"
 description: "Clone and push to AWS CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys."
-weight: 8
+weight: 4
 subtitle: "Authenticate to AWS CodeCommit repositories using Vouch"
 params:
-  docsGroup: code
+  docsGroup: aws
 ---
 
 Vouch authenticates to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) using short-lived STS credentials -- no SSH keys, no HTTPS Git credentials, and no IAM access keys to manage. Both HTTPS credential helper and native `codecommit://` remote helper are supported.

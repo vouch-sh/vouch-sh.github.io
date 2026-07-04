@@ -2,10 +2,10 @@
 title: "Multi-Account AWS Strategy"
 linkTitle: "AWS Multi-Account"
 description: "Deploy Vouch OIDC federation across multiple AWS accounts with Organizations, StackSets, and SCPs."
-weight: 3
+weight: 2
 subtitle: "Federate Vouch into dev, staging, and production AWS accounts"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Most teams start with role chaining**; choose Identity Center if you already run it.

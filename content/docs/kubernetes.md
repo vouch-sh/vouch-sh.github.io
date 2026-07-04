@@ -2,10 +2,10 @@
 title: "Authenticate to Kubernetes with OIDC"
 linkTitle: "Kubernetes"
 description: "Access any Kubernetes cluster using OIDC tokens from Vouch — no cloud-specific plugins required."
-weight: 6
+weight: 5
 subtitle: "Authenticate to Kubernetes clusters using OIDC identity tokens"
 params:
-  docsGroup: infra
+  docsGroup: integrations
 ---
 
 Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap, the CLI fetches an OIDC ID token and presents it to the API server -- no cloud-specific plugins, no static tokens, and every `kubectl` command traces back to a hardware-verified identity.

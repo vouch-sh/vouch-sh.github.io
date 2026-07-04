@@ -2,12 +2,12 @@
 title: "Replace SSH Keys with Short-Lived Certificates"
 linkTitle: "SSH Certificates"
 description: "Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist."
-weight: 4
+weight: 1
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
 sitemap:
   priority: 0.8
 params:
-  docsGroup: infra
+  docsGroup: integrations
 ---
 
 > **Windows:** SSH certificate integration is not available on Windows. See the [FAQ](/docs/faq/#does-vouch-work-on-windows) for details on Windows platform support.

@@ -2,10 +2,10 @@
 title: "Add Human Approval Gates to CI/CD Pipelines"
 linkTitle: "CI/CD"
 description: "Require a YubiKey tap before production deployments — hardware-verified identity embedded in every CI/CD credential."
-weight: 6
+weight: 10
 subtitle: "Add human authorization gates to deployment pipelines"
 params:
-  docsGroup: admin
+  docsGroup: aws
 ---
 
 Vouch's OIDC attests *human presence* -- a verified human authorized this action with their YubiKey. This enables a pattern where production deployments require an explicit YubiKey tap from an authorized deployer, with the deployer's identity embedded in the resulting AWS credentials via STS session tags.

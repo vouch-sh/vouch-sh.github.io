@@ -2,10 +2,10 @@
 title: "Connect to RDS and Aurora without Database Passwords"
 linkTitle: "Databases"
 description: "Replace static database passwords with 15-minute IAM auth tokens generated from hardware-backed credentials."
-weight: 13
+weight: 7
 subtitle: "Connect to RDS, Aurora, and Redshift using IAM database authentication"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 [IAM database authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html) replaces static database passwords with short-lived tokens generated from IAM credentials. With Vouch, those IAM credentials are hardware-backed -- every database connection traces back to a verified human identity.

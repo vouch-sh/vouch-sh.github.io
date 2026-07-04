@@ -2,10 +2,10 @@
 title: "Authenticate to Container Registries without Stored Passwords"
 linkTitle: "Docker Registries"
 description: "Stop running docker login and storing plaintext credentials. Vouch generates registry tokens on demand for ECR and GHCR."
-weight: 6
+weight: 3
 subtitle: "Authenticate to container registries using Vouch"
 params:
-  docsGroup: code
+  docsGroup: integrations
 ---
 
 Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline/login/#credential-helpers) generates registry tokens on demand -- no stored passwords, no refresh scripts, and no `docker login`. After a single `vouch login`, Docker pulls and pushes to supported registries authenticate automatically.

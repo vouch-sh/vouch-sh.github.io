@@ -2,10 +2,10 @@
 title: "Connect to EC2 Instances without SSH Port 22"
 linkTitle: "AWS Systems Manager"
 description: "Use AWS Systems Manager Session Manager with Vouch credentials to reach EC2 instances without opening SSH ports."
-weight: 12
+weight: 6
 subtitle: "Connect to EC2 instances through AWS Systems Manager"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 AWS Systems Manager Session Manager connects to EC2 instances without opening SSH ports -- connections route through the Systems Manager service and every session is logged in CloudTrail. With Vouch, the underlying AWS credentials are hardware-verified and short-lived.
