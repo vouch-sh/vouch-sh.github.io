@@ -137,9 +137,7 @@ Vouch authenticates users through your organization's OIDC or SAML 2.0 identity 
 
 ### What happens when someone leaves the company?
 
-If SCIM is configured: deactivating the user in your identity provider automatically revokes their Vouch sessions. See [SCIM Provisioning](/docs/scim/).
-
-If SCIM is not configured: an administrator must manually remove the user from the Vouch server. Their active session is revoked immediately. Outstanding short-lived credentials expire on their own (within 12 hours at most for ECR and CodeArtifact tokens; most access ends within 1 hour).
+Deactivate them in your identity provider ([SCIM](/docs/scim/) revokes their Vouch sessions automatically; without SCIM, an admin removes them from the dashboard) and outstanding short-lived credentials expire on their own. The full sequence and expiry timeline is in [When someone leaves](/docs/rollout/#when-someone-leaves).
 
 ### Can I restrict which team members can assume specific AWS roles?
 
@@ -215,20 +213,7 @@ Vouch requires outbound HTTPS (port 443) to the Vouch server (`{{< instance-url 
 
 ### What does `vouch doctor` check?
 
-`vouch doctor` runs a series of diagnostic checks and reports issues with your Vouch installation:
-
-- **Agent status** -- Whether the Vouch agent is running and reachable.
-- **Session status** -- Whether you have an active session and when it expires.
-- **SSH configuration** -- Whether `~/.ssh/config` is configured with the Vouch agent socket and the socket file exists.
-- **AWS configuration** -- Whether `~/.aws/config` contains a Vouch `credential_process` profile.
-- **Git credential helpers** -- Whether Git is configured to use Vouch for GitHub and/or CodeCommit.
-- **Docker credential helpers** -- Whether `~/.docker/config.json` references the Vouch credential helper.
-- **Cargo credential provider** -- Whether `~/.cargo/config.toml` is configured to use Vouch.
-- **EKS contexts** -- Whether any kubeconfig contexts use `vouch credential eks`.
-- **SSM configuration** -- Whether `~/.ssh/config` has a ProxyCommand for SSM instance IDs.
-- **Binary version** -- Whether the installed CLI version matches the running agent version.
-
-Each check reports **OK**, **WARNING**, or **ERROR** with a description of the issue and how to fix it. Run `vouch doctor` as a first step when something is not working as expected.
+`vouch doctor` checks the agent, your session, and every integration's configuration (SSH, AWS, Git, Docker, Cargo, EKS, SSM), reporting **OK**, **WARNING**, or **ERROR** with a fix for each. Run it as a first step when something is not working. The full check list is in the [CLI reference](/docs/cli-reference/#diagnostics).
 
 ---
 
