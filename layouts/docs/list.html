@@ -15,8 +15,8 @@
     {{ $allPages := $docsSection.Pages.ByWeight }}
     {{ $groups := slice
       (dict "key" "featured" "title" (i18n "docs_group_featured_title") "description" (i18n "docs_group_featured_desc") "featured" true)
-      (dict "key" "infra" "title" (i18n "docs_group_infra_title") "description" (i18n "docs_group_infra_desc"))
-      (dict "key" "code" "title" (i18n "docs_group_code_title") "description" (i18n "docs_group_code_desc"))
+      (dict "key" "aws" "title" (i18n "docs_group_aws_title") "description" (i18n "docs_group_aws_desc"))
+      (dict "key" "integrations" "title" (i18n "docs_group_integrations_title") "description" (i18n "docs_group_integrations_desc"))
       (dict "key" "admin" "title" (i18n "docs_group_admin_title") "description" (i18n "docs_group_admin_desc"))
       (dict "key" "reference" "title" (i18n "docs_group_reference_title") "description" (i18n "docs_group_reference_desc"))
     }}

@@ -2,43 +2,34 @@
 title: "Authenticate to Kubernetes with OIDC"
 linkTitle: "Kubernetes"
 description: "Access any Kubernetes cluster using OIDC tokens from Vouch — no cloud-specific plugins required."
-weight: 6
+weight: 5
 subtitle: "Authenticate to Kubernetes clusters using OIDC identity tokens"
 params:
-  docsGroup: infra
+  docsGroup: integrations
 ---
 
-Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap, the CLI fetches an OIDC ID token and presents it to the API server -- no cloud-specific plugins, no static tokens, and every `kubectl` command traces back to a hardware-verified identity.
+Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap, the CLI fetches an OIDC ID token and presents it to the API server -- no cloud-specific plugins and no static tokens.
 
 > **Using Amazon EKS?** EKS has its own token mechanism based on AWS IAM. See [Amazon EKS](/docs/eks/) for EKS-specific setup.
 
-## How it works
-
-The authentication flow chains three components:
-
-```
-vouch login --> vouch credential k8s --> kubectl
-```
-
-1. **`vouch login`** — The developer authenticates with their YubiKey and receives an OIDC session from the Vouch server.
-2. **`vouch credential k8s`** — The CLI requests an OIDC ID token with the audience set to match the cluster's `--oidc-client-id` (default: `kubernetes`). It outputs a Kubernetes [`ExecCredential`](https://kubernetes.io/docs/reference/config-api/client-authentication.v1/) JSON object containing the token and its expiration.
-3. **`kubectl`** — The Kubernetes client sends the token to the API server. The API server validates it against the Vouch server's OIDC discovery endpoint (`/.well-known/openid-configuration`) and applies RBAC rules based on the token claims.
-
-Because every step uses short-lived credentials, there are no static kubeconfig tokens to manage or rotate.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
+- **Admin, once:** [configure the API server](#configuring-the-api-server) to trust Vouch as an OIDC issuer, and add [RBAC bindings](#rbac-configuration).
+- **Each developer:** `vouch setup k8s --cluster my-cluster --server https://k8s.example.com:6443`, then `kubectl` just works.
+{{< /tldr >}}
 
 ## Prerequisites
 
-Before setting up Kubernetes OIDC authentication with Vouch, ensure you have:
+You will also need:
 
-- **Vouch CLI installed and enrolled** — Complete the [Getting Started](/docs/getting-started/) guide.
 - **kubectl** installed (`kubectl version --client`).
 - **A Kubernetes cluster** with OIDC authentication configured on the API server (see below).
 
 ---
 
 ## Configuring the API server
+
+{{< role admin >}}
 
 The Kubernetes API server must be configured to trust the Vouch server as an OIDC provider. Add the following flags to your `kube-apiserver` configuration:
 
@@ -68,6 +59,8 @@ How you set these flags depends on your Kubernetes distribution:
 ---
 
 ## Setup
+
+{{< role developer >}}
 
 Configure `kubectl` to use your Vouch-backed OIDC credentials:
 
@@ -112,12 +105,13 @@ kubectl get pods
 
 ## Usage
 
-With everything configured, daily usage is straightforward:
+{{< role developer >}}
+
+{{< session-note >}}
+
+Daily usage:
 
 ```bash
-# Start your day
-vouch login
-
 # Switch to your Vouch K8s context
 kubectl config use-context my-cluster-vouch
 
@@ -127,11 +121,13 @@ kubectl get namespaces
 kubectl logs deployment/my-app
 ```
 
-All authentication happens transparently. The exec credential plugin fetches a fresh OIDC token for each `kubectl` invocation. If your session expires (after 8 hours), run `vouch login` again.
+The exec credential plugin fetches a fresh OIDC token for each `kubectl` invocation.
 
 ---
 
 ## RBAC configuration
+
+{{< role admin >}}
 
 With OIDC authentication, the Kubernetes username is the developer's email address (from the `sub` claim). Use standard Kubernetes RBAC to map users to permissions.
 
@@ -188,6 +184,18 @@ roleRef:
   name: view
   apiGroup: rbac.authorization.k8s.io
 ```
+
+---
+
+## How it works
+
+```
+vouch login --> vouch credential k8s --> kubectl
+```
+
+1. **`vouch login`** — The developer authenticates with their YubiKey and receives an OIDC session from the Vouch server.
+2. **`vouch credential k8s`** — The CLI requests an OIDC ID token with the audience set to match the cluster's `--oidc-client-id` (default: `kubernetes`). It outputs a Kubernetes [`ExecCredential`](https://kubernetes.io/docs/reference/config-api/client-authentication.v1/) JSON object containing the token and its expiration -- no static kubeconfig tokens to rotate.
+3. **`kubectl`** — The Kubernetes client sends the token to the API server. The API server validates it against the Vouch server's OIDC discovery endpoint (`/.well-known/openid-configuration`) and applies RBAC rules based on the token claims.
 
 ---
 

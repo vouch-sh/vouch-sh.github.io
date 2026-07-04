@@ -36,15 +36,20 @@ Layout resolution:
 - **Blog**: `layouts/blog/list.html` and `layouts/blog/single.html`
 - **Everything else**: `layouts/_default/list.html` and `layouts/_default/single.html`
 
-The `layouts/partials/docs-sidebar-nav.html` partial renders the docs sidebar. It iterates `docsSection.Pages.ByWeight`, rendering sections (like Applications) as collapsible groups and leaf pages as flat links.
+The `layouts/partials/docs-sidebar-nav.html` partial renders the docs sidebar. Pages are bucketed by `params.docsGroup` (see below), and within each group ordered `ByWeight`; sections (like Applications) render as collapsible groups, leaf pages as flat links.
 
 ## Content Patterns
 
 Standard front matter fields:
 - `title` — Page title (required)
 - `description` — Used in meta tags and card summaries
-- `weight` — Controls ordering in sidebar nav and card grids (lower = first)
+- `weight` — Ordering *within the page's sidebar group* (lower = first); not global
 - `subtitle` — Optional; rendered below the title on docs pages
+
+Docs front matter adds:
+- `params.docsGroup` — Which sidebar/landing group the page belongs to: `featured` ("Start Here": getting-started, rollout, startups), `aws` (everything that depends on the shared OIDC provider + IAM role), `integrations` (SSH, GitHub, Docker, Cargo, Kubernetes, SPIFFE, AI APIs), `admin`, or `reference`. Group order and labels live in `hugo.toml` (`params.sidebarGroups`) + `i18n/en.toml` (`sidebar_group_<key>`, `docs_group_<key>_title/desc` referenced by `layouts/docs/list.html`).
+
+Integration guides follow a shared structure: a `{{</* tldr */>}}` box right after the intro (prereq chain, one-time admin action, per-developer command), `{{</* role admin */>}}` / `{{</* role developer */>}}` labels under step headings, actionable steps first, and "How it works" / comparison material demoted below them. `content/docs/rollout.md` is the team-rollout playbook these pages hang off; it owns the canonical offboarding section.
 
 Application guide front matter adds:
 - `params.category` — One of `server`, `spa`, or `native`; determines which section the card appears in on the applications list page
@@ -86,6 +91,9 @@ Dark theme using CSS custom properties defined in `assets/css/main.css`:
 ## Shortcodes
 
 - `{{</* instance-url */>}}` — Renders the configured instance URL (default: `https://us.vouch.sh`). Configured via `params.usInstance` in `hugo.toml`.
+- `{{</* tldr */>}}...{{</* /tldr */>}}` — Accent-bordered quick-start box at the top of integration guides (`.tldr` in main.css; title via `tldr_title` i18n key). Inner content is markdown.
+- `{{</* role admin */>}}` / `{{</* role developer */>}}` — Pill label under a heading marking one-time admin work vs. per-developer work (`role_admin`/`role_developer` i18n keys).
+- `{{</* session-note */>}}` — One-line "run `vouch login`" reminder (`session_note` i18n key); replaces repeated 8-hour-session boilerplate.
 
 ## Internationalization (i18n)
 

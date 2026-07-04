@@ -8,7 +8,9 @@ params:
   docsGroup: reference
 ---
 
-Migrating to Vouch does not have to be all-or-nothing. You can install Vouch alongside your existing credentials and migrate one integration at a time. This guide walks through a phased rollout, a per-integration checklist, and a rollback plan.
+Migrating to Vouch does not have to be all-or-nothing. You can install Vouch alongside your existing credentials and migrate one integration at a time. This guide covers the migration mechanics: the recommended order, per-integration checklists, revoking old credentials, and rolling back.
+
+> Planning the overall rollout -- foundation setup, service enablement, team onboarding, offboarding? Start with the [Team Rollout playbook](/docs/rollout/) and come back here for the migration details.
 
 ---
 

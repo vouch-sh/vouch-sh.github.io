@@ -57,10 +57,10 @@ defaultContentLanguage = "en"
 
 # Sidebar group labels are translated via i18n keys: sidebar_group_<key>
 [[params.sidebarGroups]]
-  key = "infra"
+  key = "aws"
 
 [[params.sidebarGroups]]
-  key = "code"
+  key = "integrations"
 
 [[params.sidebarGroups]]
   key = "admin"

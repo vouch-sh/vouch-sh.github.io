@@ -2,48 +2,21 @@
 title: "Authenticate to Amazon EKS without Static Credentials"
 linkTitle: "Amazon EKS"
 description: "Access EKS clusters using OIDC-federated IAM credentials instead of long-lived kubeconfig tokens."
-weight: 5
+weight: 3
 subtitle: "Authenticate to EKS clusters using AWS IAM and EKS Access Entries"
 params:
-  docsGroup: infra
+  docsGroup: aws
 ---
 
 > **Not using EKS?** For standard Kubernetes clusters (self-hosted, GKE, AKS, k3s, etc.) that use OIDC authentication, see [Kubernetes](/docs/kubernetes/).
 
 [EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) map IAM principals directly to Kubernetes permissions, with every authentication event recorded in CloudTrail. Combined with Vouch, every `kubectl` command traces back to a hardware-verified human identity -- no static tokens, no shared kubeconfigs.
 
-### EKS authentication modes compared
-
-EKS supports three ways to manage cluster authentication. The table below summarizes the trade-offs:
-
-| | **`aws-auth` ConfigMap** | **EKS Access Entries** | **Access Entries + Vouch** |
-|---|---|---|---|
-| **How it works** | A Kubernetes ConfigMap (`kube-system/aws-auth`) maps IAM principals to Kubernetes users/groups. | IAM principals are mapped to Kubernetes permissions via the EKS API, outside the cluster. | Same as Access Entries, but credentials are issued through Vouch's OIDC-backed flow. |
-| **Credential type** | Long-lived kubeconfig tokens or static IAM keys. | Temporary STS credentials. | Short-lived STS credentials; no local AWS keys needed. |
-| **Access management** | Edit a ConfigMap with `kubectl`. Changes are immediate but unversioned. | Create and modify entries via the AWS API, CLI, or Terraform. | Same AWS API/Terraform workflow as Access Entries. |
-| **Audit trail** | No native audit trail for ConfigMap edits. Kubernetes audit logs show API calls but not who edited the map. | All changes recorded in CloudTrail. Authentication events logged. | CloudTrail logs plus Vouch audit trail tying every action to a hardware-verified identity. |
-| **Granularity** | Map IAM roles/users to Kubernetes groups; RBAC handles the rest. | Built-in access policies (view, edit, admin, cluster-admin) with cluster or namespace scope, plus custom RBAC. | Same granularity as Access Entries. |
-| **Revocation** | Edit or delete the ConfigMap entry. Easy to make mistakes. | Delete the access entry via the AWS API. | Remove the IAM role mapping or revoke the user's Vouch enrollment. |
-| **Risk** | Misconfigured ConfigMap can lock out all users, including admins. Shared tokens hard to revoke per-user. | No cluster lockout risk -- cluster creator always retains access. Per-principal entries are independent. | Same safety as Access Entries, with the added benefit of no static credentials on developer machines. |
-| **EKS auth mode** | `CONFIG_MAP` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` |
-
-> **Recommendation:** Use **EKS Access Entries with Vouch** for the strongest security posture -- every `kubectl` command ties back to a hardware-verified identity with no static credentials on developer machines. The `aws-auth` ConfigMap is considered legacy; AWS recommends Access Entries for all new clusters.
-
-## How it works
-
-The authentication flow chains three components:
-
-```
-vouch login --> vouch credential eks --> kubectl
-```
-
-1. **`vouch login`** -- The developer authenticates with their YubiKey and receives an OIDC ID token from the Vouch server.
-2. **`vouch credential eks`** -- The CLI exchanges the OIDC token for temporary AWS STS credentials, then builds a presigned STS `GetCallerIdentity` URL with the `x-k8s-aws-id` header, base64url-encodes it, and outputs a Kubernetes `ExecCredential` JSON.
-3. **`kubectl`** -- The Kubernetes client sends the token to the EKS API server, which validates it against IAM and applies the permissions defined by Access Entries or RBAC.
-
-Because every step uses short-lived credentials, there are no static kubeconfig tokens or long-lived AWS keys to manage. No AWS CLI installation is required -- Vouch handles STS and EKS API calls natively.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once per cluster:** [create an Access Entry](#creating-eks-access-entries) mapping the Vouch IAM role to cluster permissions; the cluster's auth mode must include `API`.
+- **Each developer:** `vouch setup eks --cluster <NAME>`, then `kubectl get pods` on the `<NAME>-vouch` context.
+{{< /tldr >}}
 
 ## Prerequisites
 
@@ -60,7 +33,9 @@ Before setting up EKS authentication with Vouch, ensure you have:
 
 ## Setup
 
-Configure `kubectl` to use your Vouch-backed credentials for cluster authentication:
+{{< role developer >}}
+
+Configure `kubectl` to use your Vouch-backed credentials for cluster authentication (an admin must have [created an Access Entry](#creating-eks-access-entries) for your role first):
 
 ```bash
 vouch setup eks --cluster YOUR_CLUSTER_NAME
@@ -87,6 +62,8 @@ kubectl get pods
 
 ## Usage
 
+{{< role developer >}}
+
 With everything configured, daily usage is straightforward:
 
 ```bash
@@ -107,6 +84,8 @@ All authentication happens transparently. If your session expires (after 8 hours
 ---
 
 ## Creating EKS Access Entries
+
+{{< role admin >}}
 
 EKS Access Entries map IAM principals (users or roles) to Kubernetes permissions. An administrator must create an Access Entry for the IAM role used by Vouch.
 
@@ -216,6 +195,39 @@ roleRef:
 ```
 
 For per-user permissions using session tags from Vouch, you can create separate IAM roles per team or per access level and map each to different Kubernetes roles.
+
+---
+
+## How it works
+
+The authentication flow chains three components:
+
+```
+vouch login --> vouch credential eks --> kubectl
+```
+
+1. **`vouch login`** -- The developer authenticates with their YubiKey and receives an OIDC ID token from the Vouch server.
+2. **`vouch credential eks`** -- The CLI exchanges the OIDC token for temporary AWS STS credentials, then builds a presigned STS `GetCallerIdentity` URL with the `x-k8s-aws-id` header, base64url-encodes it, and outputs a Kubernetes `ExecCredential` JSON.
+3. **`kubectl`** -- The Kubernetes client sends the token to the EKS API server, which validates it against IAM and applies the permissions defined by Access Entries or RBAC.
+
+Because every step uses short-lived credentials, there are no static kubeconfig tokens or long-lived AWS keys to manage. No AWS CLI installation is required -- Vouch handles STS and EKS API calls natively.
+
+---
+
+## EKS authentication modes compared
+
+EKS supports three ways to manage cluster authentication. The `aws-auth` ConfigMap is considered legacy; AWS recommends Access Entries for all new clusters, and Vouch builds on them.
+
+| | **`aws-auth` ConfigMap** | **EKS Access Entries** | **Access Entries + Vouch** |
+|---|---|---|---|
+| **How it works** | A Kubernetes ConfigMap (`kube-system/aws-auth`) maps IAM principals to Kubernetes users/groups. | IAM principals are mapped to Kubernetes permissions via the EKS API, outside the cluster. | Same as Access Entries, but credentials are issued through Vouch's OIDC-backed flow. |
+| **Credential type** | Long-lived kubeconfig tokens or static IAM keys. | Temporary STS credentials. | Short-lived STS credentials; no local AWS keys needed. |
+| **Access management** | Edit a ConfigMap with `kubectl`. Changes are immediate but unversioned. | Create and modify entries via the AWS API, CLI, or Terraform. | Same AWS API/Terraform workflow as Access Entries. |
+| **Audit trail** | No native audit trail for ConfigMap edits. Kubernetes audit logs show API calls but not who edited the map. | All changes recorded in CloudTrail. Authentication events logged. | CloudTrail logs plus Vouch audit trail tying every action to a hardware-verified identity. |
+| **Granularity** | Map IAM roles/users to Kubernetes groups; RBAC handles the rest. | Built-in access policies (view, edit, admin, cluster-admin) with cluster or namespace scope, plus custom RBAC. | Same granularity as Access Entries. |
+| **Revocation** | Edit or delete the ConfigMap entry. Easy to make mistakes. | Delete the access entry via the AWS API. | Remove the IAM role mapping or revoke the user's Vouch enrollment. |
+| **Risk** | Misconfigured ConfigMap can lock out all users, including admins. Shared tokens hard to revoke per-user. | No cluster lockout risk -- cluster creator always retains access. Per-principal entries are independent. | Same safety as Access Entries, with the added benefit of no static credentials on developer machines. |
+| **EKS auth mode** | `CONFIG_MAP` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` | `API` or `API_AND_CONFIG_MAP` |
 
 ---
 

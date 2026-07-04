@@ -2,35 +2,29 @@
 title: "Replace SSH Keys with Short-Lived Certificates"
 linkTitle: "SSH Certificates"
 description: "Eliminate authorized_keys management. Vouch issues SSH certificates that expire in 8 hours — no key distribution, no offboarding checklist."
-weight: 4
+weight: 1
 subtitle: "Configure SSH servers to trust Vouch certificates for passwordless authentication"
 sitemap:
   priority: 0.8
 params:
-  docsGroup: infra
+  docsGroup: integrations
 ---
 
 > **Windows:** SSH certificate integration is not available on Windows. See the [FAQ](/docs/faq/#does-vouch-work-on-windows) for details on Windows platform support.
 
 Vouch replaces static SSH keys with short-lived certificates. Administrators trust a single certificate authority (CA) key, and developers receive SSH certificates that expire after 8 hours. There is no key distribution, no `authorized_keys` sprawl, and no offboarding checklist.
 
-## How it works
-
-1. During `vouch login`, the Vouch server signs the developer's ephemeral public key with an **Ed25519 CA** key.
-2. The resulting SSH certificate is valid for **8 hours** and contains the developer's **email address** and **username** as principals.
-3. When the developer connects to a server, the SSH client presents the certificate.
-4. The server verifies the certificate was signed by the trusted CA and that one of the certificate's principals matches an allowed user.
-5. The connection is established without any `authorized_keys` lookup.
-
-Once issued, the certificate is cached by the local Vouch SSH agent for its 8-hour lifetime -- subsequent `ssh` connections reuse the same certificate without contacting the Vouch server, so latency stays low even on connection-heavy workflows.
-
-Because certificates expire after 8 hours, a compromised certificate is useless the next day. There is nothing to revoke and nothing to rotate.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
+- **Admin, once:** [configure each SSH server](#step-2----configure-ssh-servers-for-administrators) to trust the Vouch CA public key.
+- **Each developer:** `vouch setup ssh`, then `ssh user@server` just works.
+{{< /tldr >}}
 
 ## Step 1 -- Set up the CLI (for developers)
 
-After completing the [Getting Started](/docs/getting-started/) guide, enable the SSH agent integration:
+{{< role developer >}}
+
+Enable the SSH agent integration:
 
 ```bash
 vouch setup ssh
@@ -67,7 +61,9 @@ This obtains a certificate from the server and displays the certificate's princi
 
 ## Step 2 -- Configure SSH servers (for administrators)
 
-To accept Vouch certificates, each server must trust the Vouch CA public key. Below are three approaches for deploying this configuration.
+{{< role admin >}}
+
+To accept Vouch certificates, each server must trust the Vouch CA public key.
 
 You can find the CA public key on the Integrations page of the Vouch dashboard:
 
@@ -75,7 +71,7 @@ You can find the CA public key on the Integrations page of the Vouch dashboard:
 
 ### Fetch the CA public key
 
-You can also retrieve your organization's CA public key programmatically from the Vouch server:
+Or retrieve it programmatically from the Vouch server:
 
 ```bash
 curl -s https://{{< instance-url >}}/v1/credentials/ssh/ca | jq -r '.public_key'
@@ -189,6 +185,8 @@ resource "aws_instance" "example" {
 
 ## Tip: understanding principals
 
+{{< role admin >}}
+
 Vouch certificates include two principals by default:
 
 | Principal | Example | Use case |
@@ -211,7 +209,11 @@ If you do not configure `AuthorizedPrincipalsFile`, OpenSSH will accept any cert
 
 ## Step 3 -- Test the connection
 
-From a developer machine with an active Vouch session:
+{{< role developer >}}
+
+{{< session-note >}}
+
+From a developer machine:
 
 ```bash
 # Log in if you have not already
@@ -233,6 +235,16 @@ You should see an entry like:
 ```
 Accepted publickey for alice from 192.168.1.100 port 54321 ssh2: ED25519-CERT SHA256:... ID "alice@example.com" serial 42 CA ED25519 SHA256:...
 ```
+
+---
+
+## How it works
+
+1. During `vouch login`, the Vouch server signs the developer's ephemeral public key with an **Ed25519 CA** key.
+2. The resulting SSH certificate is valid for **8 hours** and contains the developer's **email address** and **username** as principals. It is cached by the local Vouch SSH agent for its lifetime, so subsequent `ssh` connections reuse it without contacting the Vouch server.
+3. When the developer connects to a server, the SSH client presents the certificate.
+4. The server verifies the certificate was signed by the trusted CA and that one of the certificate's principals matches an allowed user.
+5. The connection is established without any `authorized_keys` lookup.
 
 ---
 

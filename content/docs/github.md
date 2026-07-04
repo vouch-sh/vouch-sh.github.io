@@ -2,32 +2,23 @@
 title: "Access GitHub Repos without Personal Access Tokens"
 linkTitle: "GitHub"
 description: "Replace GitHub PATs with short-lived tokens generated from your hardware-backed Vouch session."
-weight: 5
+weight: 2
 subtitle: "Access private GitHub repositories using Vouch authentication"
 params:
-  docsGroup: code
+  docsGroup: integrations
 ---
 
 Vouch replaces GitHub PATs and deploy keys with short-lived tokens (valid for up to 1 hour) issued through a [GitHub App](https://docs.github.com/en/apps) installed in your organization. Tokens are automatically scoped to the right repositories and tied to a hardware-verified identity.
 
-## How it works
-
-When you perform a Git operation against a GitHub repository, the Vouch credential helper intercepts the authentication request and obtains a short-lived GitHub access token on your behalf:
-
-1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to `github.com`.
-2. **Vouch exchanges your session** -- The credential helper contacts the Vouch server and exchanges your active hardware-backed session for a GitHub installation access token.
-3. **GitHub App issues a token** -- The Vouch server uses a GitHub App installed in your organization to generate a short-lived access token scoped to the repositories your organization has granted access to.
-4. **Git authenticates** -- The token is returned to Git and used for the current operation.
-
-Key characteristics:
-
-- **Short-lived tokens** -- Access tokens are valid for **1 hour** and are never written to disk.
-- **Multiple GitHub organizations** -- If your Vouch server is connected to more than one GitHub organization, Vouch automatically selects the correct token based on the repository you are accessing.
-- **No stored secrets** -- There are no personal access tokens, SSH keys, or deploy keys to rotate or revoke.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
+- **Admin, once:** [install the Vouch GitHub App](#step-1----install-the-vouch-github-app-admin) in your GitHub organization.
+- **Each developer:** `vouch setup github --configure`, then `git clone https://github.com/your-org/private-repo.git` just works.
+{{< /tldr >}}
 
 ## Step 1 -- Install the Vouch GitHub App (admin)
+
+{{< role admin >}}
 
 An organization administrator must connect at least one GitHub organization to the Vouch server before any team member can use the integration.
 
@@ -43,10 +34,9 @@ An organization administrator must connect at least one GitHub organization to t
 
 ## Step 2 -- Configure Git Credential Helper
 
-Before configuring the credential helper, make sure you have:
+{{< role developer >}}
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- A **verified identity** linked to your Vouch account (via your organization's SSO provider)
+You need a **verified identity** linked to your Vouch account (via your organization's SSO provider).
 
 Run the setup command to install the Vouch credential helper for GitHub:
 
@@ -71,19 +61,11 @@ This tells Git to use the Vouch credential helper whenever it needs credentials 
 
 ---
 
-## Step 3 -- Authenticate
+## Step 3 -- Use Git normally
 
-If you have not already logged in today, authenticate with your YubiKey:
+{{< role developer >}}
 
-```
-vouch login
-```
-
-Your session lasts for 8 hours. All Git operations during that window use the session automatically.
-
----
-
-## Step 4 -- Use Git normally
+{{< session-note >}}
 
 With the credential helper configured and an active session, Git commands work without any extra flags or tokens:
 
@@ -102,6 +84,15 @@ git push
 ```
 
 Vouch handles authentication transparently. You do not need to enter a username, password, or token.
+
+---
+
+## How it works
+
+1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to `github.com`.
+2. **Vouch exchanges your session** -- The credential helper contacts the Vouch server and exchanges your active hardware-backed session for a GitHub installation access token.
+3. **GitHub App issues a token** -- The Vouch server uses the GitHub App to generate an access token valid for **1 hour**, scoped to the repositories your organization has granted access to, and never written to disk. If more than one GitHub organization is connected, Vouch selects the correct token based on the repository you are accessing.
+4. **Git authenticates** -- The token is returned to Git and used for the current operation.
 
 ---
 
