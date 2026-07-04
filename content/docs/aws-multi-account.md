@@ -370,7 +370,9 @@ This model requires an [organization instance](https://docs.aws.amazon.com/singl
 
 <span class="role-label">Admin task</span>
 
-Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call, so its identity policy grants `sso-oauth:CreateTokenWithIAM` rather than `sts:AssumeRole`:
+Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call.
+
+The role needs **no identity policy** for this. Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role -- instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
 
 ```json
 {
@@ -378,12 +380,17 @@ Deploy a management role in the management account using the same [shared Vouch 
   "Statement": [
     {
       "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::999999999999:role/vouch/VouchAccess"
+      },
       "Action": "sso-oauth:CreateTokenWithIAM",
       "Resource": "*"
     }
   ]
 }
 ```
+
+Record the management role ARN -- IdC Step 2 references it as the principal in this resource policy.
 
 ### IdC Step 2 -- Register the trusted token issuer and application
 
@@ -509,7 +516,7 @@ Re-run `vouch setup aws --discover` at any time to pick up newly assigned accoun
 <div class="checkpoint">
 <p><strong>You are done with Identity Center setup when...</strong></p>
 <ul>
-  <li>The management role's identity policy grants <code>sso-oauth:CreateTokenWithIAM</code>, and it is named as the principal on the customer managed application.</li>
+  <li>The management role is named as the principal in the customer managed application's resource policy (<em>application credentials</em>), allowing it to call <code>sso-oauth:CreateTokenWithIAM</code>.</li>
   <li>The trusted token issuer's <strong>Issuer URL</strong> and the application's <strong>Aud claim</strong> are both <code>https://{{< instance-url >}}</code>.</li>
   <li><code>vouch setup aws --discover</code> writes a profile per assignment, and <code>aws sts get-caller-identity</code> against one returns the expected account.</li>
 </ul>
