@@ -15,6 +15,13 @@ Multi-account AWS layouts have two models, both anchored in the **management acc
 
 We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One management account plus per-account access covers the same use cases with less surface area.
 
+{{< tldr >}}
+- **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1----register-the-vouch-oidc-provider) in your management account.
+- **Admin, once:** deploy the [hub role](#step-1----deploy-the-hub-role) there, then a [spoke role per member account](#step-2----deploy-spoke-roles-in-member-accounts) via StackSets or Terraform.
+- **Each developer:** `vouch setup aws --management-role <HUB_ARN> --role <SPOKE_ARN> --profile vouch-<env>` -- one profile per account.
+- On Identity Center? Skip the spokes and [register Vouch as a trusted token issuer](#aws-iam-identity-center) instead.
+{{< /tldr >}}
+
 ---
 
 ## Architecture
@@ -39,7 +46,7 @@ Every developer uses the same `vouch login` session. The AWS profile they select
 
 ## Step 1 -- Deploy the hub role
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 Deploy the hub role in your management account. Developers federate into it with `vouch login`, and it can do nothing in this account except assume spoke roles in member accounts.
 
@@ -103,7 +110,7 @@ Its **identity policy** grants `sts:AssumeRole` only, scoped to the spoke role A
 
 ## Step 2 -- Deploy spoke roles in member accounts
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 Each member account needs a `VouchAccess` role that trusts the hub role and grants the actual permissions developers need in that account. The spoke role's trust policy is a plain AWS-principal trust (no OIDC provider, no JWT condition) because the chained `AssumeRole` call comes from a regular IAM role, not from a federated identity. The `aws:SourceIdentity` condition ensures only requests originating from an authenticated Vouch user with a matching email domain can assume the role.
 
@@ -299,7 +306,7 @@ module "vouch" {
 
 ## Step 3 -- Configure developer profiles
 
-<span class="role-label">Developer task</span>
+{{< role developer >}}
 
 Each developer configures a named AWS profile per account. Point `--role` at the spoke role (`/vouch/VouchAccess`) in the target account and `--management-role` at the hub role; the Vouch CLI stores the hub as an organization anchor and handles the chain through it:
 
@@ -368,7 +375,7 @@ This model requires an [organization instance](https://docs.aws.amazon.com/singl
 
 ### IdC Step 1 -- Deploy the management role
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call.
 
@@ -394,7 +401,7 @@ Record the management role ARN -- IdC Step 2 references it as the principal in t
 
 ### IdC Step 2 -- Register the trusted token issuer and application
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 Register Vouch as a **trusted token issuer** and add an OAuth 2.0 [customer managed application](https://docs.aws.amazon.com/singlesignon/latest/userguide/customermanagedapps.html) so it can exchange tokens and read your account assignments. The trusted token issuer, the application, and its account-access scope are managed in Terraform. The JWT-bearer grant (which binds the issuer and sets the `aud` claim) and the application credentials (the resource policy that lets the management role call `CreateTokenWithIAM`) have no Terraform resource yet, so apply those two with the AWS CLI.
 
@@ -485,7 +492,7 @@ Prefer the console? In the [IAM Identity Center console](https://console.aws.ama
 
 ### IdC Step 3 -- Discover accounts and permission sets
 
-<span class="role-label">Developer task</span>
+{{< role developer >}}
 
 With the application registered, developers run a single command to enumerate every account and permission set they are assigned and write one profile per assignment:
 

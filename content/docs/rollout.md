@@ -13,7 +13,7 @@ params:
 Your job: get everyone on the team into AWS, Kubernetes, and the package and repo services around them — fast, without handing out static keys, and without you becoming the person everyone waits on. This page is the whole playbook. Each step links to a deep-dive guide, but you should rarely need one.
 
 {{< tldr >}}
-1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [30 minutes](#day-0--the-foundation).
+1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [30 minutes](#day-0----the-foundation).
 2. **Per service (admin):** add a few IAM actions to that role — [checklist below](#enable-services).
 3. **Per developer:** they run `vouch enroll`, then `vouch setup aws --role <ARN>` — [send them this](#onboard-developers).
 4. **Ongoing:** offboarding is your IdP + [one deny statement](#when-someone-leaves); nothing to hunt down.

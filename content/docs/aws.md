@@ -12,13 +12,16 @@ params:
 
 Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an OIDC identity provider, and developers get temporary STS credentials -- valid for up to 1 hour -- after authenticating with their YubiKey. Every API call is tied to a verified human identity in CloudTrail.
 
-## How it works
-
-`vouch login` authenticates the developer with their YubiKey, and the Vouch server issues a short-lived OIDC ID token carrying their email in the `sub` claim. When the developer runs an AWS command, the CLI calls **AWS STS AssumeRoleWithWebIdentity** with that token; AWS validates it against the Vouch server and returns temporary credentials valid for up to 1 hour. Because the token is scoped to the authenticated user and short-lived, credentials cannot be shared or reused after expiry.
+{{< tldr >}}
+- **Prerequisite:** [Getting Started](/docs/getting-started/) (CLI installed, YubiKey enrolled).
+- **Admin, once:** [register the OIDC provider](#step-1----register-the-vouch-oidc-provider) and [deploy a role](#step-2----deploy-a-role); share the role ARN.
+- **Each developer:** `vouch setup aws --role <ROLE_ARN>`, then verify with `aws sts get-caller-identity --profile vouch`.
+- Rolling this out to a whole team? Follow the [Team Rollout playbook](/docs/rollout/).
+{{< /tldr >}}
 
 ## Step 1 -- Register the Vouch OIDC provider
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 Vouch uses **exactly one OIDC provider per organization**. Register it once -- in your single AWS account, or in the **management account** if you use AWS Organizations. An administrator does this before any user can assume a role.
 
@@ -62,7 +65,7 @@ resource "aws_iam_openid_connect_provider" "vouch" {
 
 ## Choose your setup
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 How your team accesses AWS decides what you deploy next. This is the same question the `vouch setup aws` wizard asks each developer -- **"How do you access AWS?"** -- so admins and developers stay aligned:
 
@@ -78,7 +81,7 @@ If you have an Organization, everything anchors in the management account. Singl
 
 ## Step 2 -- Deploy a role
 
-<span class="role-label">Admin task</span>
+{{< role admin >}}
 
 This is the role developers federate into with `vouch login`. Its **trust policy** is the same no matter what the role can do; only the **permissions policy** changes -- and *what the role is allowed to do is your team's decision.* Deploy the shared trust policy below, then attach a permissions policy one of two ways.
 
@@ -244,7 +247,7 @@ In CloudFormation, use [`Policies`](https://docs.aws.amazon.com/AWSCloudFormatio
 
 ## Step 3 -- Configure the Vouch CLI
 
-<span class="role-label">Developer task</span>
+{{< role developer >}}
 
 Each developer runs the wizard -- it asks the same **"How do you access AWS?"** question and writes the AWS profile for you:
 
@@ -278,7 +281,7 @@ credential_process = vouch credential aws --role arn:aws:iam::123456789012:role/
 
 ## Step 4 -- Test
 
-<span class="role-label">Developer task</span>
+{{< role developer >}}
 
 Verify that everything is working:
 
@@ -493,6 +496,12 @@ If your agent is not listed, it will be detected if it sets the `AGENT` or `AI_A
 ### Role chaining with agents
 
 When using [role chaining](/docs/aws-multi-account/#architecture) with an AI agent, Vouch applies an additional inline session policy to the management-account hop that restricts it to STS actions only (`sts:AssumeRole`, `sts:TagSession`, `sts:SetSourceIdentity`). The final role hop receives the `ReadOnlyAccess` session policy.
+
+---
+
+## How it works
+
+`vouch login` authenticates the developer with their YubiKey, and the Vouch server issues a short-lived OIDC ID token carrying their email in the `sub` claim. When the developer runs an AWS command, the CLI calls **AWS STS AssumeRoleWithWebIdentity** with that token; AWS validates it against the Vouch server and returns temporary credentials valid for up to 1 hour. Because the token is scoped to the authenticated user and short-lived, credentials cannot be shared or reused after expiry.
 
 ---
 

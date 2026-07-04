@@ -10,33 +10,26 @@ params:
 
 Vouch authenticates to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/latest/userguide/welcome.html) using short-lived STS credentials -- no SSH keys, no HTTPS Git credentials, and no IAM access keys to manage. Both HTTPS credential helper and native `codecommit://` remote helper are supported.
 
-## How it works
-
-1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to an AWS CodeCommit repository.
-2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
-3. **SigV4 signing** -- Vouch uses the STS credentials to sign the Git HTTP request with AWS Signature Version 4, authenticating directly to AWS CodeCommit without generating intermediate HTTPS Git credentials.
-4. **Git authenticates** -- The signed credentials are returned to Git and used for the current operation.
-
-Key characteristics:
-
-- **Short-lived credentials** -- Git credentials are derived from your Vouch session and expire when the session ends.
-- **No stored secrets** -- There are no IAM access keys, HTTPS Git credentials, or SSH keys to manage.
-- **Native SigV4** -- Vouch signs requests directly using the AWS SigV4 protocol, bypassing the legacy HTTPS Git credential system.
-- **Two authentication methods** -- Use HTTPS URLs with the credential helper, or `codecommit://` URLs with the native remote helper.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once:** add `codecommit:GitPull` and `codecommit:GitPush` to the Vouch IAM role.
+- **Each developer:** `vouch setup codecommit --configure`, then `git clone https://git-codecommit.<region>.amazonaws.com/v1/repos/<repo>` just works.
+{{< /tldr >}}
 
 ## Prerequisites
 
-Before configuring the AWS CodeCommit integration, make sure you have:
+{{< role admin >}}
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- The **[AWS integration](/docs/aws/)** configured (OIDC provider and IAM role)
+Before developers can configure the AWS CodeCommit integration:
+
+- The **[AWS integration](/docs/aws/)** must be configured (OIDC provider and IAM role)
 - The IAM role must have `codecommit:GitPull` and `codecommit:GitPush` permissions on the target repositories
 
 ---
 
 ## Step 1 -- Configure the Git credential helper
+
+{{< role developer >}}
 
 Run the setup command to install the Vouch credential helper for AWS CodeCommit:
 
@@ -70,19 +63,11 @@ The setup also installs the native `git-remote-codecommit` helper as a symlink a
 
 ---
 
-## Step 2 -- Authenticate
+## Step 2 -- Use Git normally
 
-If you have not already logged in today, authenticate with your YubiKey:
+{{< role developer >}}
 
-```
-vouch login
-```
-
-Your session lasts for 8 hours. All Git operations during that window use the session automatically.
-
----
-
-## Step 3 -- Use Git normally
+{{< session-note >}}
 
 With the credential helper configured and an active session, Git commands work without any extra flags or tokens:
 
@@ -189,6 +174,15 @@ fatal: Authentication failed for 'https://git-codecommit.us-east-1.amazonaws.com
 2. Remove or reorder conflicting entries so that `vouch` appears first.
 3. Re-run `vouch setup codecommit` to ensure the configuration is correct.
 4. Alternatively, switch to `codecommit://` URLs which bypass Git's credential helper system entirely.
+
+---
+
+## How it works
+
+1. **Git requests credentials** -- Git calls the Vouch credential helper when it needs to authenticate to an AWS CodeCommit repository.
+2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
+3. **SigV4 signing** -- Vouch uses the STS credentials to sign the Git HTTP request with AWS Signature Version 4, authenticating directly to AWS CodeCommit -- bypassing the legacy HTTPS Git credential system, with no stored secrets on disk.
+4. **Git authenticates** -- The signed credentials are returned to Git and used for the current operation.
 
 ---
 

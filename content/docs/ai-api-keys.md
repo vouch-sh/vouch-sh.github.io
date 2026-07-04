@@ -26,7 +26,7 @@ vouch login → Vouch OIDC JWT → jwt-bearer exchange → short-lived provider 
 
 Anthropic's WIF accepts any standards-compliant OIDC issuer. You register Vouch as a **federation issuer**, point a **federation rule** at a **service account**, and exchange Vouch tokens for short-lived `sk-ant-oat01-...` tokens.
 
-### Step 1 -- Register Vouch as a federation issuer <span class="role-label">Admin task</span>
+### Step 1 -- Register Vouch as a federation issuer {{< role admin >}}
 
 In the [Claude Console](https://platform.claude.com/), go to **Settings → Workload identity → Issuers** and select **Create issuer**. Fill in the form:
 
@@ -38,13 +38,13 @@ In the [Claude Console](https://platform.claude.com/), go to **Settings → Work
 - **Token validation → Enforce single-use tokens (JTI replay protection)** -- leave **on** (the default). Vouch mints a unique `jti` per ID token.
 - **Token validation → Maximum token lifetime** -- leave at **1 hour** (the default). Vouch ID tokens are short-lived and well under this ceiling.
 
-### Step 2 -- Create a service account and workspace <span class="role-label">Admin task</span>
+### Step 2 -- Create a service account and workspace {{< role admin >}}
 
 Go to **Settings → Service accounts → Create service account** (for example, `local-dev`) and note its ID (`svac_...`).
 
 `vouch setup anthropic` in Step 4 requires a workspace ID (`wrkspc_...`), and the organization's **Default** workspace does not expose one. Go to **Settings → Workspaces → Create workspace**, add the service account to it, and note the new workspace's ID.
 
-### Step 3 -- Create a federation rule <span class="role-label">Admin task</span>
+### Step 3 -- Create a federation rule {{< role admin >}}
 
 Back on **Workload identity → Federation rules**, select **Create rule**. The form has four sections:
 
@@ -75,7 +75,7 @@ Keep the default **Pattern match** mode. Vouch tokens carry the logged-in identi
 
 Note the rule ID (`fdrl_...`) -- you will need it in Step 4.
 
-### Step 4 -- Get a token <span class="role-label">Developer task</span> {#claude-get-a-token}
+### Step 4 -- Get a token {{< role developer >}} {#claude-get-a-token}
 
 > **Requires Vouch v2026.5.4 or later.** On earlier versions, drive the exchange directly with the [official Anthropic SDK's](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) `ANTHROPIC_FEDERATION_*` environment variables and `ANTHROPIC_IDENTITY_TOKEN_FILE`, kept current from the AWS-flow ID token returned by [`/v1/credentials/aws/token`](/docs/aws/).
 
@@ -121,7 +121,7 @@ Use `ANTHROPIC_AUTH_TOKEN`, not `ANTHROPIC_API_KEY` — the API-key variable is 
 
 OpenAI's WIF similarly exchanges an OIDC JWT for a short-lived OpenAI access token.
 
-### Step 1 -- Register Vouch as the OIDC issuer <span class="role-label">Admin task</span>
+### Step 1 -- Register Vouch as the OIDC issuer {{< role admin >}}
 
 In your OpenAI organization's workload identity settings, configure:
 
@@ -131,7 +131,7 @@ In your OpenAI organization's workload identity settings, configure:
 | Audience | The audience your workload requests (see [Audience matching](#audience-matching) below) |
 | Subject mapping | Map the Vouch `sub` claim to the OpenAI service account |
 
-### Step 2 -- Get a token <span class="role-label">Developer task</span>
+### Step 2 -- Get a token {{< role developer >}}
 
 > **Requires Vouch v2026.5.4 or later** (see the [Claude API note above](#claude-get-a-token) for the pre-v2026.5.4 SDK workaround).
 

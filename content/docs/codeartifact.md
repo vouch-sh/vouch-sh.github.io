@@ -10,27 +10,27 @@ params:
 
 Vouch authenticates to [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html) using hardware-backed IAM credentials. After a single `vouch login`, Cargo, pip, npm, pnpm, and uv can pull and publish packages without manual token management.
 
-## How it works
-
-1. **Package manager requests a token** -- When a package manager needs to authenticate to an AWS CodeArtifact repository, the Vouch credential helper intercepts the request.
-2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
-3. **STS to AWS CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain an AWS CodeArtifact authorization token.
-4. **Package manager authenticates** -- The token is returned to the package manager and used for the current operation. Tokens are short-lived and never written to disk.
-
----
+{{< tldr >}}
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once:** add `codeartifact:GetAuthorizationToken`, `codeartifact:GetRepositoryEndpoint`, `codeartifact:ReadFromRepository`, and `sts:GetServiceBearerToken` to the Vouch IAM role.
+- **Each developer:** `vouch setup codeartifact --tool <cargo|pip|npm|pnpm|uv> --repository <REPO>`, then use the package manager normally.
+{{< /tldr >}}
 
 ## Prerequisites
 
-Before configuring the AWS CodeArtifact integration, make sure you have:
+{{< role admin >}}
 
-- The **Vouch CLI** installed and enrolled (see [Getting Started](/docs/getting-started/))
-- The **[AWS integration](/docs/aws/)** configured (OIDC provider and IAM role)
-- An **AWS CodeArtifact domain and repository** in your AWS account
+Before developers can configure the AWS CodeArtifact integration:
+
+- The **[AWS integration](/docs/aws/)** must be configured (OIDC provider and IAM role)
+- An **AWS CodeArtifact domain and repository** must exist in your AWS account
 - The IAM role must have `codeartifact:GetAuthorizationToken` and `sts:GetServiceBearerToken` permissions
 
 ---
 
 ## Step 1 -- Configure the Vouch CLI
+
+{{< role developer >}}
 
 Run the setup command to configure Vouch for your AWS CodeArtifact repository:
 
@@ -51,65 +51,11 @@ This configures the appropriate credential helper for your package manager and w
 
 ---
 
-## Profiles
+## Step 2 -- Use your package manager normally
 
-Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
+{{< role developer >}}
 
-### Default profile
-
-When you run `vouch setup codeartifact` with `--domain`, `--domain-owner`, and `--region`, these values are saved to the default profile. Subsequent commands can omit these flags:
-
-```bash
-# First time: specify all values (saved to default profile)
-vouch setup codeartifact --tool cargo --domain my-domain --domain-owner 123456789012 --repository my-repo --region us-east-1
-
-# Later: only --tool and --repository are needed
-vouch setup codeartifact --tool pip --repository my-pypi-repo
-```
-
-### Named profiles
-
-Use `--profile` to create and manage separate configurations for different AWS CodeArtifact domains or accounts:
-
-```bash
-# Create a profile for the shared artifacts account
-vouch setup codeartifact --tool cargo --domain shared-packages --domain-owner 111111111111 --repository cargo-store --profile shared
-
-# Create a profile for the team account
-vouch setup codeartifact --tool cargo --domain team-packages --domain-owner 222222222222 --repository team-cargo --profile team
-```
-
-Named profiles are referenced by other commands using the `--profile` flag.
-
----
-
-## Supported package managers
-
-| Package Manager | Protocol | Authentication Method | Token Model |
-|---|---|---|---|
-| **Cargo** | `sparse+https` | Bearer token via credential provider | Dynamic (fetched on demand) |
-| **pip** | HTTPS | Token embedded in index URL via keyring | Dynamic (fetched on demand) |
-| **uv** | HTTPS | Token via keyring subprocess | Dynamic (fetched on demand) |
-| **pnpm** | HTTPS | Token via `tokenHelper` | Dynamic (fetched on demand) |
-| **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, auto-refreshed on login) |
-
-**Dynamic tokens** (Cargo, pip, uv, pnpm) are fetched transparently on each operation and do not expire during normal use. **npm** uses a static token written to `.npmrc`, but it is automatically refreshed each time you run `vouch login` -- no manual token rotation needed.
-
----
-
-## Step 2 -- Authenticate
-
-If you have not already logged in today, authenticate with your YubiKey:
-
-```
-vouch login
-```
-
-Your session lasts for 8 hours. All AWS CodeArtifact operations during that window use the session automatically.
-
----
-
-## Step 3 -- Use your package manager normally
+{{< session-note >}}
 
 {{< tabs >}}
 {{< tab "Cargo" >}}
@@ -178,6 +124,52 @@ uv sync
 uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact --tool pip` separately.
 {{< /tab >}}
 {{< /tabs >}}
+
+---
+
+## Supported package managers
+
+| Package Manager | Protocol | Authentication Method | Token Model |
+|---|---|---|---|
+| **Cargo** | `sparse+https` | Bearer token via credential provider | Dynamic (fetched on demand) |
+| **pip** | HTTPS | Token embedded in index URL via keyring | Dynamic (fetched on demand) |
+| **uv** | HTTPS | Token via keyring subprocess | Dynamic (fetched on demand) |
+| **pnpm** | HTTPS | Token via `tokenHelper` | Dynamic (fetched on demand) |
+| **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, auto-refreshed on login) |
+
+**Dynamic tokens** (Cargo, pip, uv, pnpm) are fetched transparently on each operation and do not expire during normal use. **npm** uses a static token written to `.npmrc`, but it is automatically refreshed each time you run `vouch login` -- no manual token rotation needed.
+
+---
+
+## Profiles
+
+Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
+
+### Default profile
+
+When you run `vouch setup codeartifact` with `--domain`, `--domain-owner`, and `--region`, these values are saved to the default profile. Subsequent commands can omit these flags:
+
+```bash
+# First time: specify all values (saved to default profile)
+vouch setup codeartifact --tool cargo --domain my-domain --domain-owner 123456789012 --repository my-repo --region us-east-1
+
+# Later: only --tool and --repository are needed
+vouch setup codeartifact --tool pip --repository my-pypi-repo
+```
+
+### Named profiles
+
+Use `--profile` to create and manage separate configurations for different AWS CodeArtifact domains or accounts:
+
+```bash
+# Create a profile for the shared artifacts account
+vouch setup codeartifact --tool cargo --domain shared-packages --domain-owner 111111111111 --repository cargo-store --profile shared
+
+# Create a profile for the team account
+vouch setup codeartifact --tool cargo --domain team-packages --domain-owner 222222222222 --repository team-cargo --profile team
+```
+
+Named profiles are referenced by other commands using the `--profile` flag.
 
 ---
 
@@ -308,6 +300,15 @@ vouch setup codeartifact \
 # Use the profile when fetching credentials
 vouch credential codeartifact --profile artifacts
 ```
+
+---
+
+## How it works
+
+1. **Package manager requests a token** -- When a package manager needs to authenticate to an AWS CodeArtifact repository, the Vouch credential helper intercepts the request.
+2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
+3. **STS to AWS CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain an AWS CodeArtifact authorization token.
+4. **Package manager authenticates** -- The token is returned to the package manager and used for the current operation. Tokens are short-lived and never written to disk.
 
 ---
 
