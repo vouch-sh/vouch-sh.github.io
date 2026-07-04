@@ -76,12 +76,6 @@ defaultContentLanguage = "en"
   weight = 1
 
 [[menus.main]]
-  identifier = "nav_blog"
-  name = "Blog"
-  url = "/blog/"
-  weight = 2
-
-[[menus.main]]
   identifier = "nav_about"
   name = "About"
   url = "/about/"

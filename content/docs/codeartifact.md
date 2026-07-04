@@ -1,5 +1,7 @@
 ---
 title: "Authenticate to AWS CodeArtifact without Stored Tokens"
+aliases:
+  - "/blog/making-codeartifact-work/"
 linkTitle: "AWS CodeArtifact"
 description: "Pull and publish packages from AWS CodeArtifact using hardware-backed credentials — no token files, no refresh scripts."
 weight: 5

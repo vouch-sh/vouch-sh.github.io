@@ -25,7 +25,6 @@ Every HTML page on vouch.sh is also served as raw Markdown at the same URL (e.g.
 ## Product
 
 - [Compare](https://vouch.sh/compare/): How Vouch compares to Teleport, HashiCorp Vault, AWS IAM Identity Center, and 1Password
-- [Blog](https://vouch.sh/blog/): Product updates and engineering insights
 
 ## Optional
 

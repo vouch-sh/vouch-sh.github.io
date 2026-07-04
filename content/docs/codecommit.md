@@ -1,5 +1,7 @@
 ---
 title: "Access AWS CodeCommit without Git Credentials"
+aliases:
+  - "/blog/solving-codecommit-credentials/"
 linkTitle: "AWS CodeCommit"
 description: "Clone and push to AWS CodeCommit repositories using short-lived credentials instead of HTTPS Git credentials or SSH keys."
 weight: 4
