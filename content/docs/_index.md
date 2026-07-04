@@ -28,8 +28,8 @@ Vouch replaces the static secrets your team manages today — AWS access keys, S
     <p><a href="/docs/security/">Security</a> · <a href="/docs/threat-model/">Threat model</a> · <a href="/docs/architecture/">Architecture</a> · <a href="/docs/availability/">Availability</a> · <a href="/docs/migration/">Migration</a></p>
   </div>
   <div class="journey-card">
-    <h3>For startups</h3>
-    <p>Go from Google Workspace to AWS access without IAM users, access keys, or Identity Center.</p>
-    <p><a href="/docs/startups/">Use the startup path</a></p>
+    <h3>For DevOps and platform teams</h3>
+    <p>Roll Vouch out to a growing team — AWS, EKS, CodeCommit, CodeArtifact, and more, without becoming the bottleneck.</p>
+    <p><a href="/docs/rollout/">Use the rollout playbook</a> · <a href="/docs/startups/">Starting from scratch?</a></p>
   </div>
 </div>

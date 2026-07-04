@@ -207,8 +207,8 @@ Before a tool can use Vouch, your organization needs to configure the matching i
   </div>
   <div class="journey-card">
     <h3>Organization rollout</h3>
-    <p>Set up the hosted dashboard, onboard users, and connect identity lifecycle controls.</p>
-    <p><a href="/docs/startups/">Startup setup</a> · <a href="/docs/admin/">Admin dashboard</a> · <a href="/docs/scim/">SCIM</a> · <a href="/docs/saml/">SAML</a> · <a href="/docs/migration/">Migration</a></p>
+    <p>Roll Vouch out to your team, onboard users, and connect identity lifecycle controls.</p>
+    <p><a href="/docs/rollout/">Team rollout</a> · <a href="/docs/startups/">Startup setup</a> · <a href="/docs/admin/">Admin dashboard</a> · <a href="/docs/scim/">SCIM</a> · <a href="/docs/migration/">Migration</a></p>
   </div>
   <div class="journey-card">
     <h3>Security review</h3>
@@ -221,38 +221,9 @@ Before a tool can use Vouch, your organization needs to configure the matching i
 
 ## Step 6 -- Onboard your team
 
-Once you have Vouch working for yourself, bring the rest of your team onboard.
+Once Vouch works for you, bringing the team onboard is one message: each person installs the CLI and enrolls with the same server, and anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
 
-### Team enrollment
-
-Each team member installs the CLI and enrolls with the same Vouch server. As long as they authenticate with the same Google Workspace domain, they automatically join your organization:
-
-```bash
-# Each team member runs:
-brew install vouch-sh/tap/vouch
-brew services start vouch
-vouch enroll --server https://{{< instance-url >}}
-```
-
-No invite codes or admin approval are needed for enrollment. The first person to enroll from a domain becomes the organization owner; everyone else joins as a member.
-
-### Manual user management
-
-For small teams (under 15 people), manual management works well. As organization owner, you can view and manage team members through the admin dashboard:
-
-![Organization Members page showing team members, roles, and status](/images/admin/admin-members.png)
-
-When someone leaves, remove them manually to revoke their access.
-
-### When to adopt SCIM
-
-As your team grows, consider setting up [SCIM provisioning](/docs/scim/) to automate user lifecycle management. SCIM connects your identity provider (Google Workspace, Okta, Azure AD) to Vouch so that:
-
-- New hires are provisioned automatically when added to your IdP.
-- Departing employees are de-provisioned instantly when their IdP account is deactivated.
-- You never forget to revoke someone's access.
-
-SCIM is recommended for teams of 15+ people, but can be set up at any team size.
+The **[Team Rollout playbook](/docs/rollout/)** is the guide for this phase. It has a copy-pasteable onboarding block for Slack, a per-service enablement checklist (AWS, EKS, CodeCommit, CodeArtifact, and more), when to adopt [SCIM](/docs/scim/) (15+ people), and the offboarding story.
 
 ---
 
