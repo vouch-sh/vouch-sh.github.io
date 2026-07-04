@@ -98,7 +98,7 @@ vouch credential anthropic        # prints a short-lived sk-ant-oat01-... token
 
 No `--audience` flag is needed unless the rule's Expected audience differs from Vouch's default (see [Audience matching](#audience-matching)).
 
-`vouch setup anthropic` persists these parameters in `~/.vouch/config.json` for subsequent `vouch credential anthropic` invocations.
+`vouch setup anthropic` persists these parameters in `~/.config/vouch/config.json` for subsequent `vouch credential anthropic` invocations.
 
 `vouch credential anthropic` mints a fresh OIDC ID token from your active Vouch session, exchanges it via the [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523) `jwt-bearer` grant, and caches the returned `sk-ant-oat01-...` until just before it expires (the same caching as [`vouch credential aws`](/docs/cli-reference/)). Use it inline:
 

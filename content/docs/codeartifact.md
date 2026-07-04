@@ -143,7 +143,7 @@ uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact 
 
 ## Profiles
 
-Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.vouch/config.json`.
+Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.config/vouch/config.json`.
 
 ### Default profile
 
@@ -239,7 +239,7 @@ Use the `--region` flag during setup to configure the appropriate partition.
 ### Wrong domain or repository
 
 - Run `vouch setup codeartifact` again with the correct `--tool` and `--repository` flags.
-- If using profiles, check `~/.vouch/config.json` for the stored domain and region values.
+- If using profiles, check `~/.config/vouch/config.json` for the stored domain and region values.
 - Check your package manager's configuration files for conflicting settings.
 
 ### Package manager not using Vouch

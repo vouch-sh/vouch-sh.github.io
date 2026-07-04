@@ -226,7 +226,7 @@ The CLI communicates with the agent over a Unix domain socket at a well-known pa
 
 - **Filesystem permissions** — The socket file has restrictive permissions (owner-only) to prevent other users on the system from accessing session material.
 - **Peer credential verification** — Every incoming connection is checked using OS-level peer credentials (`SO_PEERCRED` on Linux, `getpeereid` on macOS) to verify the connecting process has the same UID as the agent. Connections from a different UID are rejected and audit-logged, following the same approach used by `gpg-agent`.
-- **Directory safety** — On startup, the agent validates that `~/.vouch/` is not a symlink and is owned by the current user, preventing symlink-based directory hijacking where an attacker pre-creates the directory pointing to an attacker-controlled location.
+- **Directory safety** — On startup, the agent validates that its socket directory (`$XDG_RUNTIME_DIR/vouch/`, or `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset) is not a symlink and is owned by the current user, preventing symlink-based directory hijacking where an attacker pre-creates the directory pointing to an attacker-controlled location.
 
 ### In-memory credential cache
 

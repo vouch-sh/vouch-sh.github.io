@@ -34,8 +34,10 @@ This command configures your local SSH client to use the Vouch agent for certifi
 
 ```
 Host *
-  IdentityAgent ~/.vouch/ssh-agent.sock
+  IdentityAgent /run/user/1000/vouch/ssh-agent.sock
 ```
+
+The socket path is resolved for your platform: `$XDG_RUNTIME_DIR/vouch/ssh-agent.sock` on Linux, falling back to `~/.cache/vouch/ssh-agent.sock` where `XDG_RUNTIME_DIR` is unset (e.g. on macOS).
 
 After setup, every `ssh` connection will automatically use your Vouch certificate when available, falling back to regular keys if needed.
 
@@ -264,7 +266,7 @@ Accepted publickey for alice from 192.168.1.100 port 54321 ssh2: ED25519-CERT SH
 ### Agent not found
 
 - Run `vouch login` to start the agent, or restart it with `vouch setup ssh`.
-- Verify the socket path exists: `ls -la ~/.vouch/ssh-agent.sock`.
+- Verify the socket exists at the path your SSH config points to: `grep IdentityAgent ~/.ssh/config`, then `ls -la` that path (`$XDG_RUNTIME_DIR/vouch/ssh-agent.sock`, or `~/.cache/vouch/ssh-agent.sock` on macOS).
 
 ### Server rejects the certificate even though it was signed by the right CA
 
