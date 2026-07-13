@@ -73,6 +73,9 @@ Its **trust policy** is the shared Vouch OIDC trust -- the `sub` condition uses 
         "StringLike": {
           "{{< instance-url >}}:sub": "*@example.com",
           "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+        },
+        "Bool": {
+          "sts:RoleAuthorizedByIdp": "true"
         }
       }
     }
@@ -80,7 +83,7 @@ Its **trust policy** is the shared Vouch OIDC trust -- the `sub` condition uses 
 }
 ```
 
-> **Tip:** The token Vouch presents here is [pinned to the hub role](/docs/aws/#require-role-pinning), so you can additionally require `"Bool": {"sts:RoleAuthorizedByIdp": "true"}` in this trust policy. Do **not** add that condition to spoke roles -- their second hop is a plain SigV4 `sts:AssumeRole` with no OIDC token, so the condition would never match.
+> **Note:** The `sts:RoleAuthorizedByIdp` condition requires the token to be [pinned to the hub role](/docs/aws/#require-role-pinning), which the Vouch CLI does automatically. Do **not** add that condition to spoke roles -- their second hop is a plain SigV4 `sts:AssumeRole` with no OIDC token, so the condition would never match.
 
 Its **identity policy** grants `sts:AssumeRole` only, scoped to the spoke role ARNs you'll deploy in Step 2. The `aws:ResourceOrgID` condition restricts the hub to assuming roles only inside your AWS Organization -- it matches the org of the role being assumed against your own:
 

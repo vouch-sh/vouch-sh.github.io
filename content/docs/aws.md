@@ -110,6 +110,9 @@ The `*@example.com` condition limits role assumption to anyone with a verified e
         "StringLike": {
           "{{< instance-url >}}:sub": "*@example.com",
           "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+        },
+        "Bool": {
+          "sts:RoleAuthorizedByIdp": "true"
         }
       }
     }
@@ -117,7 +120,7 @@ The `*@example.com` condition limits role assumption to anyone with a verified e
 }
 ```
 
-The `sub` and `sts:RoleSessionName` conditions bind the session to the authenticated user; see [Tips for restricting access](#tips-for-restricting-access) for what each does.
+The `sub` and `sts:RoleSessionName` conditions bind the session to the authenticated user, and `sts:RoleAuthorizedByIdp` requires the token to be pinned to this role; see [Tips for restricting access](#tips-for-restricting-access) for what each does.
 
 ### Managed policy
 
@@ -147,6 +150,8 @@ Resources:
               StringLike:
                 "{{< instance-url >}}:sub": "*@example.com"
                 "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+              Bool:
+                "sts:RoleAuthorizedByIdp": "true"
       ManagedPolicyArns:
         # Start safe. Attach the permissions your team needs.
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess"
@@ -185,6 +190,9 @@ resource "aws_iam_role" "vouch_developer" {
           StringLike = {
             "{{< instance-url >}}:sub" = "*@example.com"
             "sts:RoleSessionName"      = "${{{< instance-url >}}:sub}"
+          }
+          Bool = {
+            "sts:RoleAuthorizedByIdp" = "true"
           }
         }
       }
@@ -346,6 +354,9 @@ Limit role assumption to specific users by adding an email condition to the trus
   },
   "StringLike": {
     "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+  },
+  "Bool": {
+    "sts:RoleAuthorizedByIdp": "true"
   }
 }
 ```
@@ -362,6 +373,9 @@ Allow any user from a specific domain:
   "StringLike": {
     "{{< instance-url >}}:sub": "*@example.com",
     "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+  },
+  "Bool": {
+    "sts:RoleAuthorizedByIdp": "true"
   }
 }
 ```
@@ -408,6 +422,9 @@ Attach this as an inline policy on each Vouch role, or apply it as a [Service Co
   },
   "StringNotEquals": {
     "{{< instance-url >}}:sub": ["former-employee@example.com"]
+  },
+  "Bool": {
+    "sts:RoleAuthorizedByIdp": "true"
   }
 }
 ```
@@ -439,7 +456,7 @@ All trust policy examples in this guide include this condition. AWS rejects any 
 
 The Vouch CLI requests each OIDC token pinned to the role it is about to assume, and the Vouch server embeds that role ARN in the token's `https://aws.amazon.com/roles` claim. AWS STS enforces the claim: a pinned token can only be exchanged for the exact role it was minted for, so a leaked token cannot assume any other role that trusts the Vouch issuer. This happens automatically -- no configuration is required.
 
-To make pinning mandatory, require the [`sts:RoleAuthorizedByIdp`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sts) condition key in the trust policy alongside the existing conditions:
+The trust policy makes pinning mandatory with the [`sts:RoleAuthorizedByIdp`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#condition-keys-sts) condition key:
 
 ```json
 "Condition": {
@@ -449,9 +466,9 @@ To make pinning mandatory, require the [`sts:RoleAuthorizedByIdp`](https://docs.
 }
 ```
 
-With this in place, AWS rejects any `AssumeRoleWithWebIdentity` call whose token does not name this role in its `roles` claim. Two caveats:
+With this in place, AWS rejects any `AssumeRoleWithWebIdentity` call whose token does not name this role in its `roles` claim. All trust policy examples in this guide include this condition. Two caveats:
 
-- **Roll the CLI out first.** Older CLI versions do not request pinning, so their tokens carry no `roles` claim and fail the condition. Add the condition only after your team is on a current CLI.
+- **Roll the CLI out first.** Older CLI versions do not request pinning, so their tokens carry no `roles` claim and fail the condition. If part of your team is on an older CLI, leave the condition out until everyone has upgraded.
 - **Web-identity trust statements only.** The condition key is defined for `AssumeRoleWithWebIdentity`. A role assumed by a plain SigV4 `sts:AssumeRole` call -- such as a [spoke role](/docs/aws-multi-account/) in a management-role chain -- has no OIDC token in the request, so a `Bool`-`true` condition there can never match.
 
 Matching is by exact role ARN; wildcards are not supported.
