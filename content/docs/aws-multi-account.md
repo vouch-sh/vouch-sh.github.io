@@ -73,12 +73,17 @@ Its **trust policy** is the shared Vouch OIDC trust -- the `sub` condition uses 
         "StringLike": {
           "{{< instance-url >}}:sub": "*@example.com",
           "sts:RoleSessionName": "${{{< instance-url >}}:sub}"
+        },
+        "Bool": {
+          "sts:RoleAuthorizedByIdp": "true"
         }
       }
     }
   ]
 }
 ```
+
+> **Note:** The `sts:RoleAuthorizedByIdp` condition requires the token to be [pinned to the hub role](/docs/aws/#require-role-pinning), which the Vouch CLI does automatically. Do **not** add that condition to spoke roles -- their second hop is a plain SigV4 `sts:AssumeRole` with no OIDC token, so the condition would never match.
 
 Its **identity policy** grants `sts:AssumeRole` only, scoped to the spoke role ARNs you'll deploy in Step 2. The `aws:ResourceOrgID` condition restricts the hub to assuming roles only inside your AWS Organization -- it matches the org of the role being assumed against your own:
 
@@ -377,7 +382,7 @@ This model requires an [organization instance](https://docs.aws.amazon.com/singl
 
 {{< role admin >}}
 
-Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call.
+Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call. The token for this hop is [pinned to the management role](/docs/aws/#require-role-pinning), so this trust policy can also require `"Bool": {"sts:RoleAuthorizedByIdp": "true"}` like any other web-identity role.
 
 The role needs **no identity policy** for this. Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role -- instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
 

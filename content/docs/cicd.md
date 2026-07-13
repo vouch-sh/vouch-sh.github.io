@@ -61,6 +61,9 @@ This is [the shared trust policy](/docs/aws/#shared-trust-policy) from the AWS g
             "deployer@example.com",
             "release-lead@example.com"
           ]
+        },
+        "Bool": {
+          "sts:RoleAuthorizedByIdp": "true"
         }
       }
     }
