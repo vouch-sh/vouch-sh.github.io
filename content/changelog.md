@@ -1,12 +1,28 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: AWS setup redesign, internationalization, mandatory HTTP message signatures, RP-initiated logout, workload identity federation, and more."
+description: "Major features and improvements in recent Vouch releases: OIDC role pinning, per-organization issuers, post-quantum TLS, AWS setup redesign, internationalization, mandatory HTTP message signatures, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.7.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.2) — July 14, 2026
+
+- **OIDC role pinning for AWS** — each token now carries the target role ARN in
+  the `https://aws.amazon.com/roles` claim, and AWS STS enforces it: a leaked
+  token cannot be exchanged for any role other than the one it was minted for.
+  Trust policies can make pinning mandatory with the `sts:RoleAuthorizedByIdp`
+  condition key.
+- **Per-organization OIDC issuers** — each organization gets its own subdomain
+  issuer for AWS federation, with per-org signing keys and key rotation.
+- **Post-quantum TLS** — the CLI and agent now prefer hybrid post-quantum key
+  exchange when connecting to the Vouch server.
+- **IAM Identity Center context in AssumeRole** — the CLI forwards IdC identity
+  context into role sessions for trusted identity propagation.
+- **Access-token audience enforcement** — the server now enforces the token
+  audience at every resource endpoint.
 
 ## [v2026.7.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.1) — July 3, 2026
 
