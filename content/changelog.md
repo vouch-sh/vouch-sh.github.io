@@ -1,12 +1,25 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: OIDC role pinning, per-organization issuers, post-quantum TLS, AWS setup redesign, internationalization, mandatory HTTP message signatures, and more."
+description: "Major features and improvements in recent Vouch releases: credential and key lifecycle audit events, OIDC role pinning, per-organization issuers, post-quantum TLS, AWS setup redesign, internationalization, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.7.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.3) — July 26, 2026
+
+- **Credential and key lifecycle audit events** — AWS credential issuance, SSH
+  certificate issuance, RFC 8693 token exchange, hardware key registration and
+  removal, device-flow approvals, and application secret changes now emit
+  queryable audit events, each with its own retention class.
+- **Website sign-ins recorded correctly** — signing in through the website now
+  emits a `login_success` event carrying the client IP, instead of being
+  misreported as a CLI device-flow approval.
+- **Vouch attributable in CloudTrail** — the server tags its AWS SDK requests
+  with `lib/vouch-server/<version>` in the user agent, so the S3 and KMS calls
+  it makes are identifiable in CloudTrail.
 
 ## [v2026.7.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.2) — July 14, 2026
 
