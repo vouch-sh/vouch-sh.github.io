@@ -1,12 +1,36 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: credential and key lifecycle audit events, OIDC role pinning, per-organization issuers, post-quantum TLS, AWS setup redesign, internationalization, and more."
+description: "Major features and improvements in recent Vouch releases: explicit AWS profile selection, in-process server config bootstrap, credential and key lifecycle audit events, OIDC role pinning, per-organization issuers, post-quantum TLS, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.7.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.4) — July 29, 2026
+
+- **Explicit AWS profile selection** — with multiple Vouch-managed AWS
+  profiles, the CLI no longer silently uses whichever appears first in
+  `~/.aws/config`. It resolves `--profile`, then `AWS_PROFILE`, then the sole
+  managed profile, and otherwise errors with a list of every profile and its
+  role ARN. `--profile` now means an AWS profile on every command; the
+  CodeArtifact bundle flag is renamed `--domain-profile`.
+- **CodeCommit git helper fixed** — `vouch setup codecommit --configure`
+  previously wrote a credential helper value git could not execute. The helper
+  (and the GitHub one) is now built shell-safe, `codecommit::<region>://`
+  URLs parse correctly, and the region resolves from the same profile that
+  mints the credentials.
+- **In-process server bootstrap** — on EC2 the server now reads instance facts
+  from IMDS and fetches its configuration from SSM Parameter Store itself at
+  startup, replacing the AMI's external bootstrap script and bundled AWS CLI.
+  Bootstrapped values apply below CLI flags and environment variables.
+- **CLI fully translation-ready** — the remaining English-only CLI strings
+  (command help text and error messages) moved into the Fluent catalogs.
+- **CodeArtifact role ARN validation** — an unparseable role ARN in
+  CodeArtifact setup now fails with an error naming the ARN, instead of
+  silently writing commercial-partition registry URLs into pip, cargo, and
+  npm configuration.
 
 ## [v2026.7.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.3) — July 26, 2026
 
