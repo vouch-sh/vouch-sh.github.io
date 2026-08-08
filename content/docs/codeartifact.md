@@ -26,7 +26,7 @@ Before developers can configure the AWS CodeArtifact integration:
 
 - The **[AWS integration](/docs/aws/)** must be configured (OIDC provider and IAM role)
 - An **AWS CodeArtifact domain and repository** must exist in your AWS account
-- The IAM role must have `codeartifact:GetAuthorizationToken` and `sts:GetServiceBearerToken` permissions
+- The IAM role must have `codeartifact:GetAuthorizationToken`, `codeartifact:GetRepositoryEndpoint`, `codeartifact:ReadFromRepository`, and `sts:GetServiceBearerToken` permissions
 
 ---
 
@@ -37,17 +37,18 @@ Before developers can configure the AWS CodeArtifact integration:
 Run the setup command to configure Vouch for your AWS CodeArtifact repository:
 
 ```bash
-vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] [--domain-owner 123456789012] [--region us-east-1] [--profile my-profile]
+vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] [--domain-owner 123456789012] [--region us-east-1] [--domain-profile my-profile]
 ```
 
 | Flag | Description |
 |---|---|
 | `--tool` | Package manager to configure: `cargo`, `pip`, `npm`, `pnpm`, or `uv` (required) |
 | `--repository` | The AWS CodeArtifact repository name (required) |
-| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
-| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--region` | AWS region (default: `us-east-1`; optional if a profile is configured) |
-| `--profile` | Named profile to use or create (see [Profiles](#profiles) below) |
+| `--domain` | The AWS CodeArtifact domain name (optional if a domain profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
+| `--region` | AWS region (optional if a domain profile is configured) |
+| `--domain-profile` | Named domain profile to use or create (see [Profiles](#profiles) below) |
+| `--profile` | AWS profile in `~/.aws/config` whose role mints tokens for this domain |
 
 This configures the appropriate credential helper for your package manager and writes the necessary configuration files.
 
@@ -63,11 +64,13 @@ This configures the appropriate credential helper for your package manager and w
 {{< tab "Cargo" >}}
 ```bash
 # Build a project that depends on private crates
-cargo build
+cargo build --registry codeartifact-my-repo
 
 # Publish a crate to your AWS CodeArtifact registry
-cargo publish --registry my-codeartifact-registry
+cargo publish --registry codeartifact-my-repo
 ```
+
+The setup command creates the registry as `codeartifact-<repository>` in `~/.cargo/config.toml`.
 
 Cargo tokens are fetched dynamically on each operation via the credential provider. No token refresh is needed.
 {{< /tab >}}
@@ -80,7 +83,7 @@ pip install my-package --index-url https://my-domain-123456789012.d.codeartifact
 pip install -r requirements.txt
 ```
 
-pip tokens are fetched dynamically by embedding the credential helper in the index URL. No token refresh is needed.
+pip tokens are fetched dynamically via the keyring subprocess protocol: setup writes `keyring-provider = subprocess` and the index URL to `pip.conf`, and installs a `keyring` shim in `~/.local/bin/` that pip calls for the token. No token refresh is needed.
 {{< /tab >}}
 {{< tab "npm" >}}
 ```bash
@@ -134,7 +137,7 @@ uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact 
 | Package Manager | Protocol | Authentication Method | Token Model |
 |---|---|---|---|
 | **Cargo** | `sparse+https` | Bearer token via credential provider | Dynamic (fetched on demand) |
-| **pip** | HTTPS | Token embedded in index URL via keyring | Dynamic (fetched on demand) |
+| **pip** | HTTPS | Token via keyring subprocess | Dynamic (fetched on demand) |
 | **uv** | HTTPS | Token via keyring subprocess | Dynamic (fetched on demand) |
 | **pnpm** | HTTPS | Token via `tokenHelper` | Dynamic (fetched on demand) |
 | **npm** | HTTPS | Bearer token via `.npmrc` | Static (embedded in `.npmrc`, auto-refreshed on login) |
@@ -145,11 +148,13 @@ uv does not read `pip.conf`. If you also use pip, run `vouch setup codeartifact 
 
 ## Profiles
 
-Vouch supports named profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Profiles are stored in `~/.config/vouch/config.json`.
+Vouch supports named domain profiles for AWS CodeArtifact, allowing you to store domain, domain owner, and region settings and reuse them across commands. Domain profiles are stored in `~/.config/vouch/config.json`.
+
+Domain profiles (`--domain-profile`) are distinct from AWS profiles (`--profile`): a domain profile names a saved CodeArtifact domain bundle in Vouch's config, while `--profile` selects the AWS profile in `~/.aws/config` whose IAM role mints the tokens.
 
 ### Default profile
 
-When you run `vouch setup codeartifact` with `--domain`, `--domain-owner`, and `--region`, these values are saved to the default profile. Subsequent commands can omit these flags:
+When you run `vouch setup codeartifact` with `--domain`, `--domain-owner`, and `--region`, these values are saved to the default domain profile. Subsequent commands can omit these flags:
 
 ```bash
 # First time: specify all values (saved to default profile)
@@ -161,17 +166,17 @@ vouch setup codeartifact --tool pip --repository my-pypi-repo
 
 ### Named profiles
 
-Use `--profile` to create and manage separate configurations for different AWS CodeArtifact domains or accounts:
+Use `--domain-profile` to create and manage separate configurations for different AWS CodeArtifact domains or accounts:
 
 ```bash
-# Create a profile for the shared artifacts account
-vouch setup codeartifact --tool cargo --domain shared-packages --domain-owner 111111111111 --repository cargo-store --profile shared
+# Create a domain profile for the shared artifacts account
+vouch setup codeartifact --tool cargo --domain shared-packages --domain-owner 111111111111 --repository cargo-store --domain-profile shared
 
-# Create a profile for the team account
-vouch setup codeartifact --tool cargo --domain team-packages --domain-owner 222222222222 --repository team-cargo --profile team
+# Create a domain profile for the team account
+vouch setup codeartifact --tool cargo --domain team-packages --domain-owner 222222222222 --repository team-cargo --domain-profile team
 ```
 
-Named profiles are referenced by other commands using the `--profile` flag.
+Named domain profiles are referenced by other commands using the `--domain-profile` flag.
 
 ---
 
@@ -184,7 +189,7 @@ You can inject a `CODEARTIFACT_AUTH_TOKEN` environment variable into your shell 
 Output the token as a shell export statement:
 
 ```bash
-eval "$(vouch env --type codeartifact [--ca-domain <DOMAIN>] [--ca-domain-owner <ACCOUNT_ID>] [--ca-region <REGION>] [--ca-profile <PROFILE>] [--shell <SHELL>])"
+eval "$(vouch env --type codeartifact [--codeartifact-domain <DOMAIN>] [--codeartifact-domain-owner <ACCOUNT_ID>] [--codeartifact-region <REGION>] [--codeartifact-profile <PROFILE>] [--shell <SHELL>])"
 ```
 
 This sets `CODEARTIFACT_AUTH_TOKEN` in your current shell.
@@ -194,21 +199,21 @@ This sets `CODEARTIFACT_AUTH_TOKEN` in your current shell.
 Run a command with the token injected:
 
 ```bash
-vouch exec --type codeartifact [--ca-domain <DOMAIN>] [--ca-domain-owner <ACCOUNT_ID>] [--ca-region <REGION>] [--ca-profile <PROFILE>] -- mvn deploy
+vouch exec --type codeartifact [--codeartifact-domain <DOMAIN>] [--codeartifact-domain-owner <ACCOUNT_ID>] [--codeartifact-region <REGION>] [--codeartifact-profile <PROFILE>] -- mvn deploy
 ```
 
 | Flag | Description |
 |---|---|
-| `--ca-domain` | AWS CodeArtifact domain name (optional if a profile is configured) |
-| `--ca-domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--ca-region` | AWS region (optional if a profile is configured) |
-| `--ca-profile` | Named AWS CodeArtifact profile to use |
+| `--codeartifact-domain` | AWS CodeArtifact domain name (optional if a domain profile is configured) |
+| `--codeartifact-domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
+| `--codeartifact-region` | AWS region (optional if a domain profile is configured) |
+| `--codeartifact-profile` | Named CodeArtifact domain profile to use |
 
 ---
 
 ## Cross-partition support
 
-All AWS partitions are supported -- standard (`aws`), China (`aws-cn`), GovCloud (`aws-us-gov`), and European Sovereign Cloud (`aws-eusc`). Pass the partition's region via `--region` during setup.
+All AWS partitions are supported -- standard (`aws`), China (`aws-cn`), GovCloud (`aws-us-gov`), and European Sovereign Cloud (`aws-eusc`). Vouch derives the partition-specific CodeArtifact endpoint from the partition of your IAM role's ARN (configured via the [AWS integration](/docs/aws/)); pass the partition's region via `--region` during setup.
 
 ---
 
@@ -282,16 +287,17 @@ vouch setup aws \
   --role arn:aws:iam::ARTIFACTS_ACCOUNT:role/CodeArtifactReader \
   --profile vouch-artifacts
 
-# Create an AWS CodeArtifact profile that uses the artifacts account
+# Create a CodeArtifact domain profile that uses the artifacts account
 vouch setup codeartifact \
   --tool npm \
   --domain shared-packages \
   --domain-owner ARTIFACTS_ACCOUNT \
   --repository npm-store \
-  --profile artifacts
+  --domain-profile artifacts \
+  --profile vouch-artifacts
 
-# Use the profile when fetching credentials
-vouch credential codeartifact --profile artifacts
+# Use the domain profile when fetching credentials
+vouch credential codeartifact --domain-profile artifacts
 ```
 
 ---
@@ -301,7 +307,7 @@ vouch credential codeartifact --profile artifacts
 1. **Package manager requests a token** -- When a package manager needs to authenticate to an AWS CodeArtifact repository, the Vouch credential helper intercepts the request.
 2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
 3. **STS to AWS CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain an AWS CodeArtifact authorization token.
-4. **Package manager authenticates** -- The token is returned to the package manager and used for the current operation. Tokens are short-lived and never written to disk.
+4. **Package manager authenticates** -- The token is returned to the package manager and used for the current operation. Tokens are short-lived and, except for npm's static `.npmrc` entry, never written to disk.
 
 ---
 
