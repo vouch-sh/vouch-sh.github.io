@@ -49,17 +49,19 @@ This configures Git to use Vouch as the credential helper for AWS CodeCommit HTT
 
 ```ini
 [credential "https://git-codecommit.*.amazonaws.com"]
-    helper = vouch
+    helper = !'/usr/local/bin/vouch' credential codecommit --profile vouch
     useHttpPath = true
 
 [credential "https://git-codecommit.*.amazonaws.com.cn"]
-    helper = vouch
+    helper = !'/usr/local/bin/vouch' credential codecommit --profile vouch
     useHttpPath = true
 
 [credential "https://git-codecommit.*.amazonaws.eu"]
-    helper = vouch
+    helper = !'/usr/local/bin/vouch' credential codecommit --profile vouch
     useHttpPath = true
 ```
+
+The helper value uses the absolute path to your `vouch` binary and bakes in the AWS profile name, so your entries will differ slightly from the example above.
 
 The setup also installs the native `git-remote-codecommit` helper as a symlink at `~/.local/bin/git-remote-codecommit`, enabling `codecommit://` URL support (see below).
 
@@ -95,7 +97,7 @@ Vouch handles authentication transparently. You do not need to enter a username,
 
 Vouch ships its own native `git-remote-codecommit` remote helper, which is installed automatically by `vouch setup codecommit`. This provides `codecommit://` URL support without requiring any external dependencies -- no Python or `pip install` needed.
 
-The remote helper reads credentials directly from the AWS credential chain, bypassing Git's credential helper system entirely. This avoids known conflicts with macOS Keychain and Git Credential Manager.
+The remote helper uses the same Vouch session → STS flow as the credential helper, but bypasses Git's credential helper system entirely. This avoids known conflicts with macOS Keychain and Git Credential Manager.
 
 ### URL formats
 
@@ -133,7 +135,7 @@ Use `codecommit://` URLs when:
 
 ## Cross-partition support
 
-All AWS partitions -- standard (`aws`), China (`aws-cn`), and European Sovereign Cloud (`aws-eusc`) -- are configured automatically during setup, as the `~/.gitconfig` entries in Step 1 show.
+All AWS partitions -- standard (`aws`), GovCloud (`aws-us-gov`, covered by the `amazonaws.com` wildcard), China (`aws-cn`), and European Sovereign Cloud (`aws-eusc`) -- are configured automatically during setup, as the `~/.gitconfig` entries in Step 1 show.
 
 ---
 
@@ -146,7 +148,7 @@ fatal: Authentication failed for 'https://git-codecommit.us-east-1.amazonaws.com
 ```
 
 - Verify you have an active Vouch session: `vouch login`.
-- Confirm the credential helper is configured: `git config --global credential.https://git-codecommit.*.amazonaws.com.helper` should return `vouch`.
+- Confirm the credential helper is configured: `git config --global credential.https://git-codecommit.*.amazonaws.com.helper` should return a value containing `vouch' credential codecommit`.
 - Check that the Vouch agent is running: `vouch status`.
 
 ### "Not authorized to perform codecommit:GitPull"
