@@ -1,12 +1,42 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: explicit AWS profile selection, in-process server config bootstrap, credential and key lifecycle audit events, OIDC role pinning, per-organization issuers, post-quantum TLS, and more."
+description: "Major features and improvements in recent Vouch releases: an organization audit events API with OCSF export, SCIM provisioning hardening, explicit AWS profile selection, credential and key lifecycle audit events, OIDC role pinning, post-quantum TLS, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.8.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.1) — August 8, 2026
+
+- **Organization audit events API with OCSF export** — a new org-scoped API
+  lets organizations query their own audit events and export them in
+  [OCSF](https://schema.ocsf.io/) format for SIEM ingestion. Browser sign-in
+  events now record the user's email, and the admin audit page loads faster
+  with batched user lookups.
+- **Deactivation enforced everywhere** — deactivated users are now blocked
+  consistently across SSO sign-in, device-flow approval, hardware key
+  registration, and OAuth token introspection, with every session path
+  running through a single active-user check.
+- **SCIM provisioning hardening** — user provisioning now rejects addresses
+  outside the organization's verified domains, checked inside the creation
+  transaction to close a race. Concurrent create requests for the same user
+  resolve to a single account, and filter matching follows RFC 7644 case
+  rules.
+- **No more duplicate users from email casing** — email addresses are
+  canonicalized to lowercase across sign-in, SCIM, and audit correlation, so
+  the same person arriving with different casing no longer creates duplicate
+  accounts. JIT account linking is now keyed on the upstream issuer and
+  subject pair.
+- **AWS partition mismatches caught early** — the CLI validates that the
+  configured region's partition matches the role ARN before calling STS — in
+  credential minting, SSM setup, and CodeCommit setup — failing with a clear
+  error instead of an opaque STS one.
+- **Git credential helper fixes** — remote URLs with an explicit `:443` port
+  now match the CodeCommit and GitHub helpers, the original host is preserved
+  for git's credential cache, and `vouch exec` and the CodeCommit helper
+  propagate the child process's exit code on Windows.
 
 ## [v2026.7.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.4) — July 29, 2026
 
