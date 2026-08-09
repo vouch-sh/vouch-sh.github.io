@@ -1,12 +1,21 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: an organization audit events API with OCSF export, SCIM provisioning hardening, explicit AWS profile selection, credential and key lifecycle audit events, OIDC role pinning, post-quantum TLS, and more."
+description: "Major features and improvements in recent Vouch releases: an SSO sign-in fix for PostgreSQL and Aurora DSQL, an organization audit events API with OCSF export, SCIM provisioning hardening, explicit AWS profile selection, credential and key lifecycle audit events, OIDC role pinning, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.8.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.2) — August 9, 2026
+
+- **SSO sign-in fixed on PostgreSQL and Aurora DSQL** — the lookup that matches
+  an upstream identity to a Vouch account built its database index value in a
+  form those backends reject, so OIDC sign-ins (and SAML sign-ins with a
+  persistent NameID) failed there. The index value is now a SHA-256 hash,
+  which also keeps the raw upstream subject out of the index table. No
+  migration is required.
 
 ## [v2026.8.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.1) — August 8, 2026
 
