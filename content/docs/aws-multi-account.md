@@ -11,7 +11,7 @@ params:
 Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Most teams start with role chaining**; choose Identity Center if you already run it.
 
 - **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below.
-- **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
+- **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below. (Identity Center's newer [account access manager](https://docs.aws.amazon.com/IAM/latest/UserGuide/account-access-manager.html) assigns existing IAM roles instead of permission sets; those roles work with Vouch via role chaining, not via this integration -- see the note in that section.)
 
 We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One management account plus per-account access covers the same use cases with less surface area.
 
@@ -375,6 +375,8 @@ export AWS_PROFILE=vouch-dev
 Instead of role chaining, you can register Vouch as a **trusted token issuer** in AWS IAM Identity Center. Developers then get credentials for exactly the accounts and permission sets they are assigned in Identity Center -- no spoke roles to deploy. Vouch signs a short-lived RS256 token, exchanges it for an Identity Center access token via `CreateTokenWithIAM`, and calls the SSO portal (`ListAccounts`, `ListAccountRoles`, `GetRoleCredentials`) on the developer's behalf.
 
 This model requires an [organization instance](https://docs.aws.amazon.com/singlesignon/latest/userguide/organization-instances-identity-center.html) of IAM Identity Center and users provisioned so their email matches the Vouch identity (the token `sub`). If you provision Identity Center from the same identity provider Vouch uses, [SCIM](/docs/scim/) keeps them in sync.
+
+> **Account access manager assignments are not discovered.** Identity Center's [account access manager](https://docs.aws.amazon.com/IAM/latest/UserGuide/account-access-manager.html) assigns your **existing IAM roles** to Identity Center users and groups, alongside (or instead of) permission sets. Those assignments live in a separate `account-access` API namespace, while Vouch discovers access through the SSO portal APIs -- so `vouch setup aws --discover` surfaces **permission-set assignments only**. Roles you assign through account access manager are ordinary IAM roles, though: reach them through Vouch with [role chaining](#step-1--deploy-the-hub-role) by trusting the hub role, or with [direct OIDC federation](/docs/aws/) in that account.
 
 > **AI agents cannot use this path.** Permission-set credentials cannot be constrained with a `ReadOnlyAccess` session policy, so Vouch **refuses to issue them to a detected AI coding agent** rather than downscoping. If your workflows include AI agents that need AWS access, use the [role-chaining](#step-1--deploy-the-hub-role) model above, where Vouch enforces read-only automatically.
 
