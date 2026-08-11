@@ -1,12 +1,47 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: an SSO sign-in fix for PostgreSQL and Aurora DSQL, an organization audit events API with OCSF export, SCIM provisioning hardening, explicit AWS profile selection, credential and key lifecycle audit events, OIDC role pinning, and more."
+description: "Major features and improvements in recent Vouch releases: a Cedar-based policy engine with history-aware policies, a guided policy rule builder, hardware-key enforcement for enrollment, an SSO sign-in fix for PostgreSQL and Aurora DSQL, an organization audit events API with OCSF export, SCIM provisioning hardening, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.8.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.3) — August 10, 2026
+
+- **New policy engine with history-aware policies** — device-posture policies
+  now run on [Dogwood](https://github.com/dogwood-policy/dogwood), a
+  Cedar-based engine with a temporal sublanguage, replacing CEL. Policies can
+  reason about recent activity: five new built-ins cover token issuance rate
+  limiting, failed-login bursts, and step-up, IP-consistency, and
+  logout-invalidation checks on token exchange. Policies are type-checked
+  against a schema at save time, so a typo'd field is an error instead of a
+  silent miss, and every denial emits a new `policy_denied` audit event.
+  Custom policies written in CEL fail closed until re-authored; the policies
+  page flags them and the docs include a rewriting guide.
+- **Guided policy rule builder** — the admin policies page replaces its
+  free-text editor with a guided builder: pick a decision point, then compose
+  conditions from dropdowns of known device fields, operators, and activity
+  windows, with a live preview and continuous validation. Raw policy text
+  remains as an escape hatch. Two new built-in policies: MDM enrollment
+  required, and a token-exchange rate limit.
+- **Hardware key possession enforced for enrollment** — `vouch enroll` for a
+  user with a registered key previously released a credential-capable token
+  without a WebAuthn ceremony. Enrollment now requires a key assertion,
+  tokens record whether their approval actually verified hardware, and
+  credential endpoints refuse tokens without that proof.
+- **NUL bytes rejected in client-supplied identifiers** — identifiers
+  containing a NUL byte (e.g. a SCIM `externalId`) caused backend-dependent
+  500s on PostgreSQL and Aurora DSQL. Every backend now answers with a 400
+  naming the offending field.
+- **FIDO2 token issuance audited** — the FIDO2 assertion grant now records an
+  `oauth_token_issued` audit event with the user, client IP, and grant type,
+  matching the other OAuth grants.
+- **SSH certificate serials printed exactly** — `vouch credential ssh` rounded
+  serials above 2^53 in its output, and a rounded serial submitted for
+  revocation silently matches no certificate. Serials now print
+  digit-for-digit.
 
 ## [v2026.8.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.2) — August 9, 2026
 
