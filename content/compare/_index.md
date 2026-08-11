@@ -50,7 +50,7 @@ Vouch is the right choice when:
 Choose IAM Identity Center when:
 
 - You only need AWS credentials (not SSH, GitHub, Docker, etc.).
-- You have a large organization with complex permission sets across many AWS accounts.
+- You have a large organization with complex access requirements across many AWS accounts -- whether managed as permission sets or as existing IAM roles assigned through [account access manager](https://docs.aws.amazon.com/IAM/latest/UserGuide/account-access-manager.html).
 - You want a fully AWS-managed solution with no third-party dependencies.
 
 ### HashiCorp Vault
