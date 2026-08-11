@@ -150,11 +150,11 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 
 | Consideration | IAM Identity Center | Vouch |
 |---|---|---|
-| **Setup complexity** | Requires an AWS Organizations management account, an Identity Center instance, permission sets, and user/group sync | Deploy one CloudFormation template and run `vouch setup aws` |
+| **Setup complexity** | Requires an AWS Organizations management account, an Identity Center instance, user/group sync, and permission sets -- or IAM roles you provision yourself, assigned through [account access manager](https://docs.aws.amazon.com/IAM/latest/UserGuide/account-access-manager.html) | Deploy one CloudFormation template and run `vouch setup aws` |
 | **Scope** | AWS only | AWS + SSH + GitHub + Docker + CodeCommit + CodeArtifact + databases + more |
 | **Authentication** | Browser-based SSO (MFA depends on IdP config) | FIDO2 hardware key (phishing-resistant by design) |
 | **Team size sweet spot** | 20+ people across multiple accounts | 2--50 people |
-| **Credential type** | Session credentials via `aws sso login` | Session credentials via `vouch login` |
+| **Credential type** | Session credentials via `aws sso login` (permission sets) or browser sign-in + `aws login` (account access manager) | Session credentials via `vouch login` |
 
 If you have a large organization with complex permission requirements across many AWS accounts, IAM Identity Center is the right choice (and Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). If you are a startup that wants secure AWS access without the overhead, Vouch gets you there faster.
 
