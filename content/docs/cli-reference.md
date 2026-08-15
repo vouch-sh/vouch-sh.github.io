@@ -762,22 +762,21 @@ eval "$(vouch completions zsh)"
 
 ## Binary download verification
 
-If you downloaded the Vouch CLI binary directly from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page, you can verify its integrity using the SHA256 checksums and SLSA provenance attestation published alongside each release.
+If you downloaded the Vouch CLI binary directly from the [GitHub releases](https://github.com/vouch-sh/vouch/releases) page, you can verify its integrity using the SHA256 checksums and build provenance attestation published alongside each release.
 
 ### SHA256 checksum
 
-Each release includes a `checksums.txt` file. Verify the downloaded binary:
+Each release includes a `SHA256SUMS.txt` file covering all artifacts, plus a `.sha256` file per artifact. Verify the downloaded binary:
 
 ```bash
-sha256sum --check checksums.txt
+sha256sum --check SHA256SUMS.txt
 ```
 
 ### SLSA provenance
 
-Vouch release binaries are built with SLSA Level 3 provenance. You can verify the provenance attestation using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool:
+Vouch release binaries are built with SLSA Build Level 2 provenance via GitHub Artifact Attestations. You can verify the provenance and SBOM attestations using the [GitHub CLI](https://cli.github.com/):
 
 ```bash
-slsa-verifier verify-artifact vouch-linux-amd64 \
-  --provenance-path vouch-linux-amd64.intoto.jsonl \
-  --source-uri github.com/vouch-sh/vouch
+gh attestation verify vouch-v2026.8.3-x86_64-unknown-linux-musl.tar.gz \
+  --owner vouch-sh
 ```

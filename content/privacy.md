@@ -81,13 +81,13 @@ We use the information we collect for the following purposes:
 
 We employ multiple layers of security to protect your information:
 
-- **TLS encryption** -- All communication between the Vouch CLI, your browser, and the Vouch server is encrypted using TLS 1.3. Data is encrypted in transit.
+- **TLS encryption** -- All communication between the Vouch CLI, your browser, and the Vouch server is encrypted in transit using TLS 1.3, with TLS 1.2 accepted using modern AEAD ciphers only.
 - **FIDO2/WebAuthn phishing-resistant authentication** -- Vouch exclusively uses the FIDO2/WebAuthn standard for user authentication. This protocol is resistant to phishing, credential stuffing, and man-in-the-middle attacks because the cryptographic assertion is bound to the origin (domain) of the Vouch server.
 - **Private keys never leave your security device** -- The private key associated with your FIDO2 credential is generated on and never exported from your hardware security key. Even if the Vouch server were compromised, your private key would remain safe.
 - **Short-lived credentials minimize breach exposure** -- All credentials issued by Vouch are short-lived and expire automatically. SSH certificates and OIDC tokens are valid for up to 8 hours by default; AWS STS credentials and GitHub access tokens are valid for up to 1 hour. This dramatically limits the window of exposure if a credential is intercepted or a system is compromised. There are no long-lived secrets to steal.
 - **SCIM tokens are stored as hashes** -- SCIM provisioning tokens are stored only as cryptographic hashes. The plaintext value is shown once at creation and is never stored or recoverable.
 - **Document-level encryption** -- User data stored by Vouch is encrypted at the document level using HPKE (Hybrid Public Key Encryption, RFC 9180). Each record is encrypted individually with its own encapsulated key. The encryption key is managed by AWS KMS, ensuring that plaintext data is only accessible on authorized server instances.
-- **Blind equality indexes** -- Database lookups (e.g., by email address) use HMAC-based blind indexes with a KMS-managed key, so the database never stores plaintext identifiers.
+- **Blind equality indexes** -- Database lookups (e.g., by email address) use HMAC-based blind indexes, so the database never stores plaintext identifiers.
 
 ---
 
