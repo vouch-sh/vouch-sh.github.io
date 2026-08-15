@@ -64,7 +64,7 @@ brew services start vouch
 vouch enroll --server https://{{< instance-url >}}
 ```
 
-As long as they authenticate with the same Google Workspace domain, they join the same organization. No invite codes or admin approval needed for initial enrollment.
+As long as they authenticate with the same Google Workspace domain, they join the same organization. No invite codes or admin approval needed for initial enrollment. (Enrolling an additional key later asks for a tap from a key that is already registered.)
 
 ---
 

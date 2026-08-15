@@ -582,6 +582,11 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 
 - Run `vouch setup aws` again and verify the profile name.
 - Check `~/.aws/config` for conflicting profile definitions.
+- With multiple Vouch-managed profiles, credential commands do not silently pick the first one: they resolve `--profile`, then `AWS_PROFILE`, then the sole managed profile, and otherwise error with a list of every managed profile and its role ARN. Pass `--profile` (or set `AWS_PROFILE`) to select one.
+
+### Region and role ARN in different partitions
+
+- The CLI validates that the configured region's partition matches the role ARN before calling STS — in credential minting, SSM setup, and CodeCommit setup. A role in one partition (e.g. `aws-cn`) with a region in another fails immediately with a clear error instead of an opaque STS one. Fix the region or the role ARN so they agree.
 
 ### Permission errors after assuming the role
 

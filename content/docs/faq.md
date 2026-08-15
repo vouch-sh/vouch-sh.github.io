@@ -25,12 +25,12 @@ Other FIDO2-compliant keys (e.g., Google Titan, Feitian, SoloKeys) may work but 
 
 1. **Report it immediately** to your organization administrator so they can remove the key from your account.
 2. Your active session (if any) continues until it expires (up to 8 hours), but no new sessions can be created with the lost key.
-3. Enroll a new YubiKey by running `vouch enroll` again.
-4. If you have a backup key already enrolled, use that key to log in while you replace the lost one.
+3. If you have a backup key already enrolled, use it to log in while you replace the lost one. It also unlocks re-enrollment: registering a replacement key asks for a tap from a key that is already on file.
+4. If the lost key was your only key, re-enrollment is blocked until your administrator removes it from your account — enrolling requires a tap from an already-registered key whenever one is on file. Once the lost key is removed, run `vouch enroll` to register the replacement.
 
 ### Can I enroll multiple YubiKeys?
 
-Yes. Run `vouch enroll` with each key. This is recommended so you have a backup in case one key is lost or damaged. All enrolled keys can be used interchangeably for `vouch login`.
+Yes. Run `vouch enroll` with each key. Enrolling an additional key asks for a WebAuthn assertion with a key that is already registered, so have your existing key ready to tap. A backup key is recommended in case one is lost or damaged — all enrolled keys can be used interchangeably for `vouch login`.
 
 ### Can I restrict which YubiKey models are accepted?
 
@@ -125,7 +125,7 @@ Yes. See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for deployment p
 
 ### Does Vouch support AWS GovCloud?
 
-Vouch supports standard and China partitions. GovCloud support depends on the integration -- check the specific integration documentation page for cross-partition details.
+Vouch supports standard and China partitions. GovCloud support depends on the integration -- check the specific integration documentation page for cross-partition details. The CLI validates that your configured region's partition matches the role ARN before calling STS, so a mismatch fails early with a clear error.
 
 ---
 

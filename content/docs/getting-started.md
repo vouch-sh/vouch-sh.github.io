@@ -104,6 +104,8 @@ This command will:
 5. Set a PIN on the YubiKey if one has not been configured already.
 6. Save the server configuration locally so future commands know where to authenticate.
 
+If your account already has a registered key — for example, you are enrolling a backup YubiKey — the browser flow asks you to verify with the existing key before the new one is registered.
+
 Once enrollment completes, the CLI prints a confirmation and you are ready to log in.
 
 You can manage your enrolled security keys at any time from the Vouch dashboard:

@@ -18,7 +18,7 @@ This page describes the components that make up Vouch, the protocols they use, a
 
 The command-line interface that developers interact with directly. It handles:
 
-- **Enrollment** -- Registers a FIDO2 key with the Vouch server.
+- **Enrollment** -- Registers a FIDO2 key with the Vouch server. An account that already has a registered key must verify with it before another key can be added.
 - **Login** -- Performs a FIDO2 assertion and establishes a session.
 - **Credential helpers** -- Provides credentials to tools like `aws`, `git`, `ssh`, `docker`, and `cargo` on demand.
 - **Setup commands** -- Configures local tool integrations (`vouch setup aws`, `vouch setup codecommit`, etc.).
@@ -58,7 +58,7 @@ The server does not store AWS credentials, SSH private keys, or GitHub tokens. I
 
 Used for all user authentication. The FIDO2 exchange happens between the YubiKey (authenticator), the Vouch CLI (client), and the Vouch server (relying party).
 
-- **Registration** (enrollment): The YubiKey generates a key pair. The public key is sent to the server along with an attestation certificate. The private key never leaves the hardware. When attestation verification is enabled, the server validates the certificate chain against pinned Yubico root CA certificates to confirm the key is a genuine hardware device.
+- **Registration** (enrollment): The YubiKey generates a key pair. The public key is sent to the server along with an attestation certificate. The private key never leaves the hardware. When attestation verification is enabled, the server validates the certificate chain against pinned Yubico root CA certificates to confirm the key is a genuine hardware device. If the account already has a registered key, the server requires an assertion with it before accepting a new registration.
 - **Authentication** (login): The server sends a challenge. The YubiKey signs it with the private key after PIN + touch verification. The server validates the signature against the stored public key.
 
 ### OIDC (OpenID Connect)

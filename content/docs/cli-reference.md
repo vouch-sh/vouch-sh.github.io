@@ -61,7 +61,7 @@ Register your YubiKey with a Vouch server and link it to your identity.
 vouch enroll --server <SERVER_URL>
 ```
 
-You only need to enroll once per YubiKey.
+You only need to enroll once per YubiKey. If your account already has a registered key, enrollment first asks you to verify with it — registering an additional key requires possession of an existing one.
 
 ### `vouch login`
 
@@ -149,12 +149,16 @@ See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for full details.
 Open the AWS Management Console in your browser.
 
 ```
-vouch aws console [--role <ROLE_ARN>]
+vouch aws console [--role <ROLE_ARN>] [--account <ACCOUNT_ID> --permission-set <NAME>] [--idc-application <ARN>] [--via <ROLE_ARN>]
 ```
 
 | Flag | Description |
 |---|---|
 | `--role` | AWS IAM role ARN to assume (auto-detected from `~/.aws/config` if not specified) |
+| `--account` | AWS account ID, for IAM Identity Center access (pair with `--permission-set`) |
+| `--permission-set` | Permission set name, for IAM Identity Center access |
+| `--idc-application` | IAM Identity Center application ARN (needed when more than one instance is configured) |
+| `--via` | Management role ARN to chain through when multiple organizations are configured |
 
 This uses your active Vouch session to obtain temporary STS credentials, exchanges them for a federation sign-in token, and opens the console in your default browser.
 
@@ -166,21 +170,22 @@ Setup commands configure credential helpers for each integration. Run these once
 
 ### `vouch setup aws`
 
-Configure the AWS credential process for an IAM role, or auto-discover accounts and roles from IAM Identity Center.
+Configure the AWS credential process for an IAM role, or auto-discover accounts and roles from IAM Identity Center. Omit all flags to launch an interactive wizard that asks how you access AWS and captures the details for you.
 
 ```
-vouch setup aws (--role <ROLE_ARN> | --discover) [--profile <PROFILE>] [--prefix <PREFIX>] [--region <REGION>]
+vouch setup aws [--role <ROLE_ARN> | --discover] [--profile <PROFILE>] [--region <REGION>] [--management-role <ROLE_ARN>] [--identity-center-application <ARN>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--role` | The IAM role ARN to assume (required unless `--discover` is used) |
+| `--role` | The IAM role ARN to assume |
 | `--discover` | Auto-discover accounts and roles from IAM Identity Center SSO (alternative to `--role`) |
 | `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
-| `--prefix` | Prefix for auto-generated profile names when using `--discover` |
 | `--region` | AWS region to set in the profile |
+| `--management-role` | Management role ARN to chain through for multi-account access |
+| `--identity-center-application` | IAM Identity Center application ARN (needed when more than one is configured) |
 
-See [AWS Integration](/docs/aws/) for full details.
+See [AWS Integration](/docs/aws/) for full details, and [Multi-Account AWS Strategy](/docs/aws-multi-account/) for the management-role and Identity Center flows.
 
 ### `vouch setup ssh`
 
@@ -246,17 +251,18 @@ See [Cargo Integration](/docs/cargo/) for full details.
 Configure a package manager for an AWS CodeArtifact repository.
 
 ```
-vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--profile <PROFILE>]
+vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--domain-profile <NAME>] [--profile <PROFILE>]
 ```
 
 | Flag | Description |
 |---|---|
 | `--tool` | Package manager to configure: `cargo`, `pip`, `npm`, `pnpm`, or `uv` (required) |
 | `--repository` | The AWS CodeArtifact repository name (required) |
-| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
-| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--region` | AWS region (optional if a profile is configured) |
-| `--profile` | Named AWS CodeArtifact profile to use or create (stores domain/owner/region for reuse) |
+| `--domain` | The AWS CodeArtifact domain name (optional if a domain profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
+| `--region` | AWS region (optional if a domain profile is configured) |
+| `--domain-profile` | Named domain profile to use or create (stores domain/owner/region for reuse) |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 
@@ -271,7 +277,7 @@ vouch setup codecommit [--region <REGION>] [--profile <PROFILE>] [--configure]
 | Flag | Description |
 |---|---|
 | `--region` | AWS region (default: wildcard matching all regions) |
-| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
 | `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
 
 See [AWS CodeCommit](/docs/codecommit/) for full details.
@@ -288,7 +294,7 @@ vouch setup eks --cluster <CLUSTER_NAME> [--region <REGION>] [--profile <PROFILE
 |---|---|
 | `--cluster` | The EKS cluster name (required) |
 | `--region` | AWS region (auto-detected from AWS profile or environment if not specified) |
-| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
 | `--kubeconfig` | Path to kubeconfig file (defaults to `~/.kube/config`) |
 
 See [Amazon EKS](/docs/eks/) for full details.
@@ -359,7 +365,7 @@ vouch setup ssm [--profile <PROFILE>] [--region <REGION>] [--hosts <HOSTS>] [--f
 
 | Flag | Description |
 |---|---|
-| `--profile` | AWS profile to use (defaults to auto-detected vouch profile) |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
 | `--region` | AWS region to use in the ProxyCommand |
 | `--hosts` | Host patterns to match (default: `i-* mi-*`) |
 | `--force` | Overwrite any existing SSM configuration in `~/.ssh/config` |
@@ -401,15 +407,16 @@ vouch credential ssh [--key <PATH>]
 Obtain an AWS CodeArtifact authorization token.
 
 ```
-vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--profile <PROFILE>]
+vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] [--region <REGION>] [--domain-profile <NAME>] [--profile <PROFILE>]
 ```
 
 | Flag | Description |
 |---|---|
-| `--domain` | The AWS CodeArtifact domain name (optional if a profile is configured) |
-| `--domain-owner` | AWS account ID that owns the domain (optional if a profile is configured) |
-| `--region` | AWS region (optional if a profile is configured) |
-| `--profile` | Named AWS CodeArtifact profile to use |
+| `--domain` | The AWS CodeArtifact domain name (optional if a domain profile is configured) |
+| `--domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
+| `--region` | AWS region (optional if a domain profile is configured) |
+| `--domain-profile` | Named domain profile to use |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
 
 ### `vouch credential rds`
 

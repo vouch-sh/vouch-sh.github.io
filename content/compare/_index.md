@@ -24,7 +24,7 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 | **Database auth (RDS)** | Yes (IAM auth) | No | Yes (database engines) | No | Yes | No | No |
 | **OIDC application SSO** | Yes (23 app and agent guides) | Yes | Yes (OIDC provider) | No | Yes | Yes | Yes |
 | **Session lifetime** | 8 hours | Configurable | Configurable | N/A | Configurable | Configurable | Configurable |
-| **Device posture policies** | Yes (CEL-based) | No | No | No | No | Yes | No |
+| **Device posture policies** | Yes (Cedar-based) | No | No | No | No | Yes | No |
 | **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes | Yes (passkeys/WebAuthn) |
 | **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) | Yes |
 | **Open source** | Yes | No | Source-available (BSL) | No | AGPL source + restricted binaries | No | Yes (core components) |
