@@ -61,7 +61,7 @@ Register your YubiKey with a Vouch server and link it to your identity.
 vouch enroll --server <SERVER_URL>
 ```
 
-You only need to enroll once per YubiKey.
+You only need to enroll once per YubiKey. If your account already has a registered key, enrollment first asks you to verify with it — registering an additional key requires possession of an existing one.
 
 ### `vouch login`
 

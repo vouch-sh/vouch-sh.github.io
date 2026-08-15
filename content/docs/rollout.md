@@ -110,7 +110,7 @@ Check it worked: `aws sts get-caller-identity --profile vouch`
 shows your email in the role ARN. Questions -> #devops-help
 ````
 
-Enrollment needs no invite codes or approval -- anyone authenticating through your Google Workspace domain lands in your organization automatically.
+First-time enrollment needs no invite codes or approval -- anyone authenticating through your Google Workspace domain lands in your organization automatically. (Enrolling an additional key later asks for a tap from the key already on file.)
 
 ---
 
