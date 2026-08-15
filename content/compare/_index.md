@@ -12,23 +12,24 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 |  | **Vouch** | **AWS IAM Identity Center** | **HashiCorp Vault** | **1Password SSH Agent** | **Teleport** | **Beyond Identity** | **Ory** |
 |---|---|---|---|---|---|---|---|
 | **What it is** | Credential broker | AWS SSO service | Secrets manager + PKI | Password manager with SSH | PAM + access platform | Passwordless identity | Identity + OAuth/OIDC platform |
-| **Hardware key required** | Yes (FIDO2) | Optional (depends on IdP) | Optional | No | Optional | Yes (device-bound) | Optional (passkeys/WebAuthn) |
+| **Hardware key required** | Yes (FIDO2) | Optional (depends on IdP) | Optional | No | Optional | No (device-bound passkeys) | Optional (passkeys/WebAuthn) |
 | **AWS credentials** | Yes (STS via OIDC) | Yes (native) | Yes (AWS secrets engine) | Stored keys via plugin | Yes (via app access) | No | No |
-| **SSH certificates** | Yes (built-in CA) | No | Yes (SSH secrets engine) | Yes (key agent) | Yes (built-in CA) | No | No |
-| **GitHub tokens** | Yes (installation tokens) | No | No | No | No | No | No |
-| **Docker registry auth** | Yes (ECR + GHCR) | No | No | No | No | No | No |
-| **CodeCommit** | Yes (SigV4) | No | No | No | No | No | No |
-| **CodeArtifact** | Yes (token exchange) | No | No | No | No | No | No |
-| **Cargo registries** | Yes | No | No | No | No | No | No |
-| **Kubernetes (EKS)** | Yes | Yes | Yes | No | Yes | No | No |
-| **Database auth (RDS)** | Yes (IAM auth) | No | Yes (database engines) | No | Yes | No | No |
-| **OIDC application SSO** | Yes (23 app and agent guides) | Yes | Yes (OIDC provider) | No | Yes | Yes | Yes |
+| **SSH certificates** | Yes (built-in CA) | No | Yes (SSH secrets engine) | Keys only (no certificates) | Yes (built-in CA) | No | No |
+| **GitHub tokens** | Yes (installation tokens) | No | No | Stored PAT via plugin | No (Git SSH proxy only) | No | No |
+| **Docker registry auth** | Yes (ECR + GHCR) | ECR only (via AWS CLI) | No | No | No | No | No |
+| **CodeCommit** | Yes (SigV4) | Yes (git-remote-codecommit) | No | No | No | No | No |
+| **CodeArtifact** | Yes (token exchange) | Yes (via AWS CLI) | No | No | No | No | No |
+| **Cargo registries** | Yes | Via CodeArtifact only | No | Stored token via plugin | No | No | No |
+| **Claude & OpenAI API credentials** | Yes (short-lived via OIDC federation) | No | No | Stored keys via plugin | No | No | No |
+| **Kubernetes** | Yes (OIDC + EKS) | EKS only | Yes | No | Yes | No | No |
+| **Database auth (RDS)** | Yes (IAM auth) | Yes (IAM auth) | Yes (database engines) | Stored passwords via plugin | Yes | No | No |
+| **OIDC application SSO** | Yes (23 app and agent guides) | No (SAML apps only) | Yes (OIDC provider) | No | No (SAML IdP only, Enterprise) | Yes | Yes |
 | **Session lifetime** | 8 hours | Configurable | Configurable | N/A | Configurable | Configurable | Configurable |
-| **Device posture policies** | Yes (Cedar-based) | No | No | No | No | Yes | No |
-| **Phishing-resistant auth** | Yes (FIDO2 origin binding) | Depends on IdP | Depends on auth method | No | Depends on config | Yes | Yes (passkeys/WebAuthn) |
+| **Device posture policies** | Yes (Cedar-based) | No | No | No (separate Device Trust product) | Device trust (Enterprise) | Yes | No |
+| **Phishing-resistant auth** | Yes (FIDO2 origin binding) | FIDO2 (built-in directory) or via IdP | Depends on auth method | No | Depends on config | Yes | Yes (passkeys/WebAuthn) |
 | **Self-hosted option** | No (SaaS) | No (AWS-managed) | Yes | No (SaaS) | Yes | No (SaaS) | Yes |
-| **Open source** | Yes | No | Source-available (BSL) | No | AGPL source + restricted binaries | No | Yes (core components) |
-| **Pricing** | Free tier available | Free (included with AWS) | Free Community / Paid Enterprise or HCP | Included with 1Password | Free Community / Paid Enterprise or Cloud | Paid | Free developer / Paid SaaS + enterprise self-hosted |
+| **Open source** | Yes | No | Source-available (BUSL 1.1) | No | AGPL source + restricted binaries | No | Yes (core components) |
+| **Pricing** | Free tier available | Free (included with AWS) | Free Community / Paid Enterprise or HCP Vault Dedicated | Included with 1Password | Free Community (small-org license) / Paid Enterprise or Cloud | Paid | Free developer / Paid SaaS + enterprise self-hosted |
 
 ---
 
@@ -36,10 +37,10 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 
 Vouch is the right choice when:
 
-- You want a **single authentication event** (one YubiKey tap) to cover AWS, SSH, GitHub, Docker, package registries, and databases.
+- You want a **single authentication event** (one YubiKey tap) to cover AWS, SSH, GitHub, Docker, package registries, databases, and the Claude and OpenAI APIs.
 - You want every credential to be **hardware-backed** and phishing-resistant by default, not as an optional add-on.
 - You are a **small-to-medium team** (2--50 people) that wants secure credentials without the operational overhead of running Vault or Teleport.
-- Your team uses **Google Workspace** and you want organizational identity federated into AWS without setting up IAM Identity Center.
+- Your team uses **Google Workspace or Microsoft Entra ID** and you want organizational identity federated into AWS without setting up IAM Identity Center.
 
 ---
 
@@ -49,7 +50,7 @@ Vouch is the right choice when:
 
 Choose IAM Identity Center when:
 
-- You only need AWS credentials (not SSH, GitHub, Docker, etc.).
+- You only need access to AWS services. Identity Center credentials also work with ECR, CodeCommit, CodeArtifact, and RDS IAM auth through standard AWS CLI steps -- what it lacks is SSH certificates, GitHub tokens, and non-AWS registries.
 - You have a large organization with complex permission sets across many AWS accounts.
 - You want a fully AWS-managed solution with no third-party dependencies.
 
