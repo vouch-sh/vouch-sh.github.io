@@ -313,7 +313,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **Document-level encryption (HPKE)** | T-E3, T-R2 (data-at-rest protection) | Application |
 | **HMAC blind indexes** | T-I3 (database-level identifier protection) | Application |
 | **HTTP message signatures (RFC 9421)** | T-T1 (request tampering) | Protocol |
-| **Device posture policies (CEL)** | T-E1, T-E2 (compromised endpoint, insider abuse) | Application |
+| **Device posture policies (Dogwood)** | T-E1, T-E2 (compromised endpoint, insider abuse) | Application |
 
 ---
 
@@ -348,6 +348,7 @@ This threat model is reviewed quarterly and after any significant architecture c
 
 | Date | Change |
 |---|---|
+| 2026-08-14 | Replaced CEL with Dogwood (Cedar-based) as the device posture policy engine, adding history-aware policies evaluated at token issuance and token exchange (shipped in v2026.8.3). Updated mitigation summary table. |
 | 2026-03-23 | Added HTTP Message Signatures (RFC 9421) as a mitigation for request tampering (T-T1). Added device posture policies (CEL) as a mitigation for compromised endpoints and insider abuse (T-E1, T-E2). Updated login dataflow to include device posture evaluation step. Updated mitigation summary table. |
 | 2026-03-02 | Updated TLS requirement to 1.3 (TLS 1.2 removed). Added KMS signing architecture, NitroTPM attestation, and document-level encryption. Added assets inventory, validation, and review schedule sections. Aligned to AWS Threat Composer methodology: added dataflow diagram, impacted assets to all threat statements, priority metadata, and assumption-to-mitigation links. Updated mitigation summary table. |
 | 2026-02-28 | Initial threat model published on vouch.sh, structured using STRIDE and the AWS Threat Composer methodology. |
