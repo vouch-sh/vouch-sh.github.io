@@ -70,11 +70,11 @@ For full SCIM setup instructions including identity provider configuration, see 
 
 ## Device posture policies
 
-The **Policies** page lets administrators enforce device security requirements. Built-in policies cover disk encryption, firewall, screen lock, endpoint protection, platform integrity, and OS recency. Custom policies can be written using CEL (Common Expression Language) expressions.
+The **Policies** page lets administrators enforce device security requirements. Built-in policies cover disk encryption, firewall, screen lock, endpoint protection, MDM enrollment, platform integrity, and OS recency, plus history-aware policies for rate limiting, failed-login bursts, and step-up on token exchange. Custom policies are composed in a guided rule builder, or written directly as [Dogwood](https://dogwood-policy.github.io/dogwood/) (Cedar-based) policy text.
 
-![Device Posture Policies page showing built-in policies with toggle controls and a custom policies section](/images/admin/admin-policies.png)
+![Device Posture Policies page listing built-in and custom policies with toggle controls](/images/admin/admin-policies.png)
 
-For full details on available signals, CEL expressions, and enforcement behavior, see [Device Posture Policies](/docs/device-posture/).
+For full details on available signals, custom policy rules, and enforcement behavior, see [Device Posture Policies](/docs/device-posture/).
 
 ---
 
