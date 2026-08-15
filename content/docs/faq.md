@@ -125,7 +125,7 @@ Yes. See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for deployment p
 
 ### Does Vouch support AWS GovCloud?
 
-Vouch supports standard and China partitions. GovCloud support depends on the integration -- check the specific integration documentation page for cross-partition details.
+Vouch supports standard and China partitions. GovCloud support depends on the integration -- check the specific integration documentation page for cross-partition details. The CLI validates that your configured region's partition matches the role ARN before calling STS, so a mismatch fails early with a clear error.
 
 ---
 
