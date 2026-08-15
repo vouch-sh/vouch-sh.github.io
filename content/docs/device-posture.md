@@ -189,11 +189,11 @@ Requires at least one endpoint detection and response (EDR) agent to be running.
 
 **Why it matters:** EDR agents detect and respond to malware, ransomware, and other threats that could compromise developer credentials or inject into build pipelines.
 
-**Detected agents:** CrowdStrike, SentinelOne, Carbon Black, Microsoft Defender for Endpoint.
+**Detected agents:** CrowdStrike, SentinelOne, Carbon Black, Microsoft Defender for Endpoint, Trellix, 1Password Device Trust.
 
 ### MDM enrollment
 
-Requires at least one mobile device management (MDM) agent to be detected (Jamf, Kandji, Intune, …).
+Requires at least one mobile device management (MDM) agent to be detected (Jamf, Kandji, Workspace ONE, Mosyle, Fleetsmith, Intune).
 
 **Why it matters:** MDM enrollment verifies the device is managed by your organization — it can be remotely locked, wiped, and kept in compliance — without requiring a specific EDR product.
 
@@ -417,7 +417,7 @@ Policies are managed from the **Vouch admin dashboard** by organization administ
 2. Toggle a policy to **Active** to begin enforcement.
 3. The policy takes effect immediately for all subsequent token requests.
 
-![Device Posture Policies page listing built-in and custom policies with toggle controls](/images/admin/admin-policies.png)
+![Device Posture Policies page listing built-in policies with toggle controls and the custom-policy caps in the header](/images/admin/admin-policies.png)
 
 ### Creating a custom policy
 
