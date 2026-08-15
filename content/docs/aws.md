@@ -25,6 +25,8 @@ Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an 
 
 Vouch uses **exactly one OIDC provider per organization**. Register it once -- in your single AWS account, or in the **management account** if you use AWS Organizations. An administrator does this before any user can assume a role.
 
+> **Claimed an issuer subdomain?** If your organization has claimed an [issuer subdomain](/docs/domains/#issuer-subdomains), your tokens are issued under that URL (e.g. `https://acme-com.{{< instance-url >}}`) instead of the shared instance URL. Use the issuer and discovery URLs shown on `/admin/subdomain` for the provider URL, the client ID, and the trust policy conditions below.
+
 > For background on OIDC identity providers in AWS, see [Creating OpenID Connect (OIDC) identity providers](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html) in the AWS documentation.
 
 {{< tabs >}}
@@ -564,7 +566,7 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 
 ### "Not authorized to perform sts:AssumeRoleWithWebIdentity"
 
-- Verify the OIDC provider URL in the IAM trust policy matches `https://{{< instance-url >}}` exactly (no trailing slash).
+- Verify the OIDC provider URL in the IAM trust policy matches `https://{{< instance-url >}}` exactly (no trailing slash) — or your [issuer subdomain](/docs/domains/#issuer-subdomains) URL if your organization has claimed one.
 - Confirm the `aud` condition matches the client ID registered with the OIDC provider.
 - Ensure the trust policy `Action` includes all three required actions: `sts:AssumeRoleWithWebIdentity`, `sts:SetSourceIdentity`, and `sts:TagSession`.
 - If the trust policy requires [`sts:RoleAuthorizedByIdp`](#require-role-pinning), make sure the CLI is up to date -- older CLI versions issue tokens without the `roles` claim and fail the condition.
@@ -575,7 +577,7 @@ If you already use IAM Identity Center, `aws sso login` may cover your AWS needs
 
 ### "Invalid identity token"
 
-- Ensure the OIDC provider in AWS points to the correct Vouch server URL: `https://{{< instance-url >}}`.
+- Ensure the OIDC provider in AWS points to the correct Vouch server URL: `https://{{< instance-url >}}`, or your claimed issuer subdomain URL.
 - Verify that the Vouch server's JWKS endpoint (`https://{{< instance-url >}}/oauth/jwks`) is reachable from the internet (AWS must be able to fetch it).
 
 ### Credentials not appearing in the expected profile

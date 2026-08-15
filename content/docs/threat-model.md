@@ -230,7 +230,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 **Mitigations:**
 
 - **T-R1**: Every credential issuance is tied to a hardware-verified FIDO2 identity. The Vouch server logs all authentication events and credential exchanges. AWS CloudTrail records STS credential usage with the Vouch-issued identity as the principal.
-- **T-R2**: Audit logs should be continuously pulled into an immutable, external log store via the SIEM export API (OCSF projection, Okta System Log-style polling) so that server compromise cannot erase the trail. → [Shared responsibility](/docs/security/#shared-responsibility)
+- **T-R2**: Audit logs should be continuously pulled into an immutable, external log store via the [SIEM export API](/docs/audit-export/) (OCSF projection, cursor-based polling) so that server compromise cannot erase the trail. → [Shared responsibility](/docs/security/#shared-responsibility)
 
 ---
 

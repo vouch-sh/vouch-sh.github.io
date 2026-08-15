@@ -199,16 +199,24 @@ All endpoints require a valid SCIM bearer token in the `Authorization` header. F
 
 ---
 
+## Domain Validation
+
+`POST /scim/v2/Users` requires `userName` (or an entry in `emails[]`) to be an email address — Vouch keys users by email. The email's domain must also be one your organization has proven it owns: the primary domain, or an additional domain that has completed DNS TXT verification. A push for any other domain — including a domain that is added but not yet verified, or a subdomain of a verified one — is rejected with `400` and `"scimType": "invalidValue"`.
+
+See [Email Domains](/docs/domains/) for adding and verifying additional domains.
+
+---
+
 ## Immediate De-provisioning
 
 One of the most important benefits of SCIM integration is **immediate de-provisioning**. When an employee leaves your organization or changes roles:
 
 1. Your identity provider sends a `PATCH` or `DELETE` request to the Vouch SCIM endpoint to deactivate the user.
 2. Vouch immediately marks the user account as inactive.
-3. All **active sessions** for that user are revoked instantly.
-4. The user can no longer obtain new credentials. Previously issued short-lived credentials (SSH certificates, AWS STS credentials) will continue to function until their natural expiration — up to 8 hours for session-bound credentials, and up to 12 hours for ECR and CodeArtifact tokens. No new credentials can be issued after de-provisioning.
+3. All **active sessions** for that user are revoked instantly, and their issued **SSH certificates** are revoked via the CA revocation list.
+4. The user can no longer obtain new credentials. Other previously issued short-lived credentials continue to function until their natural expiration — up to 1 hour for AWS STS, and up to 12 hours for ECR and CodeArtifact tokens.
 
-Because all Vouch credentials are short-lived (most expire within 8 hours; ECR and CodeArtifact tokens last up to 12), the exposure window after de-provisioning is limited. Sessions are revoked immediately, and outstanding credentials expire on their own shortly after.
+Because all Vouch credentials are short-lived, the exposure window after de-provisioning is limited. Sessions and SSH certificates are revoked immediately, and outstanding tokens expire on their own shortly after.
 
 This is a significant security improvement over traditional provisioning workflows where revoking access requires manual steps across multiple systems. With Vouch and SCIM, de-provisioning is automated and the blast radius is minimized by the short credential lifetime.
 

@@ -101,7 +101,7 @@ Vouch does not store credentials at rest. The server stores:
 
 - **Enrolled public keys** -- The FIDO2 public key registered during enrollment. This is not sensitive (it cannot be used to impersonate the user).
 - **User metadata** -- Email address, organization membership, and enrollment status.
-- **Audit logs** -- Records of authentication events and credential issuance, stored in a separate table that is unencrypted by design for queryability, with email addresses masked to domain plus an HMAC correlation column. Organization administrators can view and filter audit events from the admin dashboard, and SIEM tooling can pull them continuously via the export API (OCSF projection).
+- **Audit logs** -- Records of authentication events and credential issuance, stored in a separate table that is unencrypted by design for queryability, with email addresses masked to domain plus an HMAC correlation column. Organization administrators can view and filter audit events from the admin dashboard, and SIEM tooling can pull them continuously via the [export API](/docs/audit-export/) (OCSF projection).
 
 ![Audit Log page showing authentication events with type filters](/images/admin/admin-audit-log.png)
 

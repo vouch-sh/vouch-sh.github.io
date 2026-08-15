@@ -53,6 +53,10 @@ Use the event type filter buttons to narrow the audit log to specific categories
 
 Vouch enriches audit events with GeoIP location data. Login events show the approximate location of the client, helping security teams identify anomalous access patterns such as logins from unexpected countries.
 
+### Programmatic export
+
+For SIEM ingestion, backfills, and scripting, the same events are available from the audit events API (`GET /api/v1/org/audit-events`), with cursor-based polling, NDJSON streaming, and an OCSF projection. See [Audit Log Export](/docs/audit-export/).
+
 ---
 
 ## SCIM token management
@@ -63,6 +67,8 @@ The **SCIM Tokens** page (`/admin/scim-tokens`) lets administrators create and r
 |---|---|
 | **Create token** | Generate a new SCIM bearer token. The token is displayed once at creation -- copy it immediately. |
 | **Revoke token** | Invalidate an existing token. Your identity provider will no longer be able to push user changes using that token. |
+
+When creating a token, checking **"Also grant read-only audit log access"** adds the `audit:read` scope, allowing the same token to authenticate [audit log export](/docs/audit-export/) pollers.
 
 For full SCIM setup instructions including identity provider configuration, see [SCIM Provisioning](/docs/scim/).
 
@@ -75,6 +81,18 @@ The **Policies** page lets administrators enforce device security requirements. 
 ![Device Posture Policies page listing built-in policies with toggle controls and the custom-policy caps in the header](/images/admin/admin-policies.png)
 
 For full details on available signals, custom policy rules, and enforcement behavior, see [Device Posture Policies](/docs/device-posture/).
+
+---
+
+## Email domains
+
+The **Email Domains** page (`/admin/domains`) manages the additional email domains owned by your organization. Domains are verified by DNS TXT record and, once verified, route new enrollments to your organization and gate SCIM provisioning. See [Email Domains & Issuer Subdomains](/docs/domains/).
+
+---
+
+## Issuer subdomain
+
+The **Issuer Subdomain** page (`/admin/subdomain`) lets your organization claim a dedicated OIDC issuer (e.g. `acme-com.us.vouch.sh`) with its own signing key set for AWS federation, and manage staged key rotation. See [Issuer subdomains](/docs/domains/#issuer-subdomains).
 
 ---
 
