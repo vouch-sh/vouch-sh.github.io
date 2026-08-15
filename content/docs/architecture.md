@@ -23,7 +23,7 @@ The command-line interface that developers interact with directly. It handles:
 - **Credential helpers** -- Provides credentials to tools like `aws`, `git`, `ssh`, `docker`, and `cargo` on demand.
 - **Setup commands** -- Configures local tool integrations (`vouch setup aws`, `vouch setup codecommit`, etc.).
 
-The CLI communicates with the Vouch agent over a local Unix domain socket and with the Vouch server over HTTPS. All requests to the server are authenticated using [HTTP Message Signatures (RFC 9421)](https://datatracker.ietf.org/doc/html/rfc9421) for cryptographic proof of request authenticity.
+The CLI communicates with the Vouch agent over a local Unix domain socket and with the Vouch server over HTTPS. Authenticated credential-API requests to the server carry [HTTP Message Signatures (RFC 9421)](https://datatracker.ietf.org/doc/html/rfc9421) for cryptographic proof of request authenticity.
 
 ### Vouch Agent
 
@@ -32,7 +32,7 @@ A background process that holds session state in memory. The agent:
 - **Caches the active session** so that credential requests do not require repeated FIDO2 assertions.
 - **Serves as an SSH agent** (implementing the SSH agent protocol) so that `ssh` can request certificates without additional configuration.
 - **Listens on a Unix domain socket** with filesystem permissions restricting access to the owning user.
-- **Holds no persistent state** -- if the agent process stops, the session is lost and a new `vouch login` is required.
+- **Holds no persistent state of its own** -- cached credentials live in process memory; after a restart the agent recovers the session token from the CLI config file, so a new `vouch login` is only needed once the session expires or is revoked.
 
 On macOS, the agent runs as a Homebrew service (`brew services start vouch`). On Linux, it runs as a systemd user service.
 
@@ -97,11 +97,11 @@ The Vouch CLI calls [AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/
 
 ### FAPI 2.0
 
-The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) for protected authorization requests, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server. FAPI 2.0 also accepts Mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) as an alternative sender-constraining mechanism — see [Mutual TLS](#mutual-tls-rfc-8705) below.
+The Vouch CLI operates as a [FAPI 2.0](https://openid.net/specs/fapi-security-profile-2_0-final.html) client. On first use, it generates an ES256 key pair, stores it in the OS keychain, and auto-registers with the server ([RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591)). Token requests use DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) for sender-constrained tokens, RAR ([RFC 9396](https://datatracker.ietf.org/doc/html/rfc9396)) for structured authorization details, and `private_key_jwt` ([RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523)) for client authentication — no shared secrets between CLI and server. Browser-based authorization flows use PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) to keep authorization parameters out of URLs. FAPI 2.0 also accepts Mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) as an alternative sender-constraining mechanism — see [Mutual TLS](#mutual-tls-rfc-8705) below.
 
 ### HTTP Message Signatures (RFC 9421)
 
-All authenticated requests from the CLI to the Vouch server include [HTTP Message Signatures](https://datatracker.ietf.org/doc/html/rfc9421). The CLI signs each request using the FAPI key pair stored in the OS keychain. The server verifies the signature before processing the request, providing cryptographic proof that the request was not tampered with in transit and originated from the registered client.
+Authenticated credential-API requests (under `/v1/`) from the CLI to the Vouch server include [HTTP Message Signatures](https://datatracker.ietf.org/doc/html/rfc9421), enforced deny-by-default — the server rejects in-scope requests with a missing or invalid signature before processing. The CLI signs each request using the FAPI key pair stored in the OS keychain, providing cryptographic proof that the request was not tampered with in transit and originated from the registered client. OAuth endpoints are protected by `private_key_jwt` client assertions and DPoP proofs instead.
 
 Supported algorithms: ECDSA P-256/P-384, EdDSA, and RSA-PSS-SHA512.
 
@@ -236,7 +236,7 @@ The agent caches:
 - **SSH certificate** -- Served to SSH clients via the agent protocol.
 - **Cached STS credentials** -- AWS credentials are cached until their 1-hour expiry to avoid redundant STS calls.
 
-All cached material is held in process memory. Nothing is written to disk. When the agent process stops (logout, reboot, crash), all cached credentials are lost and a new `vouch login` is required.
+All cached material is held in process memory, and cached credentials are lost when the agent process stops (logout, reboot, crash). On startup the agent recovers the session token from the CLI config file (persisted with owner-only permissions), so a restart resumes the session until it expires; brokered credentials are simply re-issued on demand. A new `vouch login` is only needed after the session expires or is revoked.
 
 ---
 
