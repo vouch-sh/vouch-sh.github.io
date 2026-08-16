@@ -14,8 +14,25 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
   attested inside a dedicated reusable workflow, so the attestation signing
   identity is out of reach of the build steps themselves. Every archive,
   container image, Helm chart, and SBOM can be verified with the builder
-  pinned: `gh attestation verify <artifact> --owner vouch-sh
-  --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml`.
+  pinned — the attestation records the reusable workflow as the signer,
+  distinct from the release workflow that called it:
+
+  ```console
+  $ gh attestation verify vouch-v2026.8.4-aarch64-apple-darwin.tar.gz \
+      --owner vouch-sh \
+      --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml
+  Loaded 1 attestation from GitHub API
+  ✓ Verification succeeded!
+
+  The following 1 attestation matched the policy criteria
+
+  - Attestation #1
+    - Build repo:..... vouch-sh/vouch
+    - Build workflow:. .github/workflows/release.yml@refs/tags/v2026.8.4
+    - Signer repo:.... vouch-sh/vouch
+    - Signer workflow: .github/workflows/reusable-build.yml@refs/tags/v2026.8.4
+  ```
+
   The GitHub Actions OIDC identity behind release signing also moved to
   immutable subject claims, so deleting and re-registering a repository name
   can no longer mint tokens that match the release trust policies.
