@@ -42,7 +42,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 - **AWS role discovery from Identity Center entitlements** — `vouch setup aws`
   discovery now runs a second pass over
   [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html)
-  account-access entitlements, so roles assigned to you or your groups through Identity
+  [account access manager](https://aws.amazon.com/about-aws/whats-new/2026/08/aws-iam-aam/)
+  entitlements, so roles assigned to you or your groups through Identity
   Center are found without hand-configuration. The management role needs new
   read-only IAM permissions for the pass, which runs in the commercial
   partition only. **Breaking:** AWS authorization failures now exit with
@@ -198,7 +199,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 - **OIDC role pinning for AWS** — each token now carries the target role ARN in
   the `https://aws.amazon.com/roles` claim, and AWS STS enforces it: a leaked
   token cannot be exchanged for any role other than the one it was minted for.
-  Trust policies can make pinning mandatory with the `sts:RoleAuthorizedByIdp`
+  Trust policies can make pinning mandatory with the
+  [`sts:RoleAuthorizedByIdp`](https://awsteele.com/blog/2026/07/13/oidc-tokens-can-restrict-which-aws-roles-they-assume.html)
   condition key.
 - **Per-organization OIDC issuers** — each organization gets its own subdomain
   issuer for AWS federation, with per-org signing keys and key rotation.
