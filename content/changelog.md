@@ -11,8 +11,10 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 ## [v2026.8.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.4) — August 16, 2026
 
 - **SLSA Build Level 3 provenance** — release artifacts are now built and
-  attested inside a dedicated reusable workflow, so the attestation signing
-  identity is out of reach of the build steps themselves. Every archive,
+  attested inside a
+  [dedicated reusable workflow](https://docs.github.com/actions/security-guides/using-artifact-attestations-and-reusable-workflows-to-achieve-slsa-v1-build-level-3),
+  so the attestation signing identity is out of reach of the build steps
+  themselves — the bar [SLSA](https://slsa.dev/) sets for Build Level 3. Every archive,
   container image, Helm chart, and SBOM can be verified with the builder
   pinned — the attestation records the reusable workflow as the signer,
   distinct from the release workflow that called it:
@@ -34,23 +36,29 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
   ```
 
   The GitHub Actions OIDC identity behind release signing also moved to
-  immutable subject claims, so deleting and re-registering a repository name
-  can no longer mint tokens that match the release trust policies.
+  [immutable subject claims](https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/),
+  so deleting and re-registering a repository name can no longer mint tokens
+  that match the release trust policies.
 - **AWS role discovery from Identity Center entitlements** — `vouch setup aws`
-  discovery now runs a second pass over IAM Identity Center account-access
-  entitlements, so roles assigned to you or your groups through Identity
+  discovery now runs a second pass over
+  [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html)
+  account-access entitlements, so roles assigned to you or your groups through Identity
   Center are found without hand-configuration. The management role needs new
   read-only IAM permissions for the pass, which runs in the commercial
   partition only. **Breaking:** AWS authorization failures now exit with
   code 5 instead of 4 (signature and clock-skew errors keep exit code 4).
 - **Sender-constrained tokens enforced on every grant** — issuing any token
-  now requires a sender-constraint witness (DPoP proof or mTLS certificate),
+  now requires a sender-constraint witness
+  ([DPoP](https://www.rfc-editor.org/rfc/rfc9449) proof or
+  [mTLS](https://www.rfc-editor.org/rfc/rfc8705) certificate),
   DPoP-bound device-flow and client-credentials tokens are correctly labeled
   `token_type: DPoP`, and resource endpoints and `/oauth/register` answer
   stale-nonce requests with a `DPoP-Nonce` challenge instead of an opaque
   failure. Device-flow infrastructure failures now return the retryable
   `server_error` instead of `invalid_grant`.
-- **SCIM PATCH overhaul** — PATCH operations apply through a shared attribute
+- **SCIM PATCH overhaul** —
+  [PATCH](https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2) operations
+  apply through a shared attribute
   table covering every mutable attribute, group-membership changes apply
   atomically, Entra-style remove-by-value is supported, and concurrent adds
   of the same member resolve to a single membership. Status codes are
@@ -76,7 +84,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 
 - **New policy engine with history-aware policies** — device-posture policies
   now run on [Dogwood](https://github.com/dogwood-policy/dogwood), a
-  Cedar-based engine with a temporal sublanguage, replacing CEL. Policies can
+  [Cedar](https://www.cedarpolicy.com/)-based engine with a temporal
+  sublanguage, replacing CEL. Policies can
   reason about recent activity: five new built-ins cover token issuance rate
   limiting, failed-login bursts, and step-up, IP-consistency, and
   logout-invalidation checks on token exchange. Policies are type-checked
@@ -130,8 +139,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 - **SCIM provisioning hardening** — user provisioning now rejects addresses
   outside the organization's verified domains, checked inside the creation
   transaction to close a race. Concurrent create requests for the same user
-  resolve to a single account, and filter matching follows RFC 7644 case
-  rules.
+  resolve to a single account, and filter matching follows
+  [RFC 7644](https://www.rfc-editor.org/rfc/rfc7644) case rules.
 - **No more duplicate users from email casing** — email addresses are
   canonicalized to lowercase across sign-in, SCIM, and audit correlation, so
   the same person arriving with different casing no longer creates duplicate
@@ -173,7 +182,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 ## [v2026.7.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.7.3) — July 26, 2026
 
 - **Credential and key lifecycle audit events** — AWS credential issuance, SSH
-  certificate issuance, RFC 8693 token exchange, hardware key registration and
+  certificate issuance, [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693)
+  token exchange, hardware key registration and
   removal, device-flow approvals, and application secret changes now emit
   queryable audit events, each with its own retention class.
 - **Website sign-ins recorded correctly** — signing in through the website now
@@ -195,7 +205,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 - **Post-quantum TLS** — the CLI and agent now prefer hybrid post-quantum key
   exchange when connecting to the Vouch server.
 - **IAM Identity Center context in AssumeRole** — the CLI forwards IdC identity
-  context into role sessions for trusted identity propagation.
+  context into role sessions for
+  [trusted identity propagation](https://docs.aws.amazon.com/singlesignon/latest/userguide/trustedidentitypropagation.html).
 - **Access-token audience enforcement** — the server now enforces the token
   audience at every resource endpoint.
 
@@ -217,17 +228,20 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
   [Fluent](https://projectfluent.org/) catalogs and locale negotiated
   automatically. Timestamps in the applications and admin UI render in the
   viewer's locale.
-- **XDG Base Directory compliance** — the CLI and agent now follow the XDG
-  spec on every platform for config, state, data, and cache files. A legacy
+- **XDG Base Directory compliance** — the CLI and agent now follow the
+  [XDG spec](https://specifications.freedesktop.org/basedir-spec/latest/) on
+  every platform for config, state, data, and cache files. A legacy
   flat `~/.vouch/` directory is migrated automatically on first run.
 - **Mandatory HTTP message signatures** — all `/v1/*` API requests now require
   [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421) HTTP message signatures
   with Content-Digest enforcement, and the server advertises its policy via
   `Accept-Signature`.
 - **OpenID Connect RP-Initiated Logout 1.0** — applications can now end a
-  Vouch session through the standard RP-initiated logout flow.
-- **STIG-aligned kernel hardening** — the server AMI ships with STIG-aligned
-  kernel settings and a published STIG mapping document.
+  Vouch session through the standard
+  [RP-initiated logout flow](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+- **STIG-aligned kernel hardening** — the server AMI ships with
+  [STIG](https://public.cyber.mil/stigs/)-aligned kernel settings and a
+  published STIG mapping document.
 
 ## [v2026.6.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.6.2) — June 13, 2026
 
@@ -283,5 +297,6 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
   an AWS organization, with role chaining.
 - **`vouch aws console`** — open the AWS web console from the terminal using
   your short-lived credentials.
-- **RFC 9728 Protected Resource Metadata** — the server publishes OAuth 2.0
-  protected resource metadata for standards-based client discovery.
+- **RFC 9728 Protected Resource Metadata** — the server publishes
+  [OAuth 2.0 protected resource metadata](https://www.rfc-editor.org/rfc/rfc9728)
+  for standards-based client discovery.
