@@ -1,12 +1,59 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: a Cedar-based policy engine with history-aware policies, a guided policy rule builder, hardware-key enforcement for enrollment, an SSO sign-in fix for PostgreSQL and Aurora DSQL, an organization audit events API with OCSF export, SCIM provisioning hardening, and more."
+description: "Major features and improvements in recent Vouch releases: SLSA Build Level 3 provenance with a pinnable builder identity, AWS role discovery from IAM Identity Center entitlements, sender-constrained tokens enforced on every grant, a SCIM PATCH overhaul, a Cedar-based policy engine with history-aware policies, a guided policy rule builder, an organization audit events API with OCSF export, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.8.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.4) — August 16, 2026
+
+- **SLSA Build Level 3 provenance** — release artifacts are now built and
+  attested inside a dedicated reusable workflow, so the attestation signing
+  identity is out of reach of the build steps themselves. Every archive,
+  container image, Helm chart, and SBOM can be verified with the builder
+  pinned: `gh attestation verify <artifact> --owner vouch-sh
+  --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml`.
+  The GitHub Actions OIDC identity behind release signing also moved to
+  immutable subject claims, so deleting and re-registering a repository name
+  can no longer mint tokens that match the release trust policies.
+- **AWS role discovery from Identity Center entitlements** — `vouch setup aws`
+  discovery now runs a second pass over IAM Identity Center account-access
+  entitlements, so roles assigned to you or your groups through Identity
+  Center are found without hand-configuration. The management role needs new
+  read-only IAM permissions for the pass, which runs in the commercial
+  partition only. **Breaking:** AWS authorization failures now exit with
+  code 5 instead of 4 (signature and clock-skew errors keep exit code 4).
+- **Sender-constrained tokens enforced on every grant** — issuing any token
+  now requires a sender-constraint witness (DPoP proof or mTLS certificate),
+  DPoP-bound device-flow and client-credentials tokens are correctly labeled
+  `token_type: DPoP`, and resource endpoints and `/oauth/register` answer
+  stale-nonce requests with a `DPoP-Nonce` challenge instead of an opaque
+  failure. Device-flow infrastructure failures now return the retryable
+  `server_error` instead of `invalid_grant`.
+- **SCIM PATCH overhaul** — PATCH operations apply through a shared attribute
+  table covering every mutable attribute, group-membership changes apply
+  atomically, Entra-style remove-by-value is supported, and concurrent adds
+  of the same member resolve to a single membership. Status codes are
+  corrected across the board: infrastructure faults during group creation are
+  500s, a NUL byte in a member ID is a 400, and deleting an already-removed
+  user is a 404.
+- **SSH agent socket peer verification** — the agent now verifies the
+  connecting process's UID on its SSH agent socket and validates its runtime
+  directory before listening, so another local user cannot use the socket.
+- **Account lifecycle fixes** — when an org-scoped application's creator is
+  deleted, the application transfers to an active organization admin instead
+  of being orphaned. Deactivated users are blocked from CLI hardware-key
+  registration, and sessions arriving exactly at a `max_age` boundary are
+  accepted.
+- **SAML interop fix** — assertions carrying multiple SubjectConfirmation
+  elements now sign in when any bearer confirmation validates, instead of
+  being rejected outright.
+- **security.txt** — the server publishes an
+  [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116) `security.txt`, giving
+  security researchers a discoverable reporting channel.
 
 ## [v2026.8.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.3) — August 10, 2026
 

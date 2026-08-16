@@ -178,14 +178,15 @@ A successful login requires producing **all** of the following, and each is inde
 
 ### SLSA provenance
 
-Vouch release binaries are built with [SLSA Build Level 2](https://slsa.dev/) provenance via GitHub Artifact Attestations (Sigstore-backed). Each release includes provenance and SBOM attestations that you can verify with the GitHub CLI:
+Vouch release binaries are built with [SLSA Build Level 3](https://slsa.dev/) provenance via GitHub Artifact Attestations (Sigstore-backed). Builds run inside a dedicated reusable workflow, so the attestation signing identity cannot be influenced by the build steps themselves. Each release includes provenance and SBOM attestations that you can verify with the GitHub CLI, pinning the builder:
 
 ```bash
-gh attestation verify vouch-v2026.8.3-x86_64-unknown-linux-musl.tar.gz \
-  --owner vouch-sh
+gh attestation verify vouch-v2026.8.4-x86_64-unknown-linux-musl.tar.gz \
+  --owner vouch-sh \
+  --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml
 ```
 
-This confirms the binary was built from the expected source repository by the expected workflow. Releases are also independently rebuilt and hash-compared to verify reproducibility.
+This confirms the binary was built from the expected source repository by the pinned build workflow. Releases are also independently rebuilt and hash-compared to verify reproducibility.
 
 ### SHA256 checksums
 

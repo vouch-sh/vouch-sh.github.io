@@ -774,9 +774,10 @@ sha256sum --check SHA256SUMS.txt
 
 ### SLSA provenance
 
-Vouch release binaries are built with SLSA Build Level 2 provenance via GitHub Artifact Attestations. You can verify the provenance and SBOM attestations using the [GitHub CLI](https://cli.github.com/):
+Vouch release binaries are built with SLSA Build Level 3 provenance via GitHub Artifact Attestations: builds run inside a dedicated reusable workflow, and the attestation records that workflow as the builder identity. You can verify the provenance and SBOM attestations — pinning the builder — using the [GitHub CLI](https://cli.github.com/):
 
 ```bash
-gh attestation verify vouch-v2026.8.3-x86_64-unknown-linux-musl.tar.gz \
-  --owner vouch-sh
+gh attestation verify vouch-v2026.8.4-x86_64-unknown-linux-musl.tar.gz \
+  --owner vouch-sh \
+  --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml
 ```
