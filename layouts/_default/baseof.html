@@ -64,15 +64,15 @@
         vouch
       </a>
 
-      <button class="nav-toggle" aria-label="{{ i18n "aria_toggle_nav" }}" onclick="document.querySelector('.nav-links').classList.toggle('open')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="nav-toggle" aria-label="{{ i18n "aria_toggle_nav" }}" aria-expanded="false" aria-controls="nav-links" onclick="var l=document.getElementById('nav-links');l.classList.toggle('open');this.setAttribute('aria-expanded',l.classList.contains('open')?'true':'false')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
           <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
 
-      <ul class="nav-links">
+      <ul class="nav-links" id="nav-links">
         {{ range .Site.Menus.main }}
         <li>
           <a href="{{ .URL }}"

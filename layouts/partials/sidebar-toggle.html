@@ -1,0 +1,28 @@
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="{{ i18n "aria_toggle_sidebar" }}" aria-expanded="false" aria-controls="docs-sidebar">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</button>
+
+<script>
+function toggleSidebar() {
+  var sidebar = document.getElementById('docs-sidebar');
+  var open = sidebar.classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open', open);
+  document.querySelector('.sidebar-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function closeSidebar() {
+  document.getElementById('docs-sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.querySelector('.sidebar-toggle').setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('docs-sidebar').classList.contains('open')) {
+    closeSidebar();
+    document.querySelector('.sidebar-toggle').focus();
+  }
+});
+</script>

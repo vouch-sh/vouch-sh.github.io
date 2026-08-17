@@ -33,18 +33,20 @@
               {{/* Collapsible section group (e.g., Applications) */}}
               {{ $isAncestor := $currentPage.IsDescendant . }}
               {{ $isActive := eq $currentPage.Permalink .Permalink }}
-              <li class="sidebar-group{{ if or $isAncestor $isActive }} open{{ end }}">
+              {{ $isOpen := or $isAncestor $isActive }}
+              {{ $childrenId := printf "sidebar-children-%s" (path.Base .RelPermalink) }}
+              <li class="sidebar-group{{ if $isOpen }} open{{ end }}">
                 <div class="sidebar-group-header">
                   <a href="{{ .Permalink }}" {{ if $isActive }}class="active"{{ end }}>
                     {{ .LinkTitle }}
                   </a>
-                  <button class="sidebar-chevron" onclick="this.closest('.sidebar-group').classList.toggle('open')" aria-label="{{ i18n "aria_toggle_section" }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <button class="sidebar-chevron" onclick="var g=this.closest('.sidebar-group');g.classList.toggle('open');this.setAttribute('aria-expanded',g.classList.contains('open')?'true':'false')" aria-label="{{ i18n "aria_toggle_section" .LinkTitle }}" aria-expanded="{{ if $isOpen }}true{{ else }}false{{ end }}" aria-controls="{{ $childrenId }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </button>
                 </div>
-                <ul class="sidebar-children">
+                <ul class="sidebar-children" id="{{ $childrenId }}">
                   {{ range .Pages.ByWeight }}
                   <li>
                     <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>

@@ -76,7 +76,7 @@ other = "View this page as raw Markdown"
 other = "Toggle sidebar"
 
 [aria_toggle_section]
-other = "Toggle section"
+other = "Toggle {{ . }} section"
 
 # --- Buttons / shared labels ---
 [btn_copy_markdown]
