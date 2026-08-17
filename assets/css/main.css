@@ -1459,7 +1459,8 @@ tr:hover td {
   font-family: var(--font-sans);
 }
 
-.code-wrapper:hover .copy-btn {
+.code-wrapper:hover .copy-btn,
+.code-wrapper:focus-within .copy-btn {
   opacity: 1;
 }
 

@@ -66,11 +66,12 @@ other = "Copy to clipboard"
 [aria_page_actions]
 other = "Page actions"
 
+# These must start with the visible button text (WCAG 2.5.3 Label in Name).
 [aria_copy_markdown]
-other = "Copy this page as Markdown for pasting into an LLM"
+other = "Copy as Markdown for pasting into an LLM"
 
 [aria_view_md]
-other = "View this page as raw Markdown"
+other = "View as .md (raw Markdown)"
 
 [aria_toggle_sidebar]
 other = "Toggle sidebar"

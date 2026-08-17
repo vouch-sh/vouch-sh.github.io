@@ -123,8 +123,16 @@
       </div>
     </div>
   </footer>
+  <div class="sr-only" role="status" id="copy-status"></div>
   <script>
   var I18N_COPY_CLIPBOARD = {{ i18n "aria_copy_clipboard" }};
+  var I18N_COPIED = {{ i18n "js_copied" }};
+  var I18N_COPY_FAILED = {{ i18n "js_copy_failed" }};
+  function announceCopyStatus(message) {
+    var status = document.getElementById('copy-status');
+    status.textContent = message;
+    setTimeout(function() { status.textContent = ''; }, 1500);
+  }
   document.querySelectorAll('pre').forEach(function(pre) {
     var wrapper = document.createElement('div');
     wrapper.className = 'code-wrapper';
@@ -134,17 +142,20 @@
     var btn = document.createElement('button');
     btn.className = 'copy-btn';
     btn.setAttribute('aria-label', I18N_COPY_CLIPBOARD);
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
     wrapper.appendChild(btn);
 
     btn.addEventListener('click', function() {
       var code = pre.querySelector('code');
       var text = (code || pre).textContent;
       navigator.clipboard.writeText(text).then(function() {
-        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+        announceCopyStatus(I18N_COPIED);
         setTimeout(function() {
-          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
         }, 1500);
+      }).catch(function() {
+        announceCopyStatus(I18N_COPY_FAILED);
       });
     });
   });

@@ -33,8 +33,6 @@
 {{ partial "sidebar-toggle.html" . }}
 
 <script>
-var I18N_COPIED = {{ i18n "js_copied" }};
-var I18N_COPY_FAILED = {{ i18n "js_copy_failed" }};
 document.querySelectorAll('.docs-action-btn[data-md-url]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var url = btn.getAttribute('data-md-url');
@@ -45,10 +43,12 @@ document.querySelectorAll('.docs-action-btn[data-md-url]').forEach(function(btn)
       .then(function(text) { return navigator.clipboard.writeText(text); })
       .then(function() {
         if (label) label.textContent = I18N_COPIED;
+        announceCopyStatus(I18N_COPIED);
         setTimeout(function() { if (label) label.textContent = original; }, 1500);
       })
       .catch(function() {
         if (label) label.textContent = I18N_COPY_FAILED;
+        announceCopyStatus(I18N_COPY_FAILED);
         setTimeout(function() { if (label) label.textContent = original; }, 2000);
       });
   });
