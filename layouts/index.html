@@ -113,7 +113,7 @@
       <h2>{{ .Params.openSource.title }}</h2>
       <p>{{ .Params.openSource.body }}</p>
     </div>
-    <div class="evaluation-links" aria-label="{{ .Params.openSource.ariaLabel }}">
+    <div class="evaluation-links" role="group" aria-label="{{ .Params.openSource.ariaLabel }}">
       {{ range .Params.openSource.links }}
       <a href="{{ .url }}" class="btn btn-secondary">{{ .label }}</a>
       {{ end }}

@@ -1198,7 +1198,14 @@ tr:hover td {
 
 .card-featured {
   border-color: var(--accent);
-  background: linear-gradient(135deg, rgba(62, 207, 142, 0.08), var(--bg-raised));
+  /* Solid color matches the gradient's tinted stop so contrast checkers
+     that cannot resolve gradients evaluate against the real worst case. */
+  background-color: #212c27;
+  background-image: linear-gradient(135deg, rgba(62, 207, 142, 0.08), var(--bg-raised));
+}
+
+.card-featured p {
+  color: #969696;
 }
 
 .card-featured:hover {
