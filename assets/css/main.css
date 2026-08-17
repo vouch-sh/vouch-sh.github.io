@@ -106,6 +106,21 @@ a:hover {
   -webkit-mask-repeat: no-repeat;
 }
 
+/* Links inside prose need a non-color cue (WCAG 1.4.1); card, button, and
+   nav links are excluded — they are distinguished by their containers. */
+.docs-content p a,
+.docs-content li a,
+.docs-content td a,
+.docs-content blockquote a,
+.blog-single p a,
+.blog-single li a,
+.blog-single td a,
+.single-page p a,
+.single-page li a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 img {
   max-width: 100%;
   height: auto;
