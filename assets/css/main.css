@@ -429,6 +429,8 @@ tr:hover td {
 
 .footer-instances a {
   color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .footer-instances .coming-soon {
