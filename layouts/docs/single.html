@@ -2,16 +2,16 @@
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
     <div class="docs-sidebar-title">{{ i18n "sidebar_title" }}</div>
-    <nav>
+    <nav aria-label="{{ i18n "sidebar_title" }}">
       {{ partial "docs-sidebar-nav.html" . }}
     </nav>
   </aside>
 
   <article class="docs-content">
-    <div class="docs-breadcrumb">
-      {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}{{ i18n "breadcrumb_docs" }}{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator">/</span>{{ end }}{{ end }}
-      {{ .Title }}
-    </div>
+    <nav class="docs-breadcrumb" aria-label="{{ i18n "aria_breadcrumb" }}">
+      {{ range .Ancestors.Reverse }}{{ if ne .Kind "home" }}<a href="{{ .Permalink }}">{{ if eq .Kind "section" }}{{ if eq .Section "docs" }}{{ if not .Parent.IsHome }}{{ .Title }}{{ else }}{{ i18n "breadcrumb_docs" }}{{ end }}{{ else }}{{ .Title }}{{ end }}{{ else }}{{ .Title }}{{ end }}</a><span class="separator" aria-hidden="true">/</span>{{ end }}{{ end }}
+      <span aria-current="page">{{ .Title }}</span>
+    </nav>
     {{ with .OutputFormats.Get "markdown" }}
     <div class="docs-actions" role="group" aria-label="{{ i18n "aria_page_actions" }}">
       <button type="button" class="docs-action-btn" data-md-url="{{ .Permalink }}" aria-label="{{ i18n "aria_copy_markdown" }}">

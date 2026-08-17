@@ -2,7 +2,7 @@
 <div class="docs-layout">
   <aside class="docs-sidebar" id="docs-sidebar">
     <div class="docs-sidebar-title">{{ i18n "sidebar_title" }}</div>
-    <nav>
+    <nav aria-label="{{ i18n "sidebar_title" }}">
       {{ partial "docs-sidebar-nav.html" . }}
     </nav>
   </aside>

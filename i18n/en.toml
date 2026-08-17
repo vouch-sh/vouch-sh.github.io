@@ -57,6 +57,12 @@ other = "Status"
 other = "Skip to main content"
 
 # --- ARIA labels ---
+[aria_main_nav]
+other = "Main"
+
+[aria_breadcrumb]
+other = "Breadcrumb"
+
 [aria_toggle_nav]
 other = "Toggle navigation"
 

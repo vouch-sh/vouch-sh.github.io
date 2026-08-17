@@ -11,7 +11,7 @@
         {{ range . }}
           {{ if not .IsSection }}
             <li>
-              <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
+              <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active" aria-current="page"{{ end }}>
                 {{ .LinkTitle }}
               </a>
             </li>
@@ -37,7 +37,7 @@
               {{ $childrenId := printf "sidebar-children-%s" (path.Base .RelPermalink) }}
               <li class="sidebar-group{{ if $isOpen }} open{{ end }}">
                 <div class="sidebar-group-header">
-                  <a href="{{ .Permalink }}" {{ if $isActive }}class="active"{{ end }}>
+                  <a href="{{ .Permalink }}" {{ if $isActive }}class="active" aria-current="page"{{ end }}>
                     {{ .LinkTitle }}
                   </a>
                   <button class="sidebar-chevron" onclick="var g=this.closest('.sidebar-group');g.classList.toggle('open');this.setAttribute('aria-expanded',g.classList.contains('open')?'true':'false')" aria-label="{{ i18n "aria_toggle_section" .LinkTitle }}" aria-expanded="{{ if $isOpen }}true{{ else }}false{{ end }}" aria-controls="{{ $childrenId }}">
@@ -49,7 +49,7 @@
                 <ul class="sidebar-children" id="{{ $childrenId }}">
                   {{ range .Pages.ByWeight }}
                   <li>
-                    <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
+                    <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active" aria-current="page"{{ end }}>
                       {{ .LinkTitle }}
                     </a>
                   </li>
@@ -58,7 +58,7 @@
               </li>
             {{ else }}
               <li>
-                <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active"{{ end }}>
+                <a href="{{ .Permalink }}" {{ if eq .Permalink $currentPage.Permalink }}class="active" aria-current="page"{{ end }}>
                   {{ .LinkTitle }}
                 </a>
               </li>
