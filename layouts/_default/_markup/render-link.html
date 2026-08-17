@@ -3,5 +3,5 @@
 <a href="{{ .Destination | safeURL }}"
   {{- if and $isExternal (not $isSameSite) }} target="_blank" rel="noopener noreferrer" class="external-link"{{ end -}}
   {{- with .Title }} title="{{ . }}"{{ end -}}
->{{ .Text | safeHTML }}</a>
+>{{ .Text | safeHTML }}{{ if and $isExternal (not $isSameSite) }}<span class="sr-only"> {{ i18n "external_link_note" }}</span>{{ end }}</a>
 {{- /* Strip trailing whitespace */ -}}

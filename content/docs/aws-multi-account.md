@@ -189,7 +189,7 @@ aws cloudformation create-stack-instances \
 
 With `--auto-deployment Enabled`, new accounts added to the OU automatically receive the spoke role.
 
-#### Per-account permissions
+### Per-account permissions
 
 Override `ManagedPolicyArn` per account to scope permissions:
 
