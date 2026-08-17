@@ -51,6 +51,7 @@
   <link rel="stylesheet" href="{{ $css.Permalink }}">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">{{ i18n "skip_to_content" }}</a>
   <header class="nav">
     <div class="nav-inner">
       <a href="/" class="nav-logo">
@@ -90,7 +91,7 @@
     </div>
   </header>
 
-  <main class="content-wrapper">
+  <main class="content-wrapper" id="main-content">
     {{ block "main" . }}{{ end }}
   </main>
 

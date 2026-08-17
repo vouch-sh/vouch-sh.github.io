@@ -52,6 +52,10 @@ other = "GitHub"
 [footer_status]
 other = "Status"
 
+# --- Accessibility ---
+[skip_to_content]
+other = "Skip to main content"
+
 # --- ARIA labels ---
 [aria_toggle_nav]
 other = "Toggle navigation"
