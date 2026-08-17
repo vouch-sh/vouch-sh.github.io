@@ -56,6 +56,9 @@ other = "Status"
 [skip_to_content]
 other = "Skip to main content"
 
+[external_link_note]
+other = "(opens in new tab)"
+
 # --- ARIA labels ---
 [aria_main_nav]
 other = "Main"

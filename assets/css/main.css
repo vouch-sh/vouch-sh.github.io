@@ -30,11 +30,17 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + 1rem);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -718,7 +724,7 @@ tr:hover td {
   border-radius: 8px;
 }
 
-.integration-card h4 {
+.integration-card h3 {
   font-size: 1rem;
   margin: 0 0 0.25rem;
 }
@@ -821,7 +827,7 @@ tr:hover td {
   pointer-events: none;
 }
 
-.region-card.disabled h4 {
+.region-card.disabled h3 {
   color: var(--text-muted);
 }
 
@@ -835,7 +841,8 @@ tr:hover td {
   display: block;
 }
 
-.region-card h4 {
+.region-card h3 {
+  font-size: 1.1rem;
   margin: 0 0 0.25rem;
 }
 
