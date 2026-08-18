@@ -3,7 +3,7 @@ title: "Compare"
 description: "See how Vouch compares to other credential management solutions."
 ---
 
-Vouch is a credential broker -- it turns a hardware key tap into short-lived credentials for SSH, AWS, GitHub, Docker, and more. It is not a secrets manager, a PAM tool, or a full identity platform. This page compares Vouch to tools you might be evaluating alongside it.
+Vouch is a credential broker -- it turns a hardware key tap into short-lived credentials for SSH, AWS, GitHub, Docker, and more. It is not a secrets manager, a PAM tool, or a full identity platform. This page compares Vouch to six adjacent tools: AWS IAM Identity Center, HashiCorp Vault, 1Password SSH Agent, Teleport, Beyond Identity, and Ory.
 
 ---
 
@@ -51,7 +51,7 @@ Choose Vouch when:
 Choose IAM Identity Center when:
 
 - You only need access to AWS services. Identity Center credentials also work with ECR, CodeCommit, CodeArtifact, and RDS IAM auth through standard AWS CLI steps -- what it lacks is SSH certificates, GitHub tokens, and non-AWS registries.
-- You have a large organization with complex permission sets across many AWS accounts.
+- You manage permission sets across multiple AWS accounts in an AWS Organization.
 - You want a fully AWS-managed solution with no third-party dependencies.
 
 ### HashiCorp Vault
@@ -62,7 +62,7 @@ Choose Vault when:
 - You need dynamic secrets for databases, cloud providers, and PKI beyond what Vouch covers.
 - You have a platform team that can operate and maintain a Vault cluster.
 
-Vouch and Vault solve different problems. Vouch brokers developer credentials (human-to-service). Vault manages application secrets (service-to-service). Many organizations use both.
+Vouch and Vault solve different problems. Vouch brokers developer credentials (human-to-service). Vault manages application secrets (service-to-service). The two are complementary.
 
 ### 1Password SSH Agent
 
