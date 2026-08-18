@@ -1,0 +1,14 @@
+# Vouch welcomes well-behaved AI agents and crawlers.
+# Machine-readable entry points:
+#   /llms.txt       — structured index of documentation
+#   /llms-full.txt  — all docs concatenated as Markdown
+#   /agents.md      — capability manifest for agents
+# Append `.md` to any /docs/ URL for a clean Markdown version.
+
+User-agent: *
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /agents.md
+
+Sitemap: https://vouch.sh/sitemap.xml
