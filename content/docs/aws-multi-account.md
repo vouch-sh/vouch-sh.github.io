@@ -571,11 +571,11 @@ Use [Service Control Policies](https://docs.aws.amazon.com/organizations/latest/
 
 ## Protecting Vouch roles from accidental deletion
 
-A common convention is to prefix critical roles with `DO-NOT-DELETE-*`, but that is a social signal, not a control. Tired engineers ignore it; automation never reads it. Use technical guardrails as the real protection, and use names, paths, and tags only as the addressing scheme those guardrails attach to.
+A common convention is to prefix critical roles with `DO-NOT-DELETE-*`, but that is a naming signal, not a control -- nothing enforces it. Use technical guardrails as the protection, and use names, paths, and tags only as the addressing scheme those guardrails attach to.
 
 ### Use an IAM path, not a name prefix
 
-Place Vouch roles under a dedicated IAM [path](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) such as `/vouch/`. Paths are first-class in the role ARN, can be wildcarded in policy `Resource` fields, and don't pollute the role's display name:
+Place Vouch roles under a dedicated IAM [path](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-friendly-names) such as `/vouch/`. The path is part of the role ARN, can be wildcarded in policy `Resource` fields, and does not appear in the role's display name:
 
 ```
 arn:aws:iam::123456789012:role/vouch/VouchAccess
