@@ -13,7 +13,7 @@ params:
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
 - **Admin, once:** grant [`rds-db:connect`](#required-iam-permissions) on the Vouch IAM role and enable IAM auth on the database user.
-- **Each developer:** `vouch exec --type rds --rds-hostname <host> --rds-username <user> -- psql`, then `psql` just works — the 15-minute token is injected automatically.
+- **Each developer:** `vouch exec --type rds --rds-hostname <host> --rds-username <user> -- psql`, the 15-minute token is injected into `psql` automatically.
 {{< /tldr >}}
 
 ## RDS / Aurora PostgreSQL

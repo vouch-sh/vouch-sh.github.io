@@ -13,7 +13,7 @@ Vouch's [credential helper](https://docs.docker.com/engine/reference/commandline
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → this page; the ECR path also requires the [AWS integration](/docs/aws/).
 - **Admin, once:** grant the [registry-specific permissions](#registry-specific-setup) -- ECR actions on the Vouch IAM role, or `packages:read` on the GitHub App.
-- **Each developer:** `vouch setup docker --configure <registry>`, then `docker pull` and `docker push` just work.
+- **Each developer:** `vouch setup docker --configure <registry>`, then `docker pull` and `docker push` authenticate automatically.
 {{< /tldr >}}
 
 ## Supported Registries

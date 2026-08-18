@@ -152,7 +152,7 @@ That is it. After login, every integration -- SSH, AWS, Git -- uses the session 
 With an active session, your tools work without extra wrappers. Try the integration your administrator has already configured:
 
 ```
-# SSH just works
+# SSH authenticates with your Vouch certificate
 ssh user@server
 
 # AWS credentials are available through the configured profile
@@ -164,9 +164,9 @@ git ls-remote https://github.com/example/private-repo.git
 
 Vouch provides credentials on demand to each tool through the lightweight integrations configured by your organization.
 
-### What just started working?
+### What the session enables
 
-One YubiKey tap gives you credentials that cascade across your entire toolchain:
+One `vouch login` session provides credentials to each configured integration:
 
 | Command | Service |
 |---|---|

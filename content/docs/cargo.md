@@ -13,7 +13,7 @@ Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens de
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
 - **Admin, once:** confirm your private registry meets the [registry server requirements](#registry-server-requirements) (Bearer token authentication).
-- **Each developer:** `vouch setup cargo --configure`, then `cargo build` and `cargo publish` just work.
+- **Each developer:** `vouch setup cargo --configure`, then `cargo build` and `cargo publish` authenticate automatically.
 {{< /tldr >}}
 
 ## Prerequisites

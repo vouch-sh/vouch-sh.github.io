@@ -13,7 +13,7 @@ AWS Systems Manager Session Manager connects to EC2 instances without opening SS
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
 - **Admin, once:** add [`ssm:StartSession` permissions](#iam-permissions) to the Vouch IAM role and give instances an SSM instance profile.
-- **Each developer:** `vouch setup ssm`, then `ssh i-0abc123def456` just works.
+- **Each developer:** `vouch setup ssm`, then `ssh i-0abc123def456` connects through Session Manager with no further configuration.
 {{< /tldr >}}
 
 ## Prerequisites

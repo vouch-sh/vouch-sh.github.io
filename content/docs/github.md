@@ -13,7 +13,7 @@ Vouch replaces GitHub PATs and deploy keys with short-lived tokens (valid for up
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
 - **Admin, once:** [install the Vouch GitHub App](#step-1----install-the-vouch-github-app-admin) in your GitHub organization.
-- **Each developer:** `vouch setup github --configure`, then `git clone https://github.com/your-org/private-repo.git` just works.
+- **Each developer:** `vouch setup github --configure`, then `git clone https://github.com/your-org/private-repo.git` authenticates automatically.
 {{< /tldr >}}
 
 ## Step 1 -- Install the Vouch GitHub App (admin)

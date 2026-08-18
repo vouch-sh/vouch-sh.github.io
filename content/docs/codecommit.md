@@ -15,7 +15,7 @@ Vouch authenticates to [AWS CodeCommit](https://docs.aws.amazon.com/codecommit/l
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
 - **Admin, once:** add `codecommit:GitPull` and `codecommit:GitPush` to the Vouch IAM role.
-- **Each developer:** `vouch setup codecommit --configure`, then `git clone https://git-codecommit.<region>.amazonaws.com/v1/repos/<repo>` just works.
+- **Each developer:** `vouch setup codecommit --configure`, then `git clone https://git-codecommit.<region>.amazonaws.com/v1/repos/<repo>` authenticates automatically.
 {{< /tldr >}}
 
 ## Prerequisites
