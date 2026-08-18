@@ -13,7 +13,7 @@ Multi-account AWS layouts have two models, both anchored in the **management acc
 - **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below.
 - **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
 
-We don't recommend deploying separate OIDC providers in every account -- it multiplies maintenance, and AWS Organizations exists precisely so you don't have to. One management account plus per-account access covers the same use cases with less surface area.
+Deploying separate OIDC providers in every account is not recommended: it multiplies maintenance, and one management account plus per-account access covers the same use cases with less surface area.
 
 {{< tldr >}}
 - **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1----register-the-vouch-oidc-provider) in your management account.

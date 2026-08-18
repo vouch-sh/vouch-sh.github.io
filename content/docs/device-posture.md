@@ -8,11 +8,11 @@ params:
   docsGroup: admin
 ---
 
-Vouch can collect security signals from developer devices at login and enforce policies against them. If a device does not meet your organization's security baseline, Vouch denies access and tells the developer exactly what to fix.
+Vouch can collect security signals from developer devices at login and enforce policies against them. If a device does not meet your organization's security baseline, Vouch denies access and reports the failing checks with remediation instructions.
 
 Policies also cover *timing*: a policy can require a recent hardware login before workload credentials are issued, cap how many tokens a user obtains per hour, or refuse credentials after a logout. These read the user's recent authentication history rather than their device.
 
-This means you no longer need to trust that developers have configured their machines correctly — Vouch verifies it on every authentication.
+Device configuration is verified on every authentication rather than assumed.
 
 ---
 
@@ -469,7 +469,7 @@ Activate three pre-configured policies to establish a minimum security standard:
 2. **Firewall** — Prevents unauthorized network access to local services.
 3. **Screen lock** — Protects unattended machines.
 
-This is a good starting point for most teams. Developers who fail any check see specific remediation instructions for their operating system.
+These three policies cover the most common baseline requirements. Developers who fail any check see specific remediation instructions for their operating system.
 
 ### Example 2: Regulated environment
 

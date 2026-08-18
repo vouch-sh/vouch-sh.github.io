@@ -10,7 +10,7 @@ params:
 
 Both [Anthropic](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) support **Workload Identity Federation (WIF)**: a workload presents a short-lived OIDC token from an issuer you operate, and the provider exchanges it for a minutes-long access token — no static API key.
 
-In production the workload is usually a GitHub Actions runner, an AWS Lambda, or a GKE pod, and the right issuer is the native OIDC token those platforms already mint. This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is pasting an `sk-ant-...` or `sk-...` key into a `.env` file and forgetting about it. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it like any other IdP and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
+In production the workload is usually a GitHub Actions runner, an AWS Lambda, or a GKE pod, and the right issuer is the native OIDC token those platforms already mint. This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is a static `sk-ant-...` or `sk-...` key in a `.env` file that is never rotated. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it like any other IdP and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
 
 ```
 vouch login → Vouch OIDC JWT → jwt-bearer exchange → short-lived provider token → Claude / OpenAI API

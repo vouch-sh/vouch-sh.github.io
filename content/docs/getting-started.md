@@ -1,9 +1,9 @@
 ---
 title: "Getting Started with Vouch"
 linkTitle: "Getting Started"
-description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials in minutes."
+description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials."
 weight: 0
-subtitle: "Start using Vouch in under 5 minutes"
+subtitle: "Install the CLI, enroll a YubiKey, and start your first session"
 sitemap:
   priority: 0.9
 params:
@@ -223,9 +223,9 @@ Before a tool can use Vouch, your organization needs to configure the matching i
 
 ## Step 6 -- Onboard your team
 
-Once Vouch works for you, bringing the team onboard is one message: each person installs the CLI and enrolls with the same server, and anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
+Once Vouch works for you, onboarding the team requires no admin action: each person installs the CLI and enrolls with the same server, and anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
 
-The **[Team Rollout playbook](/docs/rollout/)** is the guide for this phase. It has a copy-pasteable onboarding block for Slack, a per-service enablement checklist (AWS, EKS, CodeCommit, CodeArtifact, and more), when to adopt [SCIM](/docs/scim/) (15+ people), and the offboarding story.
+The **[Team Rollout playbook](/docs/rollout/)** is the guide for this phase. It has a copy-pasteable onboarding block for Slack, a per-service enablement checklist (AWS, EKS, CodeCommit, CodeArtifact, and more), when to adopt [SCIM](/docs/scim/) (15+ people), and offboarding.
 
 ---
 

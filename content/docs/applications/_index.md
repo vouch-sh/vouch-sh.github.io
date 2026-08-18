@@ -8,9 +8,9 @@ params:
   docsGroup: admin
 ---
 
-Building phishing-resistant authentication from scratch means implementing WebAuthn flows, managing attestation, and handling device lifecycle -- a significant engineering investment for a startup. If you already have an OIDC-compatible application, you can get hardware-backed sign-in without any of that.
+Building phishing-resistant authentication from scratch means implementing WebAuthn flows, managing attestation, and handling device lifecycle. If your application supports OIDC, Vouch provides these as the identity provider instead.
 
-Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) provider. You add "Sign in with Vouch" to any web application, single-page app, or native CLI tool using standard OIDC libraries. Every login is backed by a hardware security key, giving your application phishing-resistant authentication without building it yourself.
+Vouch is a fully compliant [OpenID Connect](https://openid.net/connect/) (OIDC) provider. You add "Sign in with Vouch" to any web application, single-page app, or native CLI tool using standard OIDC libraries. Every login is backed by a hardware security key, so the application receives phishing-resistant authentication through the standard OIDC flow.
 
 <a href="https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/" target="_blank" rel="noopener noreferrer"><img src="/img/openid-certified.png" alt="OpenID Certified" class="certification-badge-inline" /></a>
 

@@ -8,7 +8,7 @@ params:
   docsGroup: admin
 ---
 
-Most organizations already have a SAML-based identity provider for single sign-on. Vouch supports **SAML 2.0** as a first-class authentication protocol alongside OIDC, so you can use your existing IdP without changes.
+Most organizations already have a SAML-based identity provider for single sign-on. Vouch supports **SAML 2.0** alongside OIDC, so you can use your existing IdP without changes.
 
 From a developer's perspective, there is no difference -- enrollment and login work the same way regardless of whether your organization uses SAML or OIDC. The browser-based sign-in flow routes through your IdP, and the CLI handles everything else.
 
