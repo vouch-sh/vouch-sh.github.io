@@ -8,7 +8,7 @@ layout: "single"
 
 Vouch is a hardware-backed authentication system for developer infrastructure. It replaces long-lived secrets -- SSH keys, AWS access keys, GitHub tokens, Docker credentials -- with short-lived, cryptographically attested credentials. No credential is ever issued without proof of human presence via a [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) security key.
 
-If your team spends time rotating AWS keys, copying SSH public keys to servers, managing GitHub PATs, or running `aws ecr get-login-password` cron jobs, Vouch eliminates all of it with a single YubiKey tap each morning.
+A single daily FIDO2 authentication replaces rotating AWS keys, copying SSH public keys to servers, managing GitHub PATs, and running `aws ecr get-login-password` cron jobs.
 
 ## How it works
 
@@ -22,7 +22,7 @@ After a single `vouch login`, credential helpers for SSH, AWS, GitHub, EKS, Dock
 
 - **Physical hardware key + PIN** -- Every credential issuance requires a FIDO2 assertion: physical touch of the security key and knowledge of the PIN. Software alone cannot obtain credentials.
 - **Phishing-resistant** -- FIDO2 credentials are cryptographically bound to the Vouch server origin. They cannot be replayed against a different site.
-- **Short-lived credentials** -- All issued credentials (SSH certificates, OIDC tokens, AWS STS sessions) expire after a maximum of 8 hours. There is nothing to revoke and nothing to rotate.
+- **Short-lived credentials** -- All issued credentials (SSH certificates, OIDC tokens, AWS STS sessions) expire after a maximum of 8 hours, so there are no long-lived keys to rotate or revoke.
 - **Full audit trail** -- Every credential issuance is logged with the authenticated identity, hardware key attestation, and timestamp.
 
 ## Certifications
@@ -52,7 +52,7 @@ Vouch provides native credential helpers for:
 
 ## Open source
 
-Vouch is fully open source under the **Apache-2.0 / MIT** dual license. Security tools should be auditable.
+Vouch is fully open source under the **Apache-2.0 / MIT** dual license. The full source is available for audit.
 
 - [GitHub Repository](https://github.com/vouch-sh/vouch)
 

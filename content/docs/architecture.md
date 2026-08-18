@@ -236,7 +236,7 @@ The agent caches:
 - **SSH certificate** -- Served to SSH clients via the agent protocol.
 - **Cached STS credentials** -- AWS credentials are cached until their 1-hour expiry to avoid redundant STS calls.
 
-All cached material is held in process memory, and cached credentials are lost when the agent process stops (logout, reboot, crash). On startup the agent recovers the session token from the CLI config file (persisted with owner-only permissions), so a restart resumes the session until it expires; brokered credentials are simply re-issued on demand. A new `vouch login` is only needed after the session expires or is revoked.
+All cached material is held in process memory, and cached credentials are lost when the agent process stops (logout, reboot, crash). On startup the agent recovers the session token from the CLI config file (persisted with owner-only permissions), so a restart resumes the session until it expires; brokered credentials are re-issued on demand. A new `vouch login` is only needed after the session expires or is revoked.
 
 ---
 

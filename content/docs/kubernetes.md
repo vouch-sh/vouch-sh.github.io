@@ -15,7 +15,7 @@ Vouch acts as an OIDC provider for your Kubernetes clusters. After a YubiKey tap
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
 - **Admin, once:** [configure the API server](#configuring-the-api-server) to trust Vouch as an OIDC issuer, and add [RBAC bindings](#rbac-configuration).
-- **Each developer:** `vouch setup k8s --cluster my-cluster --server https://k8s.example.com:6443`, then `kubectl` just works.
+- **Each developer:** `vouch setup k8s --cluster my-cluster --server https://k8s.example.com:6443`, then `kubectl` authenticates automatically.
 {{< /tldr >}}
 
 ## Prerequisites

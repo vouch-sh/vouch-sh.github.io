@@ -17,7 +17,7 @@ Vouch replaces static SSH keys with short-lived certificates. Administrators tru
 {{< tldr >}}
 - **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
 - **Admin, once:** [configure each SSH server](#step-2----configure-ssh-servers-for-administrators) to trust the Vouch CA public key.
-- **Each developer:** `vouch setup ssh`, then `ssh user@server` just works.
+- **Each developer:** `vouch setup ssh`, then `ssh user@server` authenticates with the Vouch certificate automatically.
 {{< /tldr >}}
 
 ## Step 1 -- Set up the CLI (for developers)

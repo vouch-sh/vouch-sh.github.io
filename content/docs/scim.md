@@ -16,7 +16,7 @@ SCIM (System for Cross-domain Identity Management) lets your identity provider -
 - **Update** user attributes (name, email, role) when they change in your directory.
 - **Deactivate** accounts instantly when someone leaves or changes roles.
 
-This eliminates manual user management and ensures that credential access is always in sync with your corporate directory.
+This removes the manual steps and keeps credential access in sync with your corporate directory.
 
 ---
 

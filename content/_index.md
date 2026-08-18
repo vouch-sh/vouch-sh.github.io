@@ -5,19 +5,19 @@ sitemap:
   priority: 1.0
 hero:
   title: "Vouch: Hardware-Backed Developer Credentials"
-  subtitle: "Touch your key. Get credentials for everything. Vouch is an open-source credential broker that issues short-lived SSH keys, AWS sessions, GitHub tokens, and Kubernetes configs after a single FIDO2 hardware verification."
+  subtitle: "Vouch is an open-source credential broker that issues short-lived SSH keys, AWS sessions, GitHub tokens, and Kubernetes configs after a single FIDO2 hardware verification."
   terminal:
     touch: "🔑 Touch your YubiKey..."
     pin: "Enter PIN: ****"
     authed: "✓ Authenticated as you@company.com"
     session: "✓ Session valid for 8 hours"
-    comment: "# just works"
+    comment: "# tools authenticate automatically"
 problem:
-  title: "Modern developer credentials are broken"
+  title: "The problem with long-lived credentials"
   cards:
     - icon: "🔓"
       title: "Credential sprawl"
-      body: "SSH keys from 2019. AWS access keys in plaintext. GitHub PATs that never expire. Every tool has its own long-lived secret."
+      body: "SSH keys that never rotate. AWS access keys in plaintext. GitHub PATs that never expire. Every tool has its own long-lived secret."
     - icon: "👻"
       title: "No presence verification"
       body: "Existing MFA verifies devices, not humans. A compromised laptop with cached credentials is indistinguishable from its owner."
@@ -26,13 +26,13 @@ problem:
       body: "AI coding assistants get your credentials with no scoping, no audit trail, and no way to distinguish human from agent actions."
 howItWorks:
   title: "How it works"
-  subtitle: "One tap, every credential, all day."
+  subtitle: "One FIDO2 authentication issues credentials for every integrated tool, for up to 8 hours."
   steps:
     - title: "Touch your YubiKey"
       body: "FIDO2 verification with PIN ensures a human is present. Phishing-resistant by design."
     - title: "Vouch issues credentials"
       body: "Short-lived, scoped, hardware-attested, and bound to your device. SSH certificates, AWS sessions, GitHub tokens."
-    - title: "Your tools just work"
+    - title: "Your tools authenticate automatically"
       body: "Native integration with SSH, AWS CLI, git, kubectl, docker, and cargo. No wrappers."
 integrations:
   title: "Integrations"
@@ -41,7 +41,7 @@ integrations:
     - url: "/docs/aws/"
       icon: "☁️"
       name: "AWS"
-      body: "<code>credential_process</code> for seamless STS federation"
+      body: "<code>credential_process</code> for STS federation"
     - url: "/docs/ssh/"
       icon: "🔐"
       name: "SSH"
@@ -76,7 +76,7 @@ agents:
   ctaUrl: "/docs/applications/credential-brokering-agents/"
 openSource:
   title: "Open source and auditable"
-  body: "Vouch is fully open source under the Apache-2.0/MIT dual license. Security tools should be auditable."
+  body: "Vouch is fully open source under the Apache-2.0/MIT dual license. The full source is available for audit."
   ariaLabel: "Evaluation resources"
   links:
     - url: "/docs/security/"

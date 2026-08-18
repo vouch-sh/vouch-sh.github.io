@@ -8,7 +8,7 @@ params:
   docsGroup: reference
 ---
 
-Vouch brokers the most sensitive credentials in a developer's stack: SSH certificates, AWS STS tokens, GitHub installation tokens, and container registry passwords. This page explains exactly how those credentials are protected at every layer.
+Vouch brokers SSH certificates, AWS STS tokens, GitHub installation tokens, and container registry passwords. This page explains how those credentials are protected at every layer.
 
 ## Executive summary
 

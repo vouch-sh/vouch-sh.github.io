@@ -4,20 +4,18 @@ aliases:
   - "/blog/your-startup-doesnt-need-iam-users/"
   - "/blog/google-workspace-to-aws/"
 linkTitle: "Startups"
-description: "Skip IAM users, access keys, and IAM Identity Center. Go from Google Workspace to AWS in minutes with OIDC federation."
+description: "Connect Google Workspace to AWS with OIDC federation — no IAM users, access keys, or IAM Identity Center required."
 weight: 2
-subtitle: "The fastest path from a new AWS account to a secure team setup"
+subtitle: "Set up a new AWS account with federated access instead of IAM users"
 params:
   docsGroup: featured
 ---
 
-You just created an AWS account. Every tutorial says "create an IAM user." Don't.
-
-IAM users come with long-lived access keys that never expire, get committed to Git, leaked in logs, and compromised by malware. Rotating them is a manual chore. When someone leaves, you have to hunt down every key they ever created. And none of this is necessary -- AWS supports OIDC federation, which means you can authenticate with the identity system your team already uses.
+A new AWS account does not need IAM users. IAM users come with long-lived access keys that never expire and can be committed to Git, leaked in logs, or compromised by malware. Rotation is a manual process, and offboarding requires finding and deleting every key the user created. AWS supports OIDC federation as an alternative: authentication happens through the identity system your team already uses.
 
 If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, databases, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
 
-> **Already have AWS accounts and a growing team?** This page is for day-one setups. For rolling Vouch out across an existing organization -- service enablement checklists, onboarding blocks, offboarding -- use the [Team Rollout playbook](/docs/rollout/). Wondering how Vouch compares to [IAM Identity Center or Builder ID](#why-not-iam-identity-center)? That's at the end.
+> **Already have AWS accounts and a growing team?** This page is for day-one setups. For rolling Vouch out across an existing organization -- service enablement checklists, onboarding blocks, offboarding -- use the [Team Rollout playbook](/docs/rollout/). Comparisons with [IAM Identity Center and Builder ID](#why-not-iam-identity-center) are at the end of this page.
 
 ---
 
@@ -122,13 +120,13 @@ With the same `vouch login` session, configure the rest of your toolchain:
 | CodeArtifact | `vouch setup codeartifact` | [CodeArtifact](/docs/codeartifact/) |
 | EKS | `vouch setup eks` | [EKS](/docs/eks/) |
 
-Each integration takes one command. After setup, every tool uses the same session -- one YubiKey tap covers the entire developer toolchain.
+Each integration is configured with one command. After setup, all integrations share the same `vouch login` session.
 
 ---
 
 ## What happens when someone leaves
 
-This is where the investment pays off: deactivate their Google Workspace account (which you were going to do anyway) and their access ends -- no access keys to hunt down, no SSH keys to remove from servers, no PATs to revoke. The exact sequence, expiry timeline, and the optional AWS-side deny statement are in [When someone leaves](/docs/rollout/#when-someone-leaves) on the rollout playbook.
+Deactivate their Google Workspace account and their Vouch-issued access ends. There are no access keys, `authorized_keys` entries, or PATs to find and revoke. The exact sequence, expiry timeline, and the optional AWS-side deny statement are in [When someone leaves](/docs/rollout/#when-someone-leaves) on the rollout playbook.
 
 ---
 
@@ -146,17 +144,17 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 
 ## Why not IAM Identity Center?
 
-[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) (formerly AWS SSO) is AWS's own solution for federated access. It's a good product, but it's designed for enterprises with dozens of accounts and hundreds of users. For a startup:
+[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) (formerly AWS SSO) is AWS's own solution for federated access. It is designed for organizations with many AWS accounts and users. The differences for a small team:
 
 | Consideration | IAM Identity Center | Vouch |
 |---|---|---|
 | **Setup complexity** | Requires an AWS Organizations management account, an Identity Center instance, permission sets, and user/group sync | Deploy one CloudFormation template and run `vouch setup aws` |
 | **Scope** | AWS only | AWS + SSH + GitHub + Docker + CodeCommit + CodeArtifact + databases + more |
 | **Authentication** | Browser-based SSO (MFA depends on IdP config) | FIDO2 hardware key (phishing-resistant by design) |
-| **Team size sweet spot** | 20+ people across multiple accounts | 2--50 people |
+| **Typical team size** | 20+ people across multiple accounts | 2--50 people |
 | **Credential type** | Session credentials via `aws sso login` | Session credentials via `vouch login` |
 
-If you have a large organization with complex permission requirements across many AWS accounts, IAM Identity Center is the right choice (and Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). If you are a startup that wants secure AWS access without the overhead, Vouch gets you there faster.
+For a large organization with complex permission requirements across many AWS accounts, use IAM Identity Center (Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). For a small team, Vouch requires less setup: one CloudFormation template and one command per developer.
 
 ## Why not AWS Builder ID?
 
