@@ -258,10 +258,10 @@ For requirements that go beyond the pre-configured policies, an organization can
 
 ### The rule builder
 
-**+ New** opens a guided builder — most custom policies never require writing policy text. It asks three things:
+**+ New** opens a guided builder — policy text is only needed for conditions the builder does not offer. It asks three things:
 
 1. **Applies to** — token issuance (`vouch login`) or token exchange (workload and agent credentials). Device checks are only offered on issuance, because an exchange request carries no device posture; picking exchange switches the builder to activity checks.
-2. **Checks** — *device state* ("allow the request only when ALL of these hold") or *recent activity* ("deny the request when …"). A rule is one or the other. A device rule may stack several requirements; an activity rule carries exactly one condition — combined history conditions are expressed as separate policies.
+2. **Checks** — *device state* ("allow the request only when ALL of these hold") or *recent activity* ("deny the request when …"). A rule is one or the other. A device rule can stack multiple requirements; an activity rule carries exactly one condition — combined history conditions are expressed as separate policies.
 3. **Conditions** — one row per condition:
    - A device row is field → operator → value. The field dropdown lists every posture attribute grouped by area, and each field offers only the operators its type allows: booleans get *is*, numbers get comparisons, closed-value strings (`os`) and sets (`edr`, `mdm`) get dropdowns of the values clients can actually report. Version fields take a version like `15.3` and emit the numeric `os_version_num` encoding for you. "Add OS version floor" adds the per-platform minimum-version pattern as a single row.
    - An activity row is event → shape → window: *happened in the last*, *did not happen in the last*, *happened at least N times in the last*, or *is missing or was followed by* another event. The window control enforces the 24-hour history cap.
@@ -483,7 +483,7 @@ For teams subject to SOC 2, HIPAA, or similar compliance frameworks, activate th
 6. Platform integrity
 7. OS recency (only if your fleet has no Linux devices — [it denies all of them](#os-recency))
 
-This ensures every developer machine meets a comprehensive security baseline before it can obtain credentials for production infrastructure. Consider adding the **Failed Login Burst** and **Issuance Rate Limit** history policies to contain credential-stuffing and runaway automation.
+This requires every developer machine to pass the full policy set above before it can obtain credentials for production infrastructure. Consider adding the **Failed Login Burst** and **Issuance Rate Limit** history policies to contain credential-stuffing and runaway automation.
 
 ### Example 3: Contractor restrictions
 
