@@ -262,7 +262,7 @@ vouch setup codeartifact --tool <TOOL> --repository <REPO> [--domain <DOMAIN>] [
 | `--domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
 | `--region` | AWS region (optional if a domain profile is configured) |
 | `--domain-profile` | Named domain profile to use or create (stores domain/owner/region for reuse) |
-| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if more than one profile is managed, the command errors and lists each one with its role ARN. |
 
 See [AWS CodeArtifact](/docs/codeartifact/) for full details.
 
@@ -277,7 +277,7 @@ vouch setup codecommit [--region <REGION>] [--profile <PROFILE>] [--configure]
 | Flag | Description |
 |---|---|
 | `--region` | AWS region (default: wildcard matching all regions) |
-| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if more than one profile is managed, the command errors and lists each one with its role ARN. |
 | `--configure` | Apply the configuration automatically (without this flag, the command only prints the configuration) |
 
 See [AWS CodeCommit](/docs/codecommit/) for full details.
@@ -294,7 +294,7 @@ vouch setup eks --cluster <CLUSTER_NAME> [--region <REGION>] [--profile <PROFILE
 |---|---|
 | `--cluster` | The EKS cluster name (required) |
 | `--region` | AWS region (auto-detected from AWS profile or environment if not specified) |
-| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if more than one profile is managed, the command errors and lists each one with its role ARN. |
 | `--kubeconfig` | Path to kubeconfig file (defaults to `~/.kube/config`) |
 
 See [Amazon EKS](/docs/eks/) for full details.
@@ -331,7 +331,7 @@ vouch setup anthropic --federation-rule-id <ID> --organization-id <UUID> --servi
 | `--organization-id` | Anthropic organization ID (UUID) (required) |
 | `--service-account-id` | Anthropic service account ID (`svac_...`) (required) |
 | `--workspace-id` | Anthropic workspace ID (`wrkspc_...`) (required) |
-| `--audience` | `aud` claim to request on the assertion (optional; most federation rules match on `sub` alone) |
+| `--audience` | `aud` claim to request on the assertion (optional; omit unless your federation rule matches on `aud`) |
 | `--token-endpoint` | Override the Anthropic token endpoint (defaults to Anthropic's public endpoint) |
 | `--force` | Overwrite an existing Claude Code `apiKeyHelper` configuration |
 
@@ -365,7 +365,7 @@ vouch setup ssm [--profile <PROFILE>] [--region <REGION>] [--hosts <HOSTS>] [--f
 
 | Flag | Description |
 |---|---|
-| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if more than one profile is managed, the command errors and lists each one with its role ARN. |
 | `--region` | AWS region to use in the ProxyCommand |
 | `--hosts` | Host patterns to match (default: `i-* mi-*`) |
 | `--force` | Overwrite any existing SSM configuration in `~/.ssh/config` |
@@ -376,7 +376,7 @@ See [AWS Systems Manager](/docs/ssm/) for full details.
 
 ## Credentials
 
-Credential commands obtain service-specific credentials from your active session. These are typically called automatically by credential helpers, but can be run manually for debugging.
+Credential commands obtain service-specific credentials from your active session. Credential helpers call these automatically; they can also be run manually for debugging.
 
 ### `vouch credential aws`
 
@@ -416,7 +416,7 @@ vouch credential codeartifact [--domain <DOMAIN>] [--domain-owner <ACCOUNT_ID>] 
 | `--domain-owner` | AWS account ID that owns the domain (optional if a domain profile is configured) |
 | `--region` | AWS region (optional if a domain profile is configured) |
 | `--domain-profile` | Named domain profile to use |
-| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if several profiles are managed, the command errors and lists each one with its role ARN. |
+| `--profile` | AWS profile to use. Defaults to `AWS_PROFILE`, then the sole Vouch-managed profile; if more than one profile is managed, the command errors and lists each one with its role ARN. |
 
 ### `vouch credential rds`
 

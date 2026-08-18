@@ -10,7 +10,7 @@ params:
 
 Both [Anthropic](https://platform.claude.com/docs/en/manage-claude/workload-identity-federation) and [OpenAI](https://developers.openai.com/api/docs/guides/workload-identity-federation/aws) support **Workload Identity Federation (WIF)**: a workload presents a short-lived OIDC token from an issuer you operate, and the provider exchanges it for a minutes-long access token — no static API key.
 
-In production the workload is usually a GitHub Actions runner, an AWS Lambda, or a GKE pod, and the right issuer is the native OIDC token those platforms already mint. This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is a static `sk-ant-...` or `sk-...` key in a `.env` file that is never rotated. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it like any other IdP and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
+For production workloads such as GitHub Actions runners, AWS Lambdas, or GKE pods, the right issuer is the native OIDC token those platforms already mint. This page covers a narrower case: **local development and one-off scripts on a developer laptop**, where the alternative is a static `sk-ant-...` or `sk-...` key in a `.env` file that is never rotated. Vouch is a standards-compliant OIDC issuer, so you can point Anthropic and OpenAI at it like any other IdP and exchange a Vouch-issued JWT for a short-lived provider token — no static key on disk.
 
 ```
 vouch login → Vouch OIDC JWT → jwt-bearer exchange → short-lived provider token → Claude / OpenAI API
@@ -75,7 +75,7 @@ Keep the default **Pattern match** mode. Vouch tokens carry the logged-in identi
 
 - **Workspaces** -- pick the workspace from Step 2. Leave "Enable in all workspaces" off.
 - **OAuth scope** -- e.g. `workspace:developer`.
-- **Token lifetime** -- 10 minutes is the default; shorter is better.
+- **Token lifetime** -- 10 minutes is the default; a shorter lifetime narrows the window in which an intercepted token can be used.
 
 Note the rule ID (`fdrl_...`) -- you will need it in Step 4.
 

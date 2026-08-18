@@ -3,7 +3,7 @@ title: "Frequently Asked Questions"
 linkTitle: "FAQ"
 description: "Common questions about Vouch — supported hardware, session behavior, platform support, and cost."
 weight: 7
-subtitle: "Answers to the most common questions about using Vouch"
+subtitle: "Answers to common questions about using Vouch"
 params:
   docsGroup: reference
 ---
@@ -41,7 +41,7 @@ Yes. The Vouch server supports AAGUID-based policies that control which authenti
 - **Comma-separated UUIDs** — An explicit allowlist of authenticator AAGUIDs (e.g., `cb69481e-8ff7-4039-93ec-0a2729a154a8,ee882879-721c-4913-9775-3dfcce97072a`).
 - **Unset or empty** — Any FIDO2 hardware key is accepted (default).
 
-Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. The server validates the chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/), cryptographically proving the key is a genuine Yubico device. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys typically do not.
+Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. The server validates the chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/), cryptographically proving the key is a genuine Yubico device. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys cannot chain to the Yubico roots and are rejected.
 
 ### Can I use the same YubiKey across multiple Vouch organizations?
 
@@ -232,7 +232,7 @@ Run `vouch login` and authenticate with your YubiKey.
 
 ### "Error: credential_process returned error"
 
-This typically means your Vouch session has expired or the agent is not running. Run `vouch login` to re-authenticate.
+Check that your Vouch session is active and the agent is running (`vouch status`). Run `vouch login` to re-authenticate.
 
 ### Where can I get help?
 

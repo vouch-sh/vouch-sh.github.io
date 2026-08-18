@@ -61,7 +61,7 @@ This configures Git to use Vouch as the credential helper for AWS CodeCommit HTT
     useHttpPath = true
 ```
 
-The helper value uses the absolute path to your `vouch` binary and bakes in the AWS profile name, so your entries will differ slightly from the example above.
+The helper value uses the absolute path to your `vouch` binary and bakes in the AWS profile name, so your entries will differ from the example above.
 
 The setup also installs the native `git-remote-codecommit` helper as a symlink at `~/.local/bin/git-remote-codecommit`, enabling `codecommit://` URL support (see below).
 
@@ -121,7 +121,7 @@ git clone codecommit://vouch@my-repo
 git clone codecommit::us-west-2://vouch@my-repo
 ```
 
-The profile name before `@` must match your AWS profile (typically `vouch`). All subsequent Git operations (`push`, `pull`, `fetch`) work normally.
+The profile name before `@` must match your AWS profile (default: `vouch`). All subsequent Git operations (`push`, `pull`, `fetch`) work normally.
 
 ### When to use `codecommit://` URLs
 

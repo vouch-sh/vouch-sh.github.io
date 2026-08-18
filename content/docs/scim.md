@@ -64,7 +64,7 @@ The response includes the plaintext token:
 
 > **Security note:** Vouch stores only a cryptographic hash of the token. The plaintext value is shown **exactly once** in the creation response. Copy it immediately and store it securely -- you will not be able to retrieve it again. If you lose the token, revoke it and create a new one.
 
-The `expires_in_days` field is **required** and must be an integer between **1** and **365**. Choose an expiration period that balances security with operational convenience. Most organizations use 365 days and rotate tokens annually.
+The `expires_in_days` field is **required** and must be an integer between **1** and **365**. Set the expiry to match your token-rotation schedule — for example, 365 days with annual rotation.
 
 ---
 
@@ -209,16 +209,16 @@ See [Email Domains](/docs/domains/) for adding and verifying additional domains.
 
 ## Immediate De-provisioning
 
-One of the most important benefits of SCIM integration is **immediate de-provisioning**. When an employee leaves your organization or changes roles:
+SCIM integration provides **immediate de-provisioning**. When an employee leaves your organization or changes roles:
 
 1. Your identity provider sends a `PATCH` or `DELETE` request to the Vouch SCIM endpoint to deactivate the user.
 2. Vouch immediately marks the user account as inactive.
 3. All **active sessions** for that user are revoked instantly, and their issued **SSH certificates** are revoked via the CA revocation list.
 4. The user can no longer obtain new credentials. Other previously issued short-lived credentials continue to function until their natural expiration — up to 1 hour for AWS STS, and up to 12 hours for ECR and CodeArtifact tokens.
 
-Because all Vouch credentials are short-lived, the exposure window after de-provisioning is limited. Sessions and SSH certificates are revoked immediately, and outstanding tokens expire on their own shortly after.
+Because all Vouch credentials are short-lived, the exposure window after de-provisioning is limited. Sessions and SSH certificates are revoked immediately, and outstanding tokens expire on their own within at most 12 hours.
 
-This is a significant security improvement over traditional provisioning workflows where revoking access requires manual steps across multiple systems. With Vouch and SCIM, de-provisioning is automated and the blast radius is minimized by the short credential lifetime.
+With Vouch and SCIM, de-provisioning is automated, and exposure is bounded by the credential lifetimes above.
 
 ---
 
@@ -311,7 +311,7 @@ The SCIM token is invalid, expired, or revoked.
 
 A user or group with the same unique identifier already exists.
 
-- This typically occurs when your identity provider attempts to create a user who has already been provisioned, either through a previous SCIM sync or through manual registration.
+- This occurs when your identity provider attempts to create a user who has already been provisioned, either through a previous SCIM sync or through manual registration.
 - Check whether the user already exists in Vouch by querying the Users endpoint with a filter:
 
   ```bash
@@ -320,7 +320,7 @@ A user or group with the same unique identifier already exists.
     | jq .
   ```
 
-- If the user exists, your IdP should use `PUT` or `PATCH` to update the existing record rather than `POST` to create a new one. Most identity providers handle this automatically after the initial conflict.
+- If the user exists, the IdP must update the existing record with `PUT` or `PATCH` rather than `POST` a new one; IdPs that support SCIM conflict resolution do this automatically after the initial conflict.
 
 ### Users Not Syncing
 
@@ -335,9 +335,9 @@ If users are not appearing in Vouch after configuring SCIM:
     | jq .
   ```
 
-- **Check your IdP's provisioning logs.** Most identity providers maintain a log of SCIM operations and any errors encountered. Look for HTTP error codes or timeout messages.
-- **Confirm provisioning is enabled.** In some IdPs (especially Okta and Azure AD), you must explicitly enable provisioning actions (Create, Update, Deactivate) after configuring the API connection.
-- **Verify user assignment.** In many IdPs, users must be explicitly assigned to the Vouch application before they will be provisioned. Check that the intended users or groups are assigned.
+- **Check your IdP's provisioning logs.** Look for HTTP error codes or timeout messages in the IdP's log of SCIM operations.
+- **Confirm provisioning is enabled.** In Okta and Azure AD, you must explicitly enable provisioning actions (Create, Update, Deactivate) after configuring the API connection.
+- **Verify user assignment.** IdPs that scope provisioning to assigned users or groups only provision those users. Check that the intended users or groups are assigned to the Vouch application.
 
 ### Attribute Mapping Issues
 

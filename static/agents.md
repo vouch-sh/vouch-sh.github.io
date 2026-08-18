@@ -86,8 +86,8 @@ credentials, prefer these patterns (in order of preference):
 ## Rate limits
 
 Vouch does not publish hard rate limits. Credential issuance is gated by the
-user's active session (one hardware tap per session). In practice agents should
-cache credentials until near expiry and refresh on demand rather than per-call.
+user's active session (one hardware tap per session). Agents should cache
+credentials until expiry and refresh on demand rather than request per-call.
 
 ## Preferred patterns for agents building on Vouch
 

@@ -179,7 +179,7 @@ For full details, see the [SPIFFE specification](https://github.com/spiffe/spiff
 ### Clock skew causing JWT validation errors
 
 - SPIRE validates `exp` and `nbf` claims in Vouch tokens. Ensure clocks are synchronized across all nodes using NTP.
-- Vouch tokens are short-lived — even a few minutes of clock skew can cause validation failures.
+- Vouch tokens are short-lived — clock skew can cause validation failures.
 - Check the SPIRE Server logs: `kubectl logs -n spire-system deployment/spire-server`
 
 ### "No identity issued" from Workload API

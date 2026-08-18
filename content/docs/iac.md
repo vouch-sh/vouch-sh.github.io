@@ -61,7 +61,7 @@ pulumi up
 
 ### Setting `AWS_PROFILE` vs `--profile`
 
-Some tools accept `--profile vouch` as a flag, while others only read the `AWS_PROFILE` environment variable. Setting the environment variable works universally:
+CDK and SAM accept `--profile vouch` as a flag; Terraform reads `AWS_PROFILE` or the provider's `profile` argument. Setting the environment variable works for all of them:
 
 ```bash
 export AWS_PROFILE=vouch

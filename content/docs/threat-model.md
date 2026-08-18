@@ -156,7 +156,7 @@ Three trust boundaries separate the system:
 
 ## Assumptions
 
-These assumptions underpin the threat model. If an assumption is violated, the corresponding threats may not be adequately mitigated.
+These assumptions underpin the threat model. If an assumption is violated, the mitigations that depend on it no longer hold.
 
 | ID | Assumption | Linked threats | Linked mitigations |
 |---|---|---|---|
@@ -356,7 +356,7 @@ The following threats are explicitly out of scope for this threat model:
 
 ## Review schedule
 
-This threat model is reviewed quarterly and after any significant architecture change. The revision history below tracks updates.
+This threat model is reviewed quarterly and after any change to a trust boundary or credential flow. The revision history below tracks updates.
 
 ---
 

@@ -108,7 +108,7 @@ When a user is de-provisioned (via SCIM or manual removal):
 | **Within 8 hours** | SSH certificate expires. SSH access stops. |
 | **Within 12 hours** | Cached ECR/CodeArtifact tokens expire. |
 
-The maximum exposure window after de-provisioning is the longest credential lifetime (currently 12 hours for ECR tokens). For most integrations, access ends within 1 hour.
+The maximum exposure window after de-provisioning is the longest credential lifetime (currently 12 hours for ECR tokens).
 
 ---
 

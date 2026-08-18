@@ -558,7 +558,7 @@ AWS's built-in [`aws login`](https://docs.aws.amazon.com/signin/latest/userguide
 | **Identity in CloudTrail** | IAM user or role | SSO user | Hardware-verified user |
 | **Requires AWS-managed service** | No | IAM Identity Center | No |
 
-If you already use IAM Identity Center, `aws sso login` may cover your AWS needs. Vouch fits when you want one authentication event to cover AWS and everything else your team uses.
+If you already use IAM Identity Center, `aws sso login` covers AWS access. Vouch adds SSH, GitHub, Docker, and the other integrations on the same authentication event.
 
 ---
 

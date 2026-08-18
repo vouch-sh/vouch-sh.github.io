@@ -125,7 +125,7 @@ Descriptive metadata fields are configurable via environment variables: `VOUCH_R
 
 ### Step-Up Authentication (RFC 9470)
 
-The Vouch server supports the [OAuth 2.0 Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470). When a protected resource requires a higher authentication assurance level than the current token provides, it returns a `WWW-Authenticate` challenge with `error="insufficient_user_authentication"` and `acr_values` or `max_age` parameters specifying the required authentication strength or recency. Clients use these parameters in a new authorization request to obtain a token meeting the elevated requirements. Vouch's FIDO2 hardware authentication satisfies NIST AAL3 (`acr` claim), which meets most step-up requirements.
+The Vouch server supports the [OAuth 2.0 Step-Up Authentication Challenge Protocol](https://datatracker.ietf.org/doc/html/rfc9470). When a protected resource requires a higher authentication assurance level than the current token provides, it returns a `WWW-Authenticate` challenge with `error="insufficient_user_authentication"` and `acr_values` or `max_age` parameters specifying the required authentication strength or recency. Clients use these parameters in a new authorization request to obtain a token meeting the elevated requirements. Vouch's FIDO2 hardware authentication satisfies NIST AAL3 (`acr` claim), the highest NIST authentication assurance level.
 
 ### SAML 2.0
 

@@ -232,7 +232,7 @@ All AWS partitions are supported -- standard (`aws`), China (`aws-cn`), GovCloud
 ### "Token is expired"
 
 - Run `vouch login` to refresh your session. For npm, this also automatically refreshes the static token in `.npmrc`.
-- For **Cargo/pip/pnpm/uv**: Dynamic tokens are fetched on demand, so expiry usually indicates the Vouch session itself has ended.
+- For **Cargo/pip/pnpm/uv**: Dynamic tokens are fetched on demand, so an expired token means the Vouch session itself has ended.
 
 ### Wrong domain or repository
 

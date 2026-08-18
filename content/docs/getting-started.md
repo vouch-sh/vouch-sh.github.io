@@ -162,7 +162,7 @@ aws sts get-caller-identity --profile vouch
 git ls-remote https://github.com/example/private-repo.git
 ```
 
-Vouch provides credentials on demand to each tool through the lightweight integrations configured by your organization.
+Vouch provides credentials on demand to each tool through the integrations configured by your organization.
 
 ### What the session enables
 
