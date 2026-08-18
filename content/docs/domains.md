@@ -128,7 +128,7 @@ These are administrative events and are retained indefinitely — see [Audit Log
 
 ## Troubleshooting
 
-**Verify fails but the record looks correct.** Check propagation with `dig +short TXT _vouch-verification.example.com`. The value must match the token exactly. Some DNS providers append the zone name automatically — entering `_vouch-verification.example.com` in a zone that already appends `example.com` yields `_vouch-verification.example.com.example.com`.
+**Verify fails but the record looks correct.** Check propagation with `dig +short TXT _vouch-verification.example.com`. The value must match the token exactly. If your DNS provider appends the zone name automatically, entering `_vouch-verification.example.com` in the `example.com` zone yields `_vouch-verification.example.com.example.com`.
 
 **A domain unverified itself.** The TXT record was unreachable on 3 consecutive daily checks. Republish it and click Verify again. Existing users on that domain were unaffected.
 

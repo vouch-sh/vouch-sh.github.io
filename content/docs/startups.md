@@ -144,7 +144,7 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 
 ## Why not IAM Identity Center?
 
-[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) (formerly AWS SSO) is AWS's own solution for federated access. It is designed for organizations with many AWS accounts and users. The differences for a small team:
+[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) (formerly AWS SSO) is AWS's own solution for federated access. It is designed for organizations managing permission sets across multiple AWS accounts. The differences for a small team:
 
 | Consideration | IAM Identity Center | Vouch |
 |---|---|---|
@@ -154,7 +154,7 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 | **Typical team size** | 20+ people across multiple accounts | 2--50 people |
 | **Credential type** | Session credentials via `aws sso login` | Session credentials via `vouch login` |
 
-For a large organization with complex permission requirements across many AWS accounts, use IAM Identity Center (Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). For a small team, Vouch requires less setup: one CloudFormation template and one command per developer.
+For 20+ people with per-account permission sets across multiple AWS accounts, use IAM Identity Center (Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). For a small team, Vouch requires less setup: one CloudFormation template and one command per developer.
 
 ## Why not AWS Builder ID?
 

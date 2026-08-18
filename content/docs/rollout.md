@@ -14,7 +14,7 @@ This page covers rolling Vouch out to a team: AWS, Kubernetes, and the package a
 
 {{< tldr >}}
 1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [30 minutes](#day-0----the-foundation).
-2. **Per service (admin):** add a few IAM actions to that role — [checklist below](#enable-services).
+2. **Per service (admin):** add the service's IAM actions to that role — [checklist below](#enable-services).
 3. **Per developer:** they run `vouch enroll`, then `vouch setup aws --role <ARN>` — [send them this](#onboard-developers).
 4. **Ongoing:** offboarding is your IdP plus at most [one deny statement](#when-someone-leaves).
 {{< /tldr >}}
@@ -27,7 +27,7 @@ Everything below hangs off one OIDC provider and one IAM role. The decisions in 
 
 1. **Enroll yourself.** Install the CLI and enroll your YubiKey -- [Getting Started](/docs/getting-started/) (5 minutes). The first person to enroll from your Google Workspace domain becomes the organization owner.
 
-2. **Register the Vouch OIDC provider** in AWS -- one CLI command or a few lines of Terraform/CloudFormation. Exactly one per organization, in your management account if you have an AWS Organization. [AWS guide, Step 1](/docs/aws/#step-1----register-the-vouch-oidc-provider).
+2. **Register the Vouch OIDC provider** in AWS -- one CLI command or one Terraform/CloudFormation resource. Exactly one per organization, in your management account if you have an AWS Organization. [AWS guide, Step 1](/docs/aws/#step-1----register-the-vouch-oidc-provider).
 
 3. **Pick your account layout.** This decides what roles you deploy:
 

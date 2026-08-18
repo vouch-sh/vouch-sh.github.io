@@ -156,7 +156,7 @@ resource "aws_eks_access_policy_association" "vouch_developer_edit" {
 
 ## Available Access Policies
 
-EKS provides several built-in [access policies](https://docs.aws.amazon.com/eks/latest/userguide/access-policies.html) that map to standard Kubernetes RBAC roles:
+EKS provides built-in [access policies](https://docs.aws.amazon.com/eks/latest/userguide/access-policies.html) that map to standard Kubernetes RBAC roles:
 
 | Access Policy ARN | Kubernetes Equivalent | Description |
 |---|---|---|

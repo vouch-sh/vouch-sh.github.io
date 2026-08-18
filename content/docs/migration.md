@@ -95,7 +95,7 @@ Check `~/.aws/credentials` on each developer's machine and remove static entries
 
 ## CI/CD considerations
 
-CI/CD pipelines typically do not have YubiKeys. They will continue to use their existing credential mechanisms:
+CI/CD pipelines have no human present to tap a YubiKey. They continue to use their existing credential mechanisms:
 
 | CI/CD pattern | Recommendation |
 |---|---|

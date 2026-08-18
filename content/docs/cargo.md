@@ -181,7 +181,7 @@ rustup update stable
 
 If Vouch appears to request a new token for every Cargo operation (causing delays):
 
-- This is expected behavior. Vouch derives tokens from your active session on each request rather than caching them to disk. The overhead is minimal (typically under 100ms).
+- This is expected behavior. Vouch derives tokens from your active session on each request rather than caching them to disk. The overhead is under 100ms.
 - If latency is a concern, ensure the Vouch agent is running (`vouch status`), as it keeps your session in memory for fast token derivation.
 
 ### Multiple credential providers

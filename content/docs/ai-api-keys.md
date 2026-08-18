@@ -75,7 +75,7 @@ Keep the default **Pattern match** mode. Vouch tokens carry the logged-in identi
 
 - **Workspaces** -- pick the workspace from Step 2. Leave "Enable in all workspaces" off.
 - **OAuth scope** -- e.g. `workspace:developer`.
-- **Token lifetime** -- 10 minutes is the default; shorter is better.
+- **Token lifetime** -- 10 minutes is the default; a shorter lifetime narrows the window in which an intercepted token can be used.
 
 Note the rule ID (`fdrl_...`) -- you will need it in Step 4.
 

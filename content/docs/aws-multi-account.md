@@ -8,7 +8,7 @@ params:
   docsGroup: aws
 ---
 
-Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Most teams start with role chaining**; choose Identity Center if you already run it.
+Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Start with role chaining** unless you already run Identity Center.
 
 - **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below.
 - **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
@@ -350,7 +350,7 @@ credential_process = vouch credential aws --role arn:aws:iam::333333333333:role/
 credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/vouch/VouchAccess --via arn:aws:iam::999999999999:role/vouch/VouchAccess
 ```
 
-> **Note:** Passing `--management-role` stores the hub as an organization anchor and writes `--via` into each profile, so chaining is explicit and unambiguous. Once the anchor is stored, later profiles can drop `--management-role` -- `vouch credential aws --role <spoke-arn>` resolves the management role from your stored organization automatically (pass `--via <management-role-arn>` to pick one when several organizations are configured).
+> **Note:** Passing `--management-role` stores the hub as an organization anchor and writes `--via` into each profile, so chaining is explicit and unambiguous. Once the anchor is stored, later profiles can drop `--management-role` -- `vouch credential aws --role <spoke-arn>` resolves the management role from your stored organization automatically (pass `--via <management-role-arn>` to pick one when more than one organization is configured).
 
 Use profiles per command:
 

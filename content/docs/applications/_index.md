@@ -177,11 +177,11 @@ Use the following endpoints and values to configure your OIDC client library. Al
 | **Token Introspection Endpoint** | `https://{{< instance-url >}}/oauth/introspect` |
 | **Protected Resource Metadata** | `https://{{< instance-url >}}/.well-known/oauth-protected-resource` |
 
-Most OIDC libraries can auto-configure themselves from the Discovery URL alone.
+OIDC libraries that support discovery configure themselves from the Discovery URL alone.
 
 ### Additional capabilities
 
-The authorization endpoint supports several advanced features:
+The authorization endpoint supports four additional features:
 
 - **`response_mode=form_post`** — The authorization code is delivered via an auto-submitting HTML form POST instead of a query-string redirect. Useful for server-side applications that want the code in the request body.
 - **`request_uri` by URL** — In addition to PAR (`urn:ietf:params:oauth:request_uri:...`) and inline `request` JWTs, the authorization endpoint accepts HTTPS URLs as `request_uri` values for hosting Request Objects externally (OIDC Core Section 6.2).

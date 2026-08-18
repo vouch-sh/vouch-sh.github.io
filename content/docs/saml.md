@@ -21,7 +21,7 @@ Vouch has been tested with:
 - **Microsoft Entra ID** (formerly Azure AD)
 - **Google Workspace**
 
-Any SAML 2.0 compliant identity provider that supports HTTP-POST or HTTP-Redirect bindings should work.
+Vouch accepts any SAML 2.0 compliant identity provider that supports HTTP-POST or HTTP-Redirect bindings.
 
 ---
 
@@ -47,7 +47,7 @@ To connect your SAML identity provider to Vouch, you need two pieces of informat
 | **SP Metadata URL** | `https://<your-vouch-server>/saml/metadata` |
 | **ACS URL** | `https://<your-vouch-server>/saml/acs` |
 
-The SP metadata URL provides a machine-readable XML document containing the entity ID, ACS endpoint, and signing certificate. Most identity providers can import this directly.
+The SP metadata URL provides a machine-readable XML document containing the entity ID, ACS endpoint, and signing certificate. Identity providers that support metadata import can consume this URL directly.
 
 ### Okta
 
