@@ -1,29 +1,29 @@
 ---
 title: "Roll Out Vouch to Your Team"
 linkTitle: "Team Rollout"
-description: "The playbook for giving a growing team access to AWS, EKS, CodeCommit, CodeArtifact, and more — without becoming the bottleneck."
+description: "Give a growing team access to AWS, EKS, CodeCommit, CodeArtifact, and more through a single OIDC provider and IAM role."
 weight: 1
-subtitle: "One admin afternoon, one command per developer, no blockers"
+subtitle: "One-time admin setup, one enrollment command per developer"
 sitemap:
   priority: 0.9
 params:
   docsGroup: featured
 ---
 
-Your job: get everyone on the team into AWS, Kubernetes, and the package and repo services around them — fast, without handing out static keys, and without you becoming the person everyone waits on. This page is the whole playbook. Each step links to a deep-dive guide, but you should rarely need one.
+This page covers rolling Vouch out to a team: AWS, Kubernetes, and the package and repo services around them, with no static keys distributed at any point. Each step links to a deep-dive guide for details.
 
 {{< tldr >}}
 1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [30 minutes](#day-0----the-foundation).
 2. **Per service (admin):** add a few IAM actions to that role — [checklist below](#enable-services).
 3. **Per developer:** they run `vouch enroll`, then `vouch setup aws --role <ARN>` — [send them this](#onboard-developers).
-4. **Ongoing:** offboarding is your IdP + [one deny statement](#when-someone-leaves); nothing to hunt down.
+4. **Ongoing:** offboarding is your IdP plus at most [one deny statement](#when-someone-leaves).
 {{< /tldr >}}
 
 ## Day 0 -- The foundation
 
 {{< role admin >}}
 
-Everything below hangs off one OIDC provider and one IAM role. This is the only part with real decisions in it.
+Everything below hangs off one OIDC provider and one IAM role. The decisions in this section determine everything that follows.
 
 1. **Enroll yourself.** Install the CLI and enroll your YubiKey -- [Getting Started](/docs/getting-started/) (5 minutes). The first person to enroll from your Google Workspace domain becomes the organization owner.
 
@@ -55,7 +55,7 @@ Everything below hangs off one OIDC provider and one IAM role. This is the only 
 
 {{< role admin >}}
 
-Each additional service is **IAM permissions on the role you already deployed, plus at most one admin action**. Developers then enable it with a single command. Full guides are linked for when something goes sideways.
+Each additional service is **IAM permissions on the role you already deployed, plus at most one admin action**. Developers then enable it with a single command. Full guides are linked for troubleshooting and edge cases.
 
 | Service | Add to the role's permissions | One-time admin action | Each developer runs |
 |---|---|---|---|
@@ -78,7 +78,7 @@ Sequence tip: ship **AWS first** (everything else chains off it), then EKS and C
 
 {{< role developer >}}
 
-Developers never touch IAM. Paste the block below into Slack or your onboarding wiki, fill in the two placeholders, and each person is productive in about five minutes -- no action from you.
+Developers never touch IAM. Paste the block below into Slack or your onboarding wiki and fill in the two placeholders; each person completes setup on their own.
 
 ````markdown
 **Set up Vouch (one time, ~5 min, YubiKey required)**
@@ -116,7 +116,7 @@ First-time enrollment needs no invite codes or approval -- anyone authenticating
 
 ## Pilot, then roll out
 
-Vouch installs alongside existing credentials -- the `vouch` AWS profile, SSH certificates, and stacked Git credential helpers don't disturb anything your team uses today. So de-risk the rollout the boring way:
+Vouch installs alongside existing credentials -- the `vouch` AWS profile, SSH certificates, and stacked Git credential helpers don't disturb anything your team uses today. A staged rollout keeps existing credentials as a fallback:
 
 1. **Pilot on yourself plus one volunteer** for a week, with static credentials still in place.
 2. **Migrate one integration at a time**, AWS first. The [migration guide](/docs/migration/) has the recommended order, per-integration checklists, and a rollback plan for each integration.
@@ -129,7 +129,7 @@ CI/CD pipelines are a separate track: they have no YubiKeys and should use their
 
 ## When someone leaves
 
-This is the payoff for never distributing static keys: offboarding is your identity provider plus, at most, one IAM statement.
+Because no static keys were distributed, offboarding is your identity provider plus, at most, one IAM statement.
 
 1. **Deactivate their account in your IdP** (you were doing this anyway).
    - **With [SCIM](/docs/scim/):** their Vouch sessions are revoked automatically the moment the IdP deactivates them. Nothing else to do on the Vouch side.
@@ -145,7 +145,7 @@ What expires on its own:
 | SSH certificate, GitHub tokens | up to 8 hours (end of session) |
 | ECR / CodeArtifact authorization tokens | up to 12 hours |
 
-There are no access keys to hunt down, no `authorized_keys` to scrub, no PATs to revoke. Full failure-mode detail (including **break-glass access** if the Vouch server is ever unreachable) is in [Availability](/docs/availability/).
+There are no access keys, `authorized_keys` entries, or PATs to revoke. Full failure-mode detail (including **break-glass access** if the Vouch server is ever unreachable) is in [Availability](/docs/availability/).
 
 ---
 
