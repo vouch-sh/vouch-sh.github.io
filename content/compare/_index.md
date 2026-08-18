@@ -35,11 +35,11 @@ Vouch is a credential broker -- it turns a hardware key tap into short-lived cre
 
 ## When to choose Vouch
 
-Vouch is the right choice when:
+Choose Vouch when:
 
 - You want a **single authentication event** (one YubiKey tap) to cover AWS, SSH, GitHub, Docker, package registries, databases, and the Claude and OpenAI APIs.
 - You want every credential to be **hardware-backed** and phishing-resistant by default, not as an optional add-on.
-- You are a **small-to-medium team** (2--50 people) that wants secure credentials without the operational overhead of running Vault or Teleport.
+- You are a **small-to-medium team** (2--50 people) and do not want to operate Vault or Teleport infrastructure.
 - Your team uses **Google Workspace or Microsoft Entra ID** and you want organizational identity federated into AWS without setting up IAM Identity Center.
 
 ---
