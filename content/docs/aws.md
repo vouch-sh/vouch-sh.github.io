@@ -14,7 +14,7 @@ Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an 
 
 {{< tldr >}}
 - **Prerequisite:** [Getting Started](/docs/getting-started/) (CLI installed, YubiKey enrolled).
-- **Admin, once:** [register the OIDC provider](#step-1----register-the-vouch-oidc-provider) and [deploy a role](#step-2----deploy-a-role); share the role ARN.
+- **Admin, once:** [register the OIDC provider](#step-1--register-the-vouch-oidc-provider) and [deploy a role](#step-2--deploy-a-role); share the role ARN.
 - **Each developer:** `vouch setup aws --role <ROLE_ARN>`, then verify with `aws sts get-caller-identity --profile vouch`.
 - Rolling this out to a whole team? Follow the [Team Rollout playbook](/docs/rollout/).
 {{< /tldr >}}
@@ -276,7 +276,7 @@ This command accepts the following flags:
 - `--role` -- The ARN of the IAM role from Step 2. Omit all flags to launch the interactive wizard.
 - `--profile` -- The AWS profile name to write credentials to (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.).
 
-For multi-account setups, `vouch setup aws` also accepts `--management-role`, `--identity-center-application`, `--region`, and `--discover` -- see [Multi-Account AWS](/docs/aws-multi-account/).
+For multi-account setups, `vouch setup aws` also accepts `--management-role`, `--identity-center-application`, `--region`, and `--discover`. A `--discover` run writes a profile per Identity Center permission-set assignment and per [account access manager entitlement](/docs/aws-multi-account/#account-access-manager-entitlements) -- see [Multi-Account AWS](/docs/aws-multi-account/).
 
 The command writes a `credential_process` entry into `~/.aws/config` so that the AWS CLI and SDKs automatically call `vouch credential aws` whenever credentials are needed:
 
@@ -506,7 +506,7 @@ Because Vouch marks all tags as [transitive](https://docs.aws.amazon.com/IAM/lat
 
 When `vouch credential aws` runs inside an AI coding agent, Vouch automatically restricts the returned credentials to read-only access. No configuration is required -- the CLI detects the agent environment and applies the restriction transparently.
 
-> **Note:** This read-only downscoping applies to the STS credential paths (`--role`, including role chaining). On the [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) path (`--account`/`--permission-set`), Vouch **refuses to issue credentials to a detected agent** rather than downscoping them -- permission-set credentials cannot be constrained with a session policy, so there is no way to enforce read-only access. Agent workflows that need AWS access should use the STS role-chaining model.
+> **Note:** This read-only downscoping applies to the STS credential paths (`--role`, including role chaining). On the [IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) path (`--account`/`--permission-set`), Vouch **refuses to issue credentials to a detected agent** rather than downscoping them -- permission-set credentials cannot be constrained with a session policy, so there is no way to enforce read-only access. Agent workflows that need AWS access should use the STS role-chaining model. Profiles created from [account access manager entitlements](/docs/aws-multi-account/#account-access-manager-entitlements) use the role-chaining path, so the read-only downscoping applies to them.
 
 ### How it works
 

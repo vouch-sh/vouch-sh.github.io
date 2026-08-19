@@ -11,13 +11,13 @@ params:
 Multi-account AWS layouts have two models, both anchored in the **management account** where the Vouch OIDC provider lives. **Start with role chaining** unless you already run Identity Center.
 
 - **Role chaining (STS)** -- developers federate into a single management-account "hub" role, and the hub assumes "spoke" roles in member accounts using `sts:AssumeRole`. Covered in Steps 1--3 below.
-- **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned. Covered in the Identity Center section below.
+- **[IAM Identity Center](#aws-iam-identity-center)** -- Vouch is registered as a trusted-token-issuer application in Identity Center, and developers get credentials for the accounts and permission sets they are assigned -- plus any IAM roles assigned through [account access manager](#account-access-manager-entitlements). Covered in the Identity Center section below.
 
 Deploying separate OIDC providers in every account is not recommended: it multiplies maintenance, and one management account plus per-account access covers the same use cases with less surface area.
 
 {{< tldr >}}
-- **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1----register-the-vouch-oidc-provider) in your management account.
-- **Admin, once:** deploy the [hub role](#step-1----deploy-the-hub-role) there, then a [spoke role per member account](#step-2----deploy-spoke-roles-in-member-accounts) via StackSets or Terraform.
+- **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1--register-the-vouch-oidc-provider) in your management account.
+- **Admin, once:** deploy the [hub role](#step-1--deploy-the-hub-role) there, then a [spoke role per member account](#step-2--deploy-spoke-roles-in-member-accounts) via StackSets or Terraform.
 - **Each developer:** `vouch setup aws --management-role <HUB_ARN> --role <SPOKE_ARN> --profile vouch-<env>` -- one profile per account.
 - On Identity Center? Skip the spokes and [register Vouch as a trusted token issuer](#aws-iam-identity-center) instead.
 {{< /tldr >}}
@@ -372,7 +372,7 @@ export AWS_PROFILE=vouch-dev
 
 ## AWS IAM Identity Center
 
-Instead of role chaining, you can register Vouch as a **trusted token issuer** in AWS IAM Identity Center. Developers then get credentials for exactly the accounts and permission sets they are assigned in Identity Center -- no spoke roles to deploy. Vouch signs a short-lived RS256 token, exchanges it for an Identity Center access token via `CreateTokenWithIAM`, and calls the SSO portal (`ListAccounts`, `ListAccountRoles`, `GetRoleCredentials`) on the developer's behalf.
+Instead of role chaining, you can register Vouch as a **trusted token issuer** in AWS IAM Identity Center. Developers then get credentials for exactly the accounts and permission sets they are assigned in Identity Center -- no spoke roles to deploy. Vouch signs a short-lived RS256 token, exchanges it for an Identity Center access token via `CreateTokenWithIAM`, and calls the SSO portal (`ListAccounts`, `ListAccountRoles`, `GetRoleCredentials`) on the developer's behalf. If your organization also assigns existing IAM roles through account access manager, the same discovery command surfaces those assignments -- see [Account access manager entitlements](#account-access-manager-entitlements).
 
 This model requires an [organization instance](https://docs.aws.amazon.com/singlesignon/latest/userguide/organization-instances-identity-center.html) of IAM Identity Center and users provisioned so their email matches the Vouch identity (the token `sub`). If you provision Identity Center from the same identity provider Vouch uses, [SCIM](/docs/scim/) keeps them in sync.
 
@@ -384,7 +384,7 @@ This model requires an [organization instance](https://docs.aws.amazon.com/singl
 
 Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call. The token for this hop is [pinned to the management role](/docs/aws/#require-role-pinning), so this trust policy can also require `"Bool": {"sts:RoleAuthorizedByIdp": "true"}` like any other web-identity role.
 
-The role needs **no identity policy** for this. Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role -- instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
+The role needs **no identity policy** for the token exchange (the optional [entitlement pass](#account-access-manager-entitlements) adds read-only discovery grants). Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role -- instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
 
 ```json
 {
@@ -525,6 +525,8 @@ aws s3 ls --profile vouch-production-administratoraccess
 
 Re-run `vouch setup aws --discover` at any time to pick up newly assigned accounts and permission sets; existing profiles are left untouched.
 
+If your organization assigns IAM roles through account access manager, the same `--discover` run also surfaces those entitlements and writes a role-chaining profile for each -- covered in the [next section](#account-access-manager-entitlements).
+
 <div class="checkpoint">
 <p><strong>You are done with Identity Center setup when...</strong></p>
 <ul>
@@ -533,6 +535,62 @@ Re-run `vouch setup aws --discover` at any time to pick up newly assigned accoun
   <li><code>vouch setup aws --discover</code> writes a profile per assignment, and <code>aws sts get-caller-identity</code> against one returns the expected account.</li>
 </ul>
 </div>
+
+### Account access manager entitlements
+
+[Account access manager](https://docs.aws.amazon.com/IAM/latest/UserGuide/account-access-manager.html) is an Identity Center capability that assigns **existing IAM roles** -- rather than permission sets -- to Identity Center users and groups. `vouch setup aws --discover` surfaces these assignments in a second pass: it resolves your Identity Center user by matching your verified email against the identity store, expands your group memberships (direct memberships only, which is complete -- the identity store does not support nested groups), lists the entitlements assigned to you or your groups, and writes one profile per entitled role.
+
+Entitled roles are vended through [role chaining](#architecture), not through permission-set credentials: each profile chains from the management role into the entitled role with a plain `sts:AssumeRole`. The entitlement replaces hand-configuring profiles; the IAM wiring is the same as a spoke role. Because these are role-chaining profiles, the [AI agent read-only downscoping](/docs/aws/#ai-agent-safety) applies to them -- unlike permission-set profiles, which Vouch refuses to issue to a detected agent.
+
+The pass is best-effort. If anything it needs is missing -- the grants below, an Identity Center user matching your email, an account access manager application -- it is skipped without affecting permission-set discovery; run with `--verbose` to see why. It requires the [customer managed application](#idc-step-2--register-the-trusted-token-issuer-and-application) to be registered, and runs only in the commercial AWS partition -- the only one where the `account-access` API is available.
+
+#### What the admin deploys
+
+{{< role admin >}}
+
+Three pieces of IAM configuration make entitled roles discoverable and assumable:
+
+**1. Discovery grants on the management role.** The pass calls five read-only APIs; if any is missing it skips silently. Attach this identity policy to the management role:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "VouchEntitlementDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "sso:ListInstances",
+        "identitystore:GetUserId",
+        "identitystore:ListGroupMembershipsForMember",
+        "account-access:ListApplications",
+        "account-access:ListEntitlements"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+**2. `sts:AssumeRole` on each entitled role.** The management role's identity policy must allow the chained hop into the entitled roles -- the same statement as the [hub role's identity policy](#step-1--deploy-the-hub-role), with the `Resource` covering the entitled role ARNs. Keep the `aws:ResourceOrgID` condition.
+
+**3. A trust statement on each entitled role.** Each entitled role must trust the management role, like a [spoke role](#step-2--deploy-spoke-roles-in-member-accounts): the management role as principal, actions `sts:AssumeRole`, `sts:SetSourceIdentity`, and `sts:TagSession`, and an `aws:SourceIdentity` condition on your email domain. Do **not** add `sts:RoleAuthorizedByIdp` -- the chained hop carries no OIDC token, so that condition can never match. If the trust statement is missing, credential calls for the profile fail and the CLI prints the exact statement to add.
+
+> **Discovery is not enforcement.** An entitlement makes a role appear in `--discover`; it does not authorize anyone to assume it. The entitled role's trust policy -- specifically its `aws:SourceIdentity` condition -- remains the only per-user gate on the AWS side. Removing an entitlement hides the role from future discovery runs but does not change the trust policy or delete existing profiles.
+
+#### What discovery writes
+
+{{< role developer >}}
+
+Entitled-role profiles are named like permission-set profiles (`vouch-<account>-<role-name>`) and chain through the management role:
+
+```ini
+[profile vouch-production-deployrole]
+credential_process = vouch credential aws --role arn:aws:iam::222222222222:role/DeployRole --via arn:aws:iam::999999999999:role/vouch/VouchAccess
+output = json
+```
+
+Re-runs are idempotent: a profile that already vends the same role is skipped. A profile name already taken by anything else -- a permission set, a different role, a hand-written profile -- is reported as a collision and the entitlement is **not** configured. Entitlements whose role ARN or account ID fails validation are dropped with a message.
 
 ---
 
@@ -704,3 +762,16 @@ aws sts get-caller-identity --profile vouch-dev
 ```
 
 Check `~/.aws/config` for the correct role ARN in each profile.
+
+### Entitled roles missing after `--discover`
+
+Entitlement discovery is best-effort and skips when it cannot proceed. Run `vouch setup aws --discover --verbose` to see the reason. Common causes:
+
+- The management role is missing one of the five [discovery grants](#account-access-manager-entitlements).
+- No Identity Center user's email matches your Vouch verified email.
+- Identity Center runs outside the commercial AWS partition, where the `account-access` API is not available.
+- The profile name was already taken by another profile -- the output reports the collision, and the entitlement is not configured.
+
+### "Access denied" using an entitlement profile
+
+The CLI prints the exact trust statement to add to the entitled role; keep the `aws:SourceIdentity` condition when you apply it. If the trust statement is already present, check that the management role's identity policy allows `sts:AssumeRole` on the entitled role, and that no service control policy or permissions boundary blocks the hop.

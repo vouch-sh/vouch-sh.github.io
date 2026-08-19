@@ -179,7 +179,7 @@ vouch setup aws [--role <ROLE_ARN> | --discover] [--profile <PROFILE>] [--region
 | Flag | Description |
 |---|---|
 | `--role` | The IAM role ARN to assume |
-| `--discover` | Auto-discover accounts and roles from IAM Identity Center SSO (alternative to `--role`) |
+| `--discover` | Auto-discover access from IAM Identity Center: writes a profile per permission-set assignment and per [account access manager entitlement](/docs/aws-multi-account/#account-access-manager-entitlements) (alternative to `--role`) |
 | `--profile` | AWS profile name to configure (default: `vouch`; additional profiles auto-name as `vouch-2`, `vouch-3`, etc.) |
 | `--region` | AWS region to set in the profile |
 | `--management-role` | Management role ARN to chain through for multi-account access |
