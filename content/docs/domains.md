@@ -90,7 +90,7 @@ The labels you may claim are derived from the registrable apex of your verified 
 
 ### Effect on AWS federation
 
-Issuer selection is automatic and fail-closed: once a subdomain is claimed, **all** of your organization's AWS OIDC tokens carry the subdomain as `iss` and `aud` — they never fall back to the shared issuer. Your [IAM OIDC provider](/docs/aws/#step-1----register-the-vouch-oidc-provider) must therefore point at the subdomain URL, not the shared instance URL. Claim the subdomain and update the IAM provider together, or role assumption will fail until they match.
+Issuer selection is automatic and fail-closed: once a subdomain is claimed, **all** of your organization's AWS OIDC tokens carry the subdomain as `iss` and `aud` — they never fall back to the shared issuer. Your [IAM OIDC provider](/docs/aws/#step-1--register-the-vouch-oidc-provider) must therefore point at the subdomain URL, not the shared instance URL. Claim the subdomain and update the IAM provider together, or role assumption will fail until they match.
 
 ### Signing key management
 
