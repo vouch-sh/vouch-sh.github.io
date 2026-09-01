@@ -39,9 +39,9 @@ Yes. The Vouch server supports AAGUID-based policies that control which authenti
 - **`fips-only`** — Only FIPS-certified YubiKey models are accepted.
 - **`yubikey-5`** — Any YubiKey 5 series model is accepted.
 - **Comma-separated UUIDs** — An explicit allowlist of authenticator AAGUIDs (e.g., `cb69481e-8ff7-4039-93ec-0a2729a154a8,ee882879-721c-4913-9775-3dfcce97072a`).
-- **Unset or empty** — Any FIDO2 hardware key is accepted (default).
+- **Unset or empty** — No model restriction; any key that passes attestation verification is accepted (default).
 
-Additionally, setting `VOUCH_REQUIRE_ATTESTATION_CERT=true` rejects self-attestation and requires authenticators to provide a full attestation certificate chain. The server validates the chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/), cryptographically proving the key is a genuine Yubico device. YubiKeys with packed attestation satisfy this requirement; platform authenticators and software-based keys cannot chain to the Yubico roots and are rejected.
+Independent of the model policy, every registration requires a full attestation certificate chain; self-attestation is rejected. The server validates the chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/), cryptographically proving the key is a genuine Yubico device, and reads the key model (AAGUID) from the verified certificate rather than from client-supplied data. Platform authenticators and software-based keys cannot chain to the Yubico roots and are rejected.
 
 ### Can I use the same YubiKey across multiple Vouch organizations?
 

@@ -121,7 +121,7 @@ Vouch uses [FIDO2/WebAuthn](https://fidoalliance.org/fido2/) for all user authen
 - **Hardware key storage** -- The private key is generated on the YubiKey's secure element and cannot be extracted, cloned, or backed up.
 - **User verification** -- Every assertion requires the user's PIN and a physical touch of the key, providing two-factor authentication in a single gesture.
 - **Replay protection** -- Each assertion includes a signature counter that the server tracks. Replayed assertions are rejected.
-- **Attestation certificate chain validation** -- When `VOUCH_REQUIRE_ATTESTATION_CERT=true` is set, the server validates the authenticator's attestation certificate chain against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/). This cryptographically proves the key is a genuine Yubico device, not a software emulator or unknown authenticator. The server also extracts the FIDO AAGUID from the attestation certificate to identify the exact key model.
+- **Attestation certificate chain validation** -- Every registration must present an attestation certificate chain that validates against pinned [Yubico root CA certificates](https://developers.yubico.com/PKI/); self-attestation is rejected. This cryptographically proves the key is a genuine Yubico device, not a software emulator or unknown authenticator. The FIDO AAGUID identifying the exact key model is read from the verified certificate, never from client-supplied authenticator data.
 
 ---
 
