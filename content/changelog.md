@@ -1,12 +1,57 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: SLSA Build Level 3 provenance with a pinnable builder identity, AWS role discovery from IAM Identity Center entitlements, sender-constrained tokens enforced on every grant, a SCIM PATCH overhaul, a Cedar-based policy engine with history-aware policies, a guided policy rule builder, an organization audit events API with OCSF export, and more."
+description: "Major features and improvements in recent Vouch releases: mandatory attestation for hardware key registration, AWS profile assumability checks, scoped revocation on authorization-code replay, SLSA Build Level 3 provenance with a pinnable builder identity, AWS role discovery from IAM Identity Center entitlements, sender-constrained tokens enforced on every grant, a Cedar-based policy engine with history-aware policies, an organization audit events API with OCSF export, and more."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release — including bug fixes, dependency updates, and internal refactoring —
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.1) — September 1, 2026
+
+- **Hardware key registration requires attestation** — **Breaking:**
+  registering a hardware key now requires a verified attestation chain — the
+  manufacturer's proof that the key is a genuine device. Sign-ins that used
+  only the upstream identity provider no longer count as hardware-verified,
+  and the re-authentication check before key deletion rejects future
+  timestamps.
+- **AWS setup verifies each role** — `vouch setup aws` tests that each
+  discovered or existing profile can assume its role. When a profile fails,
+  the CLI prints the IAM policy change that fixes it and the role's Identity
+  Center status.
+- **Authorization code replay revokes only the affected tokens** — when an
+  authorization code is used twice, Vouch revokes the tokens issued from
+  that code. The user's other sessions stay active.
+- **SAML assertions must reference their request** — the server rejects
+  assertions without `InResponseTo` and reads values only from the signed
+  portion of the response.
+- **Registration rejects misconfigured applications** — the server rejects
+  an OAuth client with an invalid configuration — a signing key incompatible
+  with its algorithm, a private key in a JWKS, an invalid redirect URI — at
+  create or update time, before the configuration causes sign-in failures.
+  The same rules apply on every registration path.
+- **Client management API fixes** — failed authentication on the
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) client-management
+  endpoints returns 401 and revokes the presented token,
+  an update replaces the application's metadata as a whole, and a stale
+  request carrying an old registration token cannot undo a rotation.
+- **The agent shuts down on SIGTERM and Ctrl+C** — the agent finishes
+  in-flight requests before exiting, and it installs the signal handlers
+  before its listeners bind, so it does not miss an early signal.
+- **Deactivation revokes credentials first** — the server revokes a user's
+  credentials before it saves the deactivation, so a failure partway through
+  cannot leave a deactivated user with working credentials. Deleting a
+  hardware key voids the pending device sign-in approvals it made.
+- **SSH CA keys must be Ed25519** — the server rejects other key types when
+  it loads the key, not later during signing.
+- **OAuth and request-signing error fixes** — the authorize endpoint returns
+  errors in the response mode the application requested, the server reports
+  its own faults as server errors instead of client errors, session-age
+  checks compare at full precision instead of whole seconds, and
+  [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421) request-signature
+  validation implements the remaining canonicalization algorithms and
+  rejects duplicate covered components.
 
 ## [v2026.8.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.8.4) — August 16, 2026
 
