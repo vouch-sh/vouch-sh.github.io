@@ -85,7 +85,7 @@ If you have an Organization, everything anchors in the management account. Singl
 
 {{< role admin >}}
 
-This is the role developers federate into with `vouch login`. Its **trust policy** is the same no matter what the role can do; only the **permissions policy** changes -- and *what the role is allowed to do is your team's decision.* Deploy the shared trust policy below, then attach a permissions policy one of two ways.
+This is the role developers federate into with `vouch login`. Its **trust policy** is the same no matter what the role can do. Only the **permissions policy** changes -- and *what the role is allowed to do is your team's decision.* Deploy the shared trust policy below, then attach a permissions policy one of two ways.
 
 The `*@example.com` condition limits role assumption to anyone with a verified email in your domain (see [Tips for restricting access](#tips-for-restricting-access) for narrower patterns).
 
@@ -438,7 +438,7 @@ On its own, this only takes effect when the Vouch agent's cached STS credentials
 - **With [SCIM](/docs/scim/) provisioning**, deactivating the user in your identity provider automatically revokes their active Vouch session and blocks future logins -- no manual step required.
 - **Without SCIM**, an administrator can use the **Deactivate** and **Revoke credentials** actions in the [admin console](/docs/admin/) to do the same thing.
 
-Note that revoking the Vouch session does not invalidate STS credentials already cached in the user's local Vouch agent -- the explicit `Deny` from step 1 is what blocks those on the AWS side. The Vouch-side action prevents new sessions and severs other credentials issued from the same session.
+Revoking the Vouch session does not invalidate STS credentials already cached in the user's local Vouch agent -- the explicit `Deny` from step 1 is what blocks those on the AWS side. The Vouch-side action prevents new sessions and severs other credentials issued from the same session.
 
 ### Prevent session name spoofing
 
@@ -513,7 +513,7 @@ When `vouch credential aws` runs inside an AI coding agent, Vouch automatically 
 The CLI checks for environment variables set by popular AI coding agents. When one is detected:
 
 1. The [`ReadOnlyAccess`](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/ReadOnlyAccess.html) AWS managed policy is attached as a [session policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html#policies_session), which limits the effective permissions to the intersection of the role's policies and `ReadOnlyAccess` -- regardless of what the role itself allows.
-2. The `vouch:AccessType=ai` and `vouch:Agent=<name>` session tags are added, where `<name>` is the verbatim value of the detected agent environment variable (for agents that set `AI_AGENT` or `AGENT`, the raw value is forwarded; for agents detected by a marker variable like `CLAUDE_CODE` or `CURSOR_TRACE_ID`, the agent name is used). These tags appear on every CloudTrail event for the session, so you can attribute API calls to the specific agent that made them.
+2. The `vouch:AccessType=ai` and `vouch:Agent=<name>` session tags are added, where `<name>` is the verbatim value of the detected agent environment variable. For agents that set `AI_AGENT` or `AGENT`, the raw value is forwarded; for agents detected by a marker variable like `CLAUDE_CODE` or `CURSOR_TRACE_ID`, the agent name is used. These tags appear on every CloudTrail event for the session, so you can attribute API calls to the specific agent that made them.
 
 ### Supported agents
 

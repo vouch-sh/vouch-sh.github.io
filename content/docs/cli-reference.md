@@ -38,7 +38,7 @@ These flags are available on all commands.
 
 ### Configuration file
 
-The Vouch CLI follows the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/latest/) on all platforms, including macOS: configuration lives at `~/.config/vouch/config.json` (`$XDG_CONFIG_HOME`), session state (cookie, audit log) under `~/.local/state/vouch/` (`$XDG_STATE_HOME`), and the agent sockets under `$XDG_RUNTIME_DIR/vouch/` (falling back to `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset). The configuration file is created automatically during enrollment and contains the server URL and session state.
+The Vouch CLI follows the [XDG Base Directory specification](https://specifications.freedesktop.org/basedir-spec/latest/) on all platforms, including macOS. Configuration lives at `~/.config/vouch/config.json` (`$XDG_CONFIG_HOME`). Session state (cookie, audit log) lives under `~/.local/state/vouch/` (`$XDG_STATE_HOME`), and the agent sockets under `$XDG_RUNTIME_DIR/vouch/` (falling back to `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset). The configuration file is created automatically during enrollment and contains the server URL and session state.
 
 | Field | Description |
 |---|---|

@@ -8,7 +8,7 @@ params:
   docsGroup: admin
 ---
 
-Manually adding and removing users from Vouch when people join or leave your organization is error-prone and easy to forget. A missed offboarding means someone retains access to hardware-backed credentials they should no longer have.
+Manually adding and removing users from Vouch when people join or leave your organization is error-prone. A missed offboarding means someone retains access to hardware-backed credentials they should no longer have.
 
 SCIM (System for Cross-domain Identity Management) lets your identity provider -- Google Workspace, Okta, Azure AD, or OneLogin -- handle this automatically in real time. Vouch supports the **SCIM 2.0** protocol ([RFC 7644](https://datatracker.ietf.org/doc/html/rfc7644)) for automated user provisioning and de-provisioning. When SCIM is configured, your identity provider (IdP) can automatically:
 

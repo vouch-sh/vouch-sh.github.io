@@ -86,7 +86,7 @@ Some jurisdictions do not allow the exclusion or limitation of incidental or con
 Your access to the Vouch service may be terminated:
 
 - **By your organization** at any time, for any reason, with or without notice. Your organization's administrators have full authority to de-provision your account.
-- **Upon termination of your employment or affiliation** with the organization. When your relationship with the organization ends, your Vouch account will be deactivated, typically through automated SCIM de-provisioning.
+- **Upon termination of your employment or affiliation** with the organization. When your relationship with the organization ends, your Vouch account is deactivated through automated SCIM de-provisioning or by an administrator.
 - **For violations of these Terms or your organization's policies.** If you violate these Terms, your organization's acceptable use policies, or any applicable security policies, your access may be terminated immediately without prior notice.
 
 Upon termination, regardless of the reason:

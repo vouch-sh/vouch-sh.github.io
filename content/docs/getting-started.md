@@ -223,7 +223,7 @@ Before a tool can use Vouch, your organization needs to configure the matching i
 
 ## Step 6 -- Onboard your team
 
-Once Vouch works for you, onboarding the team requires no admin action: each person installs the CLI and enrolls with the same server, and anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
+Once Vouch works for you, onboarding the team requires no admin action. Each person installs the CLI and enrolls with the same server. Anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
 
 The **[Team Rollout playbook](/docs/rollout/)** is the guide for this phase. It has a copy-pasteable onboarding block for Slack, a per-service enablement checklist (AWS, EKS, CodeCommit, CodeArtifact, and more), when to adopt [SCIM](/docs/scim/) (15+ people), and offboarding.
 

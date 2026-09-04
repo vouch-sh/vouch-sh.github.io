@@ -40,7 +40,7 @@ eval "$(vouch env --type rds \
 psql -d mydb
 ```
 
-To generate just the token (for scripts or non-PostgreSQL clients):
+To generate only the token (for scripts or non-PostgreSQL clients):
 
 ```bash
 TOKEN=$(vouch credential rds \
@@ -162,7 +162,7 @@ eval "$(vouch env --type redshift \
 psql -h my-cluster.abc123.us-east-1.redshift.amazonaws.com -p 5439
 ```
 
-To generate just the credentials:
+To generate only the credentials:
 
 ```bash
 vouch credential redshift --cluster-id my-cluster --db-name mydb

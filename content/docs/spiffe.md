@@ -137,7 +137,7 @@ Once SPIRE trusts Vouch tokens, the common architectures are standard SPIFFE/SPI
 
 - **Kubernetes with human + service identity** -- Developers reach the API server with Vouch OIDC (see the [Kubernetes guide](/docs/kubernetes/)); pods authenticate to each other with X.509-SVIDs issued by SPIRE. The layers are complementary: Vouch covers human-to-cluster, SPIRE covers pod-to-pod mTLS.
 - **Multi-cloud service mesh** -- SPIRE servers in each cloud federate via bundle exchange so services authenticate across trust domains, while operators use the same `vouch login` session for access to every environment.
-- **Zero-trust CI/CD with human approval** -- a self-hosted runner attests its own identity via SPIFFE SVID, and the deployment additionally requires a Vouch OIDC token minted by a human with a YubiKey -- see [CI/CD approval gates](/docs/cicd/) for the Vouch half of that pattern.
+- **Zero-trust CI/CD with human approval** -- a self-hosted runner attests its own identity via SPIFFE SVID, and the deployment additionally requires a Vouch OIDC token minted by a human with a YubiKey. See [CI/CD approval gates](/docs/cicd/) for the Vouch half of that pattern.
 
 ---
 

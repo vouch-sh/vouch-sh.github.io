@@ -38,7 +38,7 @@ You don't need to follow the STS calls to deploy this: put the OIDC provider and
 - The **hub role** is defined in [Step 1](#step-1--deploy-the-hub-role) -- its identity policy is `sts:AssumeRole` only.
 - Each **spoke role** trusts the hub through a plain AWS-principal trust (no OIDC).
 - The developer's verified email propagates through the chain as [`SourceIdentity`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html): set to `alice@example.com` at `AssumeRoleWithWebIdentity`, carried forward through each `AssumeRole`, recorded in CloudTrail in every member account.
-- All session tags are [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), so conditions like `aws:PrincipalTag/vouch:Domain` and `aws:PrincipalTag/vouch:Email` work in spoke trust policies just as they do in the hub.
+- All session tags are [transitive](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html#id_session-tags_role-chaining), so conditions like `aws:PrincipalTag/vouch:Domain` and `aws:PrincipalTag/vouch:Email` work in spoke trust policies as they do in the hub.
 
 Every developer uses the same `vouch login` session. The AWS profile they select determines which spoke role -- and therefore which account -- they assume.
 
@@ -384,7 +384,7 @@ This model requires an [organization instance](https://docs.aws.amazon.com/singl
 
 Deploy a management role in the management account using the same [shared Vouch OIDC trust policy](/docs/aws/#shared-trust-policy) as the rest of this guide (`AssumeRoleWithWebIdentity`, with a `*@example.com` `sub` condition). Vouch assumes this role via web identity and uses it to sign the `CreateTokenWithIAM` call. The token for this hop is [pinned to the management role](/docs/aws/#require-role-pinning), so this trust policy can also require `"Bool": {"sts:RoleAuthorizedByIdp": "true"}` like any other web-identity role.
 
-The role needs **no identity policy** for this. Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role -- instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
+The role needs **no identity policy** for this. Permission to call `CreateTokenWithIAM` is not granted through an identity policy on the role. Instead you attach a **resource policy to the customer managed application** (the *application credentials*) that names this role as the principal allowed to call the action. You apply it in [IdC Step 2](#idc-step-2--register-the-trusted-token-issuer-and-application); it looks like this:
 
 ```json
 {

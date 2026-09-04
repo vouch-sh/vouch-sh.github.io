@@ -80,7 +80,7 @@ Remove a domain from `/admin/domains`. This unclaims it — future enrollments f
 
 ## Issuer subdomains
 
-By default, every organization's OIDC federation tokens are issued under the shared instance URL (for the US instance, `https://us.vouch.sh`). An organization can instead claim a **dedicated issuer subdomain** — for example, `acme-com` → `https://acme-com.us.vouch.sh` — with its own signing key set, so that a token issued for your organization does not verify against any other organization's JWKS, and vice versa.
+By default, every organization's OIDC federation tokens are issued under the shared instance URL (for the US instance, `https://us.vouch.sh`). An organization can instead claim a **dedicated issuer subdomain** — for example, `acme-com` → `https://acme-com.us.vouch.sh` — with its own signing key set. A token issued for your organization then does not verify against any other organization's JWKS, and vice versa.
 
 Manage it on the **Issuer Subdomain** page (`/admin/subdomain`).
 

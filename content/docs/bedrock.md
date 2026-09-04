@@ -92,7 +92,7 @@ With [Amazon Bedrock model invocation logging](https://docs.aws.amazon.com/bedro
 
 ## Agent delegation
 
-For automated agents that call Amazon Bedrock on behalf of users, use scoped JWTs with agent-specific `sub` claims and session policies that limit model access -- the human identity chain is preserved while the agent is restricted to only the models it needs.
+For automated agents that call Amazon Bedrock on behalf of users, use scoped JWTs with agent-specific `sub` claims and session policies that limit model access. The human identity chain is preserved while the agent is restricted to only the models it needs.
 
 ---
 

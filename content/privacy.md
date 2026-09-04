@@ -81,7 +81,7 @@ We use the information we collect for the following purposes:
 
 We employ multiple layers of security to protect your information:
 
-- **TLS encryption** -- All communication between the Vouch CLI, your browser, and the Vouch server is encrypted in transit using TLS 1.3, with TLS 1.2 accepted using modern AEAD ciphers only.
+- **TLS encryption** -- All communication between the Vouch CLI, your browser, and the Vouch server is encrypted in transit using TLS 1.3, with TLS 1.2 accepted using AEAD ciphers only.
 - **FIDO2/WebAuthn phishing-resistant authentication** -- Vouch exclusively uses the FIDO2/WebAuthn standard for user authentication. This protocol is resistant to phishing, credential stuffing, and man-in-the-middle attacks because the cryptographic assertion is bound to the origin (domain) of the Vouch server.
 - **Private keys never leave your security device** -- The private key associated with your FIDO2 credential is generated on and never exported from your hardware security key. Even if the Vouch server were compromised, your private key would remain safe.
 - **Short-lived credentials minimize breach exposure** -- All credentials issued by Vouch are short-lived and expire automatically. SSH certificates and OIDC tokens are valid for up to 8 hours by default; AWS STS credentials and GitHub access tokens are valid for up to 1 hour. This dramatically limits the window of exposure if a credential is intercepted or a system is compromised. There are no long-lived secrets to steal.
@@ -96,7 +96,7 @@ We employ multiple layers of security to protect your information:
 Depending on your jurisdiction, you may have the following rights regarding your personal information:
 
 - **Access** -- You have the right to request a copy of the personal information we hold about you.
-- **Correction** -- You have the right to request correction of inaccurate personal information. Note that most account information is sourced from your organization's identity provider; corrections should typically be made there.
+- **Correction** -- You have the right to request correction of inaccurate personal information. Most account information comes from your organization's identity provider; request corrections there.
 - **Deletion** -- You have the right to request deletion of your personal information. Account deletion requests should be directed to your organization's administrator, who can de-provision your account through SCIM or the Vouch administrative interface.
 - **Data portability** -- You have the right to request your data in a structured, commonly used, machine-readable format.
 
@@ -126,7 +126,7 @@ Vouch operates independent regional instances (for example, the United States, E
 
 ## Children's Privacy
 
-Vouch is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided personal information, we will take steps to delete that information. If you believe a child under 13 has provided personal information to us, please contact us at [privacy@vouch.sh](mailto:privacy@vouch.sh).
+Vouch is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided personal information, we will take steps to delete that information. If you believe a child under 13 has provided personal information to us, contact us at [privacy@vouch.sh](mailto:privacy@vouch.sh).
 
 ---
 

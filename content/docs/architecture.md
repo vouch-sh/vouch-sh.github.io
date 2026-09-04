@@ -32,7 +32,7 @@ A background process that holds session state in memory. The agent:
 - **Caches the active session** so that credential requests do not require repeated FIDO2 assertions.
 - **Serves as an SSH agent** (implementing the SSH agent protocol) so that `ssh` can request certificates without additional configuration.
 - **Listens on a Unix domain socket** with filesystem permissions restricting access to the owning user.
-- **Holds no persistent state of its own** -- cached credentials live in process memory; after a restart the agent recovers the session token from the CLI config file, so a new `vouch login` is only needed once the session expires or is revoked.
+- **Holds no persistent state of its own** -- cached credentials live in process memory. After a restart the agent recovers the session token from the CLI config file, so a new `vouch login` is only needed once the session expires or is revoked.
 
 On macOS, the agent runs as a Homebrew service (`brew services start vouch`). On Linux, it runs as a systemd user service.
 
@@ -226,7 +226,7 @@ The CLI communicates with the agent over a Unix domain socket at a well-known pa
 
 - **Filesystem permissions** — The socket file has restrictive permissions (owner-only) to prevent other users on the system from accessing session material.
 - **Peer credential verification** — Every incoming connection is checked using OS-level peer credentials (`SO_PEERCRED` on Linux, `getpeereid` on macOS) to verify the connecting process has the same UID as the agent. Connections from a different UID are rejected and audit-logged, following the same approach used by `gpg-agent`.
-- **Directory safety** — On startup, the agent validates that its socket directory (`$XDG_RUNTIME_DIR/vouch/`, or `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset) is not a symlink and is owned by the current user, preventing symlink-based directory hijacking where an attacker pre-creates the directory pointing to an attacker-controlled location.
+- **Directory safety** — On startup, the agent validates that its socket directory (`$XDG_RUNTIME_DIR/vouch/`, or `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset) is not a symlink and is owned by the current user. This prevents symlink-based directory hijacking, where an attacker pre-creates the directory pointing to an attacker-controlled location.
 
 ### In-memory credential cache
 

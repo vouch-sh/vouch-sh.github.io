@@ -15,7 +15,7 @@ Vouch brokers SSH certificates, AWS STS tokens, GitHub installation tokens, and 
 - The Vouch server does not store users' AWS credentials, SSH private keys, GitHub tokens, or registry passwords. It brokers short-lived credentials after hardware-backed authentication.
 - User authentication is based on FIDO2/WebAuthn assertions from enrolled YubiKeys, requiring both the key and user verification.
 - Credentials are scoped to one authenticated user, short-lived, and expire automatically; brokered AWS credentials are cached only in the local agent's memory.
-- Server-side signing keys are managed by AWS KMS, and authenticated requests use modern OAuth and FAPI protections including DPoP, PAR, private-key client authentication, and HTTP Message Signatures.
+- Server-side signing keys are managed by AWS KMS, and authenticated requests use OAuth and FAPI (Financial-grade API) protections: DPoP, PAR, private-key client authentication, and HTTP Message Signatures.
 - Security reviewers should also read the [Threat Model](/docs/threat-model/), [Architecture](/docs/architecture/), [Availability](/docs/availability/), and [Migration](/docs/migration/) guides.
 
 ---
@@ -107,7 +107,7 @@ Vouch does not store credentials at rest. The server stores:
 
 No AWS credentials, SSH keys, or GitHub tokens are stored on the server.
 
-User data and metadata are protected with **document-level encryption** using HPKE ([RFC 9180](https://datatracker.ietf.org/doc/html/rfc9180)) with DHKEM(P-384), HKDF-SHA384, and AES-256-GCM. Each document is encrypted individually with its own encapsulated key — the encryption is bound to the document type and ID, preventing ciphertext relocation. The document encryption key pair is generated via AWS KMS (`GenerateDataKeyPairWithoutPlaintext`) and the private key is decrypted at server startup via KMS; the KMS key policy restricts that decryption to NitroTPM-attested EC2 instances, so the plaintext private key is only recoverable on attested hosts.
+User data and metadata are protected with **document-level encryption** using HPKE ([RFC 9180](https://datatracker.ietf.org/doc/html/rfc9180)) with DHKEM(P-384), HKDF-SHA384, and AES-256-GCM. Each document is encrypted individually with its own encapsulated key — the encryption is bound to the document type and ID, preventing ciphertext relocation. The document encryption key pair is generated via AWS KMS (`GenerateDataKeyPairWithoutPlaintext`) and the private key is decrypted at server startup via KMS. The KMS key policy restricts that decryption to NitroTPM-attested EC2 instances, so the plaintext private key is only recoverable on attested hosts.
 
 Blind equality indexes (for lookups by email, etc.) use HMAC-SHA256 with a key derived from the document encryption public key, so the database never contains plaintext identifiers.
 
