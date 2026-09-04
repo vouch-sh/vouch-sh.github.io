@@ -9,7 +9,7 @@ params:
 
 See the [Applications overview](/docs/applications/) for prerequisites, configuration endpoints, and available scopes.
 
-CLI agents and automation scripts can authenticate with Vouch using the [Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628) (no browser redirect needed), then use the Vouch credential brokering APIs to obtain temporary AWS credentials, GitHub tokens, or SSH certificates -- all tied to the user's hardware-backed identity.
+CLI agents and automation scripts can authenticate with Vouch using the [Device Authorization Grant](https://datatracker.ietf.org/doc/html/rfc8628) (no browser redirect needed). They then use the Vouch credential brokering APIs to obtain temporary AWS credentials, GitHub tokens, or SSH certificates -- all tied to the user's hardware-backed identity.
 
 ## Examples
 

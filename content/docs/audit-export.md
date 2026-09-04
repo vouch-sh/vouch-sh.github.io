@@ -74,11 +74,11 @@ With neither cursor set, the first call defaults to an ascending walk from the s
 
 ## Cursor semantics and the delivery guarantee
 
-`next_cursor` is present whenever there may be more matching events; pass it back as `after` (or `before`, if walking backward) to continue. Event IDs are UUIDv7 (time-ordered), but authentication events are written from detached background tasks, so commit order can trail ID order under load — a naive poller that just tracks "the highest ID seen" can miss events that commit late.
+`next_cursor` is present whenever there may be more matching events; pass it back as `after` (or `before`, if walking backward) to continue. Event IDs are UUIDv7 (time-ordered), but authentication events are written from detached background tasks, so commit order can trail ID order under load. A naive poller that tracks only "the highest ID seen" can miss events that commit late.
 
-The API's guarantee is therefore about time, not ID order: **an event is never returned with `created_at` newer than `now − 30s`**. A poller that requests `after=<last cursor>` no more often than every 30 seconds, and persists the returned `next_cursor` after each successful page, will not miss events that commit within that window. Always follow `next_cursor` until a page comes back without one — pages can be size-capped, so one poll does not necessarily drain everything new.
+The API's guarantee is therefore about time, not ID order: **an event is never returned with `created_at` newer than `now − 30s`**. A poller that requests `after=<last cursor>` no more often than every 30 seconds, and persists the returned `next_cursor` after each successful page, will not miss events that commit within that window. Always follow `next_cursor` until a page comes back without one — pages are size-capped, so a single page can hold only part of the new events.
 
-Treat this as a best-effort guarantee under normal operating conditions: `created_at` is stamped when the event is minted, not when it commits, so a write delayed beyond 30 seconds by write-path contention can still land later than a poller expects. If your environment is prone to write-path contention, use a polling interval longer than 30 seconds.
+Treat this as a best-effort guarantee under normal operating conditions. `created_at` is stamped when the event is minted, not when it commits, so a write delayed beyond 30 seconds by write-path contention can still land later than a poller expects. If your environment is prone to write-path contention, use a polling interval longer than 30 seconds.
 
 Polling this endpoint does not itself write an audit event — that would create a feedback loop of one event per poll.
 

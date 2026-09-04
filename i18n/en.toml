@@ -216,7 +216,7 @@ other = "Blog"
 other = "No posts yet"
 
 [blog_empty_body]
-other = "Check back soon for updates on Vouch development, security best practices, and engineering insights."
+other = "Posts on Vouch development and security will appear here."
 
 [blog_by]
 other = "By"

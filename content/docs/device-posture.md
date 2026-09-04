@@ -203,7 +203,7 @@ Requires at least one mobile device management (MDM) agent to be detected (Jamf,
 
 Requires platform-specific integrity protections to be active: System Integrity Protection (SIP) and Gatekeeper on macOS, SELinux or AppArmor enforcement on Linux.
 
-**Why it matters:** Disabling platform integrity protections makes it easier for malware to persist, modify system binaries, and tamper with security controls.
+**Why it matters:** Disabling platform integrity protections lets malware persist, modify system binaries, and tamper with security controls.
 
 **Remediation:**
 - **macOS:** Reboot into Recovery Mode and run `csrutil enable` to re-enable SIP. Ensure Gatekeeper is enabled via `spctl --master-enable`.
@@ -221,7 +221,7 @@ Requires a minimum operating system version: macOS 14.0.0 or later, or Windows 1
 
 The version thresholds are maintained by Vouch and advance over time. If this policy is active, a raised floor can deny devices that were passing before — watch the [changelog](/changelog/).
 
-> **OS recency denies every Linux device.** The check has no Linux branch — distributions version independently, so there is no sensible built-in threshold — and the policy fails closed, so a Linux client matches neither condition and is denied. If any part of your fleet runs Linux, do not enable this policy. Write a custom policy that covers all three platforms instead:
+> **OS recency denies every Linux device.** The check has no Linux branch: distributions version independently, so there is no sensible built-in threshold. The policy fails closed, so a Linux client matches neither condition and is denied. If any part of your fleet runs Linux, do not enable this policy. Write a custom policy that covers all three platforms instead:
 >
 > ```cedar
 > forbid (principal, action == Vouch::Action::"IssueToken", resource)
@@ -263,14 +263,14 @@ For requirements that go beyond the pre-configured policies, an organization can
 1. **Applies to** — token issuance (`vouch login`) or token exchange (workload and agent credentials). Device checks are only offered on issuance, because an exchange request carries no device posture; picking exchange switches the builder to activity checks.
 2. **Checks** — *device state* ("allow the request only when ALL of these hold") or *recent activity* ("deny the request when …"). A rule is one or the other. A device rule can stack multiple requirements; an activity rule carries exactly one condition — combined history conditions are expressed as separate policies.
 3. **Conditions** — one row per condition:
-   - A device row is field → operator → value. The field dropdown lists every posture attribute grouped by area, and each field offers only the operators its type allows: booleans get *is*, numbers get comparisons, closed-value strings (`os`) and sets (`edr`, `mdm`) get dropdowns of the values clients can actually report. Version fields take a version like `15.3` and emit the numeric `os_version_num` encoding for you. "Add OS version floor" adds the per-platform minimum-version pattern as a single row.
+   - A device row is field → operator → value. The field dropdown lists every posture attribute grouped by area, and each field offers only the operators its type allows. Booleans get *is*, numbers get comparisons, and closed-value strings (`os`) and sets (`edr`, `mdm`) get dropdowns of the values clients can report. Version fields take a version like `15.3` and emit the numeric `os_version_num` encoding for you. "Add OS version floor" adds the per-platform minimum-version pattern as a single row.
    - An activity row is event → shape → window: *happened in the last*, *did not happen in the last*, *happened at least N times in the last*, or *is missing or was followed by* another event. The window control enforces the 24-hour history cap.
 
 The generated rule previews below the rows and is validated continuously.
 
-The builder warns (without blocking) when a successful-login recency condition targets token issuance: the login being evaluated is not yet in the history the rule reads, so "did not happen" locks users out, and "happened" is a once-per-window login cooldown. Login-recency requirements belong on token exchange.
+The builder warns (without blocking) when a successful-login recency condition targets token issuance. The login being evaluated is not yet in the history the rule reads, so "did not happen" locks users out, and "happened" is a once-per-window login cooldown. Login-recency requirements belong on token exchange.
 
-**Edit as text** is the escape hatch, and a one-way door: it turns the generated rule into an editable textarea, and a policy edited as text reopens as text from then on — the builder never tries to parse hand-written Dogwood back into rows.
+**Edit as text** is the escape hatch, and a one-way door: it turns the generated rule into an editable textarea. A policy edited as text reopens as text from then on; the builder never tries to parse hand-written Dogwood back into rows.
 
 ### Writing policy text directly
 

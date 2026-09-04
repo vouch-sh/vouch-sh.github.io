@@ -1,6 +1,6 @@
 ---
 title: "Changelog"
-description: "Major features and improvements in recent Vouch releases: mandatory attestation for hardware key registration, AWS profile assumability checks, scoped revocation on authorization-code replay, SLSA Build Level 3 provenance with a pinnable builder identity, AWS role discovery from IAM Identity Center entitlements, sender-constrained tokens enforced on every grant, a Cedar-based policy engine with history-aware policies, an organization audit events API with OCSF export, and more."
+description: "Major features in recent Vouch releases: mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
@@ -148,7 +148,7 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 - **Hardware key possession enforced for enrollment**: `vouch enroll` for a
   user with a registered key previously released a credential-capable token
   without a WebAuthn ceremony. Enrollment now requires a key assertion,
-  tokens record whether their approval actually verified hardware, and
+  tokens record whether their approval verified hardware, and
   credential endpoints refuse tokens without that proof.
 - **NUL bytes rejected in client-supplied identifiers**: identifiers
   containing a NUL byte (e.g. a SCIM `externalId`) caused backend-dependent

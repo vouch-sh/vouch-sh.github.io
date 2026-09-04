@@ -65,7 +65,7 @@ Keep the default **Pattern match** mode. Vouch tokens carry the logged-in identi
 - **Expected audience** -- `https://{{< instance-url >}}`. Vouch's default `aud` is the issuer URL, so matching that string here means no extra `--audience` flag in Step 4. Anthropic enforces audience even though the field is labeled optional; mismatches are rejected with `jwt_audience_mismatch`.
 - **Additional claim conditions** -- for a company-wide allow, set claim key `hd` and expected value `example.com` (your Vouch hosted-domain).
 
-> **Avoid CEL expression mode.** In CEL the Expected audience field is hidden and not enforced, and the CEL evaluator handles `claims.aud` in ways that don't match Vouch's tokens reliably (`==` against a string-typed `aud` and `in` against a list-typed `aud` have both been observed to fail). Stay on Pattern match.
+> **Avoid CEL expression mode.** In CEL the Expected audience field is hidden and not enforced. The CEL evaluator also mishandles Vouch's tokens: `==` against a string-typed `aud` and `in` against a list-typed `aud` both failed in testing. Stay on Pattern match.
 
 **Target**
 
@@ -173,9 +173,9 @@ If a provider requires a specific audience (OpenAI configures the audience serve
 
 ## Beyond local development
 
-For workloads that run somewhere other than a developer laptop, prefer the native OIDC issuer of the platform they run on — GitHub Actions, AWS, GCP, and Kubernetes all mint their own workload tokens that Anthropic and OpenAI accept directly.
+For workloads that run somewhere other than a developer laptop, prefer the native OIDC issuer of the platform they run on. GitHub Actions, AWS, GCP, and Kubernetes all mint their own workload tokens that Anthropic and OpenAI accept directly.
 
-For an unattended job that does need to federate through Vouch (a scheduled task on a server you control, for example), use Vouch's [client-credentials flow](/docs/applications/#client-credentials-machine-to-machine) to obtain a Vouch token without an interactive login, then run the same federation exchange.
+For an unattended job that does need to federate through Vouch (a scheduled task on a server you control, for example), use Vouch's [client-credentials flow](/docs/applications/#client-credentials-machine-to-machine) to obtain a Vouch token without an interactive login. Then run the same federation exchange.
 
 ## Background
 
@@ -187,7 +187,7 @@ Internally, Vouch mints audience-scoped tokens via [RFC 8707 resource indicators
 
 **Provider cannot fetch JWKS / signature validation fails.** The issuer URL must be `https://{{< instance-url >}}` and reachable from the public internet. Confirm `https://{{< instance-url >}}/.well-known/openid-configuration` resolves and that the `jwks_uri` it advertises is reachable.
 
-**Rule does not match.** The provider matches against the **ID token** that `vouch credential anthropic` / `vouch credential openai` mints internally (its `sub` is your email). Note that `vouch credential token` prints the RFC 9068 *access* token whose `sub` is a stable user UUID — useful for debugging Vouch-protected APIs, but not what the federation rule sees. The Authentication events tab in the Claude Console shows the decoded JWT for any failed exchange.
+**Rule does not match.** The provider matches against the **ID token** that `vouch credential anthropic` / `vouch credential openai` mints internally (its `sub` is your email). `vouch credential token` prints the RFC 9068 *access* token whose `sub` is a stable user UUID — useful for debugging Vouch-protected APIs, but not what the federation rule sees. The Authentication events tab in the Claude Console shows the decoded JWT for any failed exchange.
 
 **Audience mismatch.** If the provider rejects the audience, mint an audience-scoped token (see [Audience matching](#audience-matching)) so `aud` equals the value the provider expects.
 
