@@ -57,7 +57,7 @@ Vouch is a credential broker that replaces long-lived developer secrets (AWS acc
 
 Data flows:
 
-1. **Login** — YubiKey signs FIDO2 assertion → CLI sends to server over TLS → server validates against enrolled public key → server evaluates [device posture policies](/docs/device-posture/) (if active) → returns a DPoP-bound session token, which the CLI persists to its config file (owner-only permissions) and hands to the agent for in-memory caching. The server never issues refresh tokens — a new session requires a fresh FIDO2 assertion.
+1. **Login** — YubiKey signs FIDO2 assertion → CLI sends to server over TLS → server validates against enrolled public key → server evaluates [device posture policies](/docs/device-posture/) (if active) → returns a DPoP-bound session token, which the CLI persists to its config file (owner-only permissions) and hands to the agent for in-memory caching. The server never issues refresh tokens — a new CLI session requires a fresh FIDO2 assertion. Browser sessions are established by upstream IdP sign-in instead (see the identity trust boundary below).
 2. **AWS credential** — CLI presents session token + DPoP proof → server issues OIDC ID token (signed via KMS ES256) → CLI calls AWS STS `AssumeRoleWithWebIdentity` → STS returns temporary credentials.
 3. **SSH certificate** — CLI sends signing request with session token → server delegates to KMS Ed25519 CA → returns signed SSH certificate → agent serves via SSH agent protocol.
 4. **GitHub token** — CLI requests token with session token → server exchanges GitHub App credentials for installation access token → returns short-lived token to CLI.
@@ -77,11 +77,12 @@ All CLI ↔ server traffic uses TLS 1.3 (TLS 1.2 is accepted, restricted to BCP 
 | **SSH CA key** (Ed25519) | AWS KMS | Critical — certificate authority | KMS access policy, non-extractable |
 | **Document encryption key** (P-384) | Encrypted by KMS, decrypted at runtime | Critical — protects data at rest | KMS key policy restricts decryption to NitroTPM-attested instances |
 | **Session MAC key** | AWS KMS | High — session token integrity | KMS HMAC operations, key never leaves KMS |
-| **Session tokens** | Agent memory + CLI config file | High — grants credential access | DPoP-bound; on-disk copy restricted to owner (0600) |
+| **Session tokens** | Agent memory + CLI config file + browser cookie | High — grants credential access | DPoP-bound (CLI); on-disk copy restricted to owner (0600); browser cookie is `__Host-`-prefixed, Secure, HttpOnly |
 | **Client key pair** (DPoP/FAPI) | OS keychain | High — token binding | Keychain-protected where available; owner-only file fallback |
 | **SSH key + certificate** | Developer's `~/.ssh/` | Medium — SSH access for certificate lifetime | Owner-only file permissions; certificate expires with the session |
 | **Audit logs** | Server database | Medium — forensic evidence | Unencrypted by design for queryability; emails masked to domain + HMAC correlation column; pull-based SIEM export (OCSF) |
 | **SCIM tokens** | Server database (hashed) | High — provisioning authority | Stored as hashes, not reversible |
+| **GitHub OAuth refresh tokens** (per user) | Server database (sealed) | High — GitHub access as the user | Document-level encryption (HPKE); revoked on de-provisioning |
 
 ---
 
@@ -152,6 +153,8 @@ Three trust boundaries separate the system:
 2. **Workstation boundary** — The developer's machine. The agent process, Unix socket, and in-memory credentials are protected by OS-level user isolation.
 3. **Network boundary** — All communication between CLI and server, and between server and external services, uses TLS 1.3, with TLS 1.2 accepted using BCP 195-restricted AEAD cipher suites.
 
+A fourth boundary is organizational rather than architectural: the **upstream identity provider** is the trust root for identity. Enrollment, lost-key recovery, and the browser UI (including organization administration) authenticate the person through IdP sign-in; hardware proof gates credential issuance and security-key deletion. Vouch can prove that *a* registered key is present, but the binding between a person and their first key is anchored at the IdP — no lower layer of proof exists (see T-S6 and assumption A12).
+
 ---
 
 ## Assumptions
@@ -165,12 +168,13 @@ These assumptions underpin the threat model. If an assumption is violated, the m
 | **A3** | TLS (1.3, or 1.2 restricted to BCP 195 AEAD suites) is not broken — an attacker cannot decrypt or tamper with data in transit. | T-T1, T-I2 | TLS transport encryption |
 | **A4** | AWS STS, GitHub, and other external services correctly validate OIDC tokens and enforce their own access controls. | T-E2 | OIDC audience restriction |
 | **A5** | The developer's workstation has not been fully compromised at the kernel level (no rootkit). User-space isolation is intact. | T-I1, T-E1 | In-memory credential cache, Unix socket permissions |
-| **A6** | SCIM de-provisioning events are delivered promptly by the identity provider. | T-E4 | SCIM de-provisioning |
+| **A6** | SCIM de-provisioning events are delivered promptly by the identity provider. | T-E4, T-S6 | SCIM de-provisioning |
 | **A7** | The Vouch server infrastructure is hardened and access-controlled (encrypted at rest, network isolation, audited access). | T-T2, T-T4, T-E3 | Infrastructure hardening, audit log export |
 | **A8** | Developers keep their YubiKey PINs secret and report lost or stolen keys promptly. | T-S2 | FIDO2 user verification (PIN + touch) |
 | **A9** | AWS KMS correctly protects signing key material and enforces access controls. The KMS key policy for the document encryption key restricts decryption to NitroTPM-attested instances. | T-T2, T-E3 | KMS-managed signing keys, NitroTPM attestation, document-level encryption |
 | **A10** | SCIM provisioning tokens are handled as secrets by identity provider and SIEM operators, and revoked if exposed. | T-S4 | Hashed token storage, token revocation, SCIM domain validation |
 | **A11** | Control of a domain's DNS is legitimate proof of ownership of that domain. | T-S5 | DNS TXT domain verification, periodic re-verification |
+| **A12** | The upstream identity provider correctly authenticates users, and the organization protects IdP accounts with its own controls (MFA, session policies, anomaly detection). IdP sign-in is the trust root for enrollment, lost-key recovery, and the browser UI. | T-S6 | Audited enrollment and key registration, SCIM de-provisioning |
 
 ---
 
@@ -188,15 +192,17 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **T-S2** | An **external attacker** with physical access to a stolen YubiKey and knowledge of the PIN can **authenticate as the enrolled user**, leading to **unauthorized credential issuance** for the session lifetime, negatively impacting **session tokens**. | Spoofing | High | Medium |
 | **T-S4** | An **external attacker** who obtains a SCIM provisioning token can **impersonate the identity provider integration** — creating or deactivating users on the organization's owned domains, and reading the audit trail if the token carries the `audit:read` scope — leading to **unauthorized account manipulation**, negatively impacting **SCIM tokens**, **user metadata**, and **audit logs**. | Spoofing | High | Low |
 | **T-S5** | An **external attacker** with DNS control of a domain (a lapsed registration, a divested subsidiary) can **verify that domain into their own organization**, leading to **capture of future enrollments** from that domain, negatively impacting **user metadata**. | Spoofing | Medium | Low |
+| **T-S6** | An **external attacker** who compromises a user's upstream identity provider account can **sign in to the Vouch web UI and register their own security key** (enrollment and lost-key recovery deliberately trust the IdP), leading to **credential issuance as the victim** and — for administrator accounts — **use of the organization admin surfaces** (SCIM tokens, OAuth application secrets, GitHub App connections), negatively impacting **session tokens**, **SCIM tokens**, and **user metadata**. | Spoofing | High | Low |
 
 </div>
 
 **Mitigations:**
 
 - **T-S1**: FIDO2 origin binding prevents the YubiKey from signing assertions for unregistered domains. Even if a developer visits a phishing site, the authenticator will not produce a valid assertion. → [FIDO2 security properties](/docs/security/#fido2-security-properties)
-- **T-S2**: YubiKey PINs provide a second factor — physical possession alone is insufficient. Keys should be reported lost immediately, and the enrolled credential should be removed from the user's account. Session lifetime (8 hours) limits the window.
+- **T-S2**: YubiKey PINs provide a second factor — physical possession alone is insufficient. Report a lost key immediately and remove its enrolled credential from the user's account. Session lifetime (8 hours) limits the window.
 - **T-S4**: SCIM tokens are stored as SHA-256 hashes — a database read cannot recover them. Domain validation restricts user creation to the organization's verified domains, every provisioning operation is audited (`scim_operation`), tokens are revocable at any time from `/admin/scim-tokens`, and audit-trail read access must be explicitly granted when a token is minted. → [SCIM Provisioning](/docs/scim/)
 - **T-S5**: Domain verification requires publishing a DNS TXT record, and ownership is re-proven continuously — verified domains are re-checked daily and unverify after 3 consecutive failures. A claimed domain affects only *future* enrollments; existing users never change organizations. All domain lifecycle transitions are audited. The residual risk is accepted: DNS control is the industry-standard proof of domain ownership (assumption A11). → [Email Domains](/docs/domains/)
+- **T-S6**: The residual risk is accepted by design: Vouch must anchor identity in something upstream, and the binding between a person and their security key is established at IdP-authenticated enrollment — a lost-key user re-proves identity the same way, so an attacker holding the IdP account can always follow the same path with their own authenticator. Hardware attestation proves which *device model* is present, never which *person*. The compensating controls are detective and identity-side: every enrollment and key registration is audited and exported to the SIEM, making an attacker-registered key visible; domain verification bounds which IdP-asserted identities can enroll at all; SCIM de-provisioning (assumption A6) and server-side session revocation cut off access once the IdP compromise is detected; sessions last at most 8 hours. Deleting a registered security key additionally requires a FIDO2 assertion no older than 60 seconds ([RFC 9470](https://datatracker.ietf.org/doc/html/rfc9470) step-up), so a hijacked session cannot silently remove the legitimate key. Protect IdP accounts with phishing-resistant MFA — a hardware-backed IdP makes the trust root as strong as Vouch's own ceremonies (assumption A12).
 
 *T-S3 (use of a still-active session after delayed offboarding) was re-categorized as elevation of privilege — see [T-E4](#elevation-of-privilege). The former employee's identity is genuine; it is the authorization that is stale.*
 
@@ -217,8 +223,8 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 
 **Mitigations:**
 
-- **T-T1**: All CLI-to-server communication uses TLS 1.3 (TLS 1.2 accepted with BCP 195 AEAD ciphers only). HTTP Message Signatures ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)) provide request-level integrity on the credential API — the CLI signs requests to `/v1/` endpoints using the FAPI key pair, and the server rejects any in-scope request with an invalid or missing signature (deny-by-default). OAuth endpoints are protected by private_key_jwt client assertions and DPoP proofs instead. DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) binds tokens to the client's key pair — intercepted tokens cannot be used from a different machine, and presenting a DPoP-bound token as a plain Bearer token is rejected. For browser-based OIDC applications, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) transmits authorization parameters server-side, keeping sensitive data out of URLs and browser history.
-- **T-T2**: Platform signing keys (OIDC ES256/RS256 and SSH CA Ed25519) are managed by AWS KMS and cannot be extracted or modified — server compromise does not expose signing key material, though signing *authority* while the attacker retains access cannot be removed by key secrecy (that impersonation outcome is T-E3). Per-organization issuer keys are the exception: they are generated in software and stored sealed under document-level encryption, so recovering them requires the runtime document-decryption capability (KMS-gated, restricted to attested instances) rather than a database dump alone; staged and emergency [key rotation](/docs/domains/#signing-key-management) exist to respond to suspected exposure. The document encryption private key is KMS-wrapped, with the key policy restricting decryption to NitroTPM-attested EC2 instances. The server stores no user credentials for external services — AWS and GitHub tokens are brokered on demand; the standing exception is the GitHub App private key, held in server configuration to authenticate as the App. Infrastructure controls (network isolation, access auditing) provide defense in depth. → [Shared responsibility](/docs/security/#shared-responsibility)
+- **T-T1**: All CLI-to-server communication uses TLS 1.3 (TLS 1.2 accepted with BCP 195 AEAD ciphers only). HTTP Message Signatures ([RFC 9421](https://datatracker.ietf.org/doc/html/rfc9421)) provide request-level integrity on the credential API — the CLI signs requests to `/v1/` endpoints using the FAPI key pair, and the server rejects any in-scope request with an invalid or missing signature (deny-by-default). OAuth endpoints are protected by private_key_jwt client assertions and DPoP proofs instead. DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) binds tokens to the client's key pair — intercepted tokens cannot be used from a different machine, and presenting a DPoP-bound token as a plain Bearer token is rejected. Access tokens can alternatively be certificate-bound via mutual TLS ([RFC 8705](https://datatracker.ietf.org/doc/html/rfc8705)) — a bound token is rejected unless presented over mTLS with the matching client certificate. For browser-based OIDC applications, PAR ([RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126)) transmits authorization parameters server-side, keeping sensitive data out of URLs and browser history. Browser UI mutations enforce same-origin: any state-changing request must present the server's own `Origin` header, refusing cross-site request forgeries regardless of cookie state.
+- **T-T2**: Platform signing keys (OIDC ES256/RS256 and SSH CA Ed25519) are managed by AWS KMS and cannot be extracted or modified — server compromise does not expose signing key material, though signing *authority* while the attacker retains access cannot be removed by key secrecy (that impersonation outcome is T-E3). Per-organization issuer keys are the exception: they are generated in software and stored sealed under document-level encryption, so recovering them requires the runtime document-decryption capability (KMS-gated, restricted to attested instances) rather than a database dump alone; staged and emergency [key rotation](/docs/domains/#signing-key-management) exist to respond to suspected exposure. The document encryption private key is KMS-wrapped, with the key policy restricting decryption to NitroTPM-attested EC2 instances. The server stores no AWS credentials for users — they are brokered on demand. Two standing exceptions exist for GitHub: the GitHub App private key, held in server configuration to authenticate as the App, and a per-user GitHub OAuth refresh token, stored under document-level encryption and revoked when the user is deactivated. Infrastructure controls (network isolation, access auditing) provide defense in depth. → [Shared responsibility](/docs/security/#shared-responsibility)
 - **T-T3**: Release binaries include [SLSA Build Level 3](https://slsa.dev/) provenance and SBOM attestations (Sigstore-backed, built in a dedicated reusable workflow and verifiable with `gh attestation verify --signer-workflow`) plus SHA256 checksums, and releases are independently rebuilt to verify reproducibility. APT and DNF repositories are GPG-signed and verified automatically by the package manager; Homebrew installs are pinned by SHA256 checksum. → [Supply chain security](/docs/security/#supply-chain-security)
 - **T-T4**: Document-level encryption binds each record to its row and document type, preventing ciphertext relocation, but sealing requires only the public key — encryption alone does not authenticate writers. Integrity of enrollment records therefore rests on database access control and infrastructure hardening (assumption A7). Enrollment and key-registration events are audited, making unexpected credential changes detectable, and the [SIEM export](/docs/audit-export/) preserves that trail off-server; remediation is per-user credential revocation.
 
@@ -238,7 +244,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 **Mitigations:**
 
 - **T-R1**: Every credential issuance is tied to a hardware-verified FIDO2 identity. The Vouch server logs all authentication events and credential exchanges. AWS CloudTrail records STS credential usage with the Vouch-issued identity as the principal.
-- **T-R2**: Audit logs should be continuously pulled into an immutable, external log store via the [SIEM export API](/docs/audit-export/) (OCSF projection, cursor-based polling) so that server compromise cannot erase the trail. → [Shared responsibility](/docs/security/#shared-responsibility)
+- **T-R2**: Pull audit logs continuously into an immutable, external log store via the [SIEM export API](/docs/audit-export/) (OCSF projection, cursor-based polling) so that server compromise cannot erase the trail. → [Shared responsibility](/docs/security/#shared-responsibility)
 
 ---
 
@@ -257,7 +263,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 **Mitigations:**
 
 - **T-I1**: DPoP binds tokens to the CLI's key pair — a token stolen in transit or from a backup cannot be used from another machine, and no refresh tokens exist to steal. Against a local attacker running as the user, DPoP is a weaker boundary: the client key pair itself is reachable (OS keychain, or the file fallback in headless environments), so the effective bounds are credential lifetime, server-side revocation, and [device posture policies](/docs/device-posture/). Brokered AWS credentials live only in agent memory and are never written to disk (no `~/.aws/credentials`). The session token is persisted to the CLI config file and the SSH key and certificate to `~/.ssh/`, all with owner-only permissions. Session lifetime is limited to 8 hours (SSH certificates expire with the session), and AWS STS credentials expire within 1 hour. Full endpoint compromise with kernel access is out of scope (see [assumption A5](#assumptions)).
-- **T-I2**: TLS encrypts all traffic in transit (1.3 preferred, 1.2 restricted to BCP 195 AEAD suites). DPoP provides an additional layer — even if a token is somehow intercepted, it cannot be replayed from another client.
+- **T-I2**: TLS encrypts all traffic in transit (1.3 preferred, 1.2 restricted to BCP 195 AEAD suites). DPoP binds tokens to the client key pair — an intercepted token cannot be replayed from another client.
 - **T-I3**: OIDC discovery is public by design (required for AWS OIDC federation). The exposed information (issuer URL, JWKS, supported algorithms) does not enable impersonation. Private keys are never exposed through these endpoints.
 
 ---
@@ -288,16 +294,16 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 |---|---|---|---|---|
 | **T-E1** | A **compromised endpoint** can **access the Unix domain socket** and **use the active session to request credentials for any role the user is authorized for**, leading to **unauthorized access to cloud resources** within the user's permission set, negatively impacting **session tokens**. | Elevation of privilege | High | Medium |
 | **T-E2** | A **malicious insider** can **use their valid Vouch session to access resources beyond their intended scope** if IAM roles are overly permissive, leading to **unauthorized access to production systems or sensitive data**, negatively impacting **session tokens**. | Elevation of privilege | High | Medium |
-| **T-E3** | A **compromised server** can **issue sessions for any enrolled user**, leading to **impersonation of any developer** and access to their authorized resources, negatively impacting **OIDC signing keys**, **SSH CA key**, **session MAC key**, **user metadata**, and **audit logs**. | Elevation of privilege | Critical | Low |
+| **T-E3** | A **compromised server** can **issue sessions for any enrolled user**, leading to **impersonation of any developer** and access to their authorized resources, negatively impacting **OIDC signing keys**, **SSH CA key**, **session MAC key**, **user metadata**, **GitHub OAuth refresh tokens**, and **audit logs**. | Elevation of privilege | Critical | Low |
 | **T-E4** | A **former employee** whose SCIM de-provisioning is delayed can **continue to use an active session**, leading to **unauthorized access** to organizational resources after offboarding, negatively impacting **session tokens**. | Elevation of privilege | Medium | Low |
 
 </div>
 
 **Mitigations:**
 
-- **T-E1**: The Unix socket is restricted to the owning user by filesystem permissions. Additionally, the agent verifies peer credentials (`SO_PEERCRED` / `getpeereid`) on every connection to its IPC socket, confirming the connecting process has the same UID — rejected connections are audit-logged for forensic visibility. The companion SSH agent socket relies on the same owner-only directory and socket permissions. On startup, the agent validates that its socket directory (`$XDG_RUNTIME_DIR/vouch/`, or `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset) is not a symlink and is owned by the current user, preventing directory hijacking. DPoP prevents extracted tokens from being used on a different machine. Credential scope is limited to the user's authorized roles — the attacker cannot escalate beyond what the user could already access. This threat is bounded by session lifetime (8 hours, which also bounds SSH certificates) and AWS credential lifetime (≤1 hour).
-- **T-E2**: IAM roles should follow least-privilege principles. Vouch enables fine-grained role mapping per user via OIDC claims. CloudTrail provides full attribution of which user assumed which role. → [Shared responsibility](/docs/security/#shared-responsibility)
-- **T-E3**: Signing keys are in AWS KMS (non-extractable). The document encryption private key is KMS-wrapped, with the key policy restricting decryption to NitroTPM-attested instances — an attacker with disk or database access alone cannot decrypt user data. Server infrastructure is hardened with network isolation, encrypted storage, audited access, and minimal attack surface. The server does not store user credentials for external services — it brokers them — so compromise enables credential issuance (while the attacker maintains access) but not extraction of stored user secrets.
+- **T-E1**: The Unix socket is restricted to the owning user by filesystem permissions. The agent also verifies peer credentials (`SO_PEERCRED` / `getpeereid`) on every connection to its IPC socket, confirming the connecting process has the same UID — rejected connections are audit-logged for forensic visibility. The companion SSH agent socket relies on the same owner-only directory and socket permissions. On startup, the agent validates that its socket directory (`$XDG_RUNTIME_DIR/vouch/`, or `~/.cache/vouch/` where `XDG_RUNTIME_DIR` is unset) is not a symlink and is owned by the current user, preventing directory hijacking. DPoP prevents extracted tokens from being used on a different machine. Credential scope is limited to the user's authorized roles — the attacker cannot escalate beyond what the user could already access. This threat is bounded by session lifetime (8 hours, which also bounds SSH certificates) and AWS credential lifetime (≤1 hour).
+- **T-E2**: Scope IAM roles to least privilege. Vouch maps roles per user via OIDC claims, and CloudTrail records which user assumed which role. → [Shared responsibility](/docs/security/#shared-responsibility)
+- **T-E3**: Signing keys are in AWS KMS (non-extractable). The document encryption private key is KMS-wrapped, with the key policy restricting decryption to NitroTPM-attested instances — an attacker with disk or database access alone cannot decrypt user data. Server infrastructure is hardened with network isolation, encrypted storage, and audited access. The server brokers external-service credentials rather than storing them (the exceptions are the GitHub App private key and per-user GitHub OAuth refresh tokens, the latter sealed under document-level encryption), so compromise enables credential issuance (while the attacker maintains access) but not bulk extraction of stored user secrets.
 - **T-E4** *(formerly T-S3)*: SCIM integration enables automated de-provisioning — deactivation revokes active sessions and issued SSH certificates (via the CA revocation list). Sessions can also be revoked server-side. Outstanding AWS credentials (≤1 hour) expire naturally.
 
 ---
@@ -309,6 +315,9 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **FIDO2 origin binding** | T-S1 (phishing) | Hardware |
 | **FIDO2 user verification (PIN + touch)** | T-S2 (stolen key) | Hardware |
 | **DPoP sender-constrained tokens** | T-T1, T-I1, T-I2, T-E1 (token theft, replay) | Protocol |
+| **mTLS certificate-bound tokens (RFC 8705)** | T-T1, T-I2 (token theft, replay) | Protocol |
+| **Same-origin enforcement on browser mutations** | T-T1 (cross-site request forgery) | Application |
+| **Key-deletion step-up (RFC 9470, 60-second window)** | T-S6 (hijacked session removing keys) | Application |
 | **PAR + signed JWTs** | T-T1 (parameter injection) | Protocol |
 | **TLS 1.3 / 1.2 (BCP 195 ciphers)** | T-T1, T-I2 (network interception) | Transport |
 | **In-memory credential cache** (brokered AWS credentials) | T-I1 (disk exfiltration) | Application |
@@ -316,6 +325,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **SCIM de-provisioning** | T-E4 (offboarding) | Identity |
 | **Hashed SCIM tokens + revocation** | T-S4 (provisioning token theft) | Application |
 | **Domain verification (DNS TXT + re-verification)** | T-S5 (domain takeover) | Identity |
+| **Audited enrollment and key registration + SIEM export** | T-S6 (IdP account compromise) | Operational |
 | **OIDC audience restriction** | T-E2 (cross-service abuse) | Protocol |
 | **SLSA Build Level 3 provenance** | T-T3 (supply chain) | Build |
 | **Audit logging + CloudTrail** | T-R1, T-R2, T-T4 (repudiation, tamper detection) | Operational |
@@ -327,7 +337,7 @@ Threats are organized using the [STRIDE](https://en.wikipedia.org/wiki/STRIDE_(s
 | **Per-org issuer key rotation (staged + emergency)** | T-T2 (key compromise response) | Cryptographic |
 | **NitroTPM attestation** | T-T2, T-E3 (runtime key protection) | Infrastructure |
 | **Document-level encryption (HPKE)** | T-E3 (data-at-rest protection) | Application |
-| **HMAC blind indexes** | T-I3 (database-level identifier protection) | Application |
+| **HMAC blind indexes** | T-E3 (database-level identifier protection) | Application |
 | **HTTP message signatures (RFC 9421)** | T-T1 (request tampering) | Protocol |
 | **Device posture policies (Dogwood)** | T-E1, T-E2 (compromised endpoint, insider abuse) | Application |
 
@@ -339,7 +349,7 @@ The following threats are explicitly out of scope for this threat model:
 
 | Threat | Rationale |
 |---|---|
-| **Kernel-level endpoint compromise** | If an attacker has root/kernel access, all user-space isolation (process memory, socket permissions) is bypassed. Endpoint detection and response (EDR) tools are the appropriate mitigation layer. |
+| **Kernel-level endpoint compromise** | If an attacker has root/kernel access, all user-space isolation (process memory, socket permissions) is bypassed. Endpoint detection and response (EDR) tools mitigate that layer. |
 | **Vulnerabilities in external services** | AWS STS, GitHub APIs, container registries, and SSH implementations have their own security models. Vouch trusts their documented behavior. |
 | **Cryptographic breaks** | If ECDSA (P-256), Ed25519, or TLS 1.3 are broken, the impact extends far beyond Vouch. |
 | **Physical coercion** | An attacker who can physically compel a developer to authenticate is outside the scope of a technical threat model. |
@@ -351,7 +361,7 @@ The following threats are explicitly out of scope for this threat model:
 
 - **Automated scanning** -- Dependency auditing (`cargo deny`: advisories, licenses, sources) and a deny-level lint gate (unsafe code and panics denied workspace-wide) run on every commit; dependency review runs on every pull request; container images are vulnerability-scanned on push.
 - **SLSA provenance** -- Release binaries include Build Level 3 provenance and SBOM attestations, verifiable against the source repository and the pinned reusable build workflow with `gh attestation verify --signer-workflow`; releases are independently rebuilt to verify reproducibility.
-- **Protocol conformance** -- WebAuthn assertion validation is covered by a spec-referenced test suite (WebAuthn Level 2), OIDC behavior is validated against the OpenID Foundation conformance suite, and HTTP Message Signatures are tested against the official RFC 9421 test vectors.
+- **Protocol conformance** -- Vouch is OpenID Certified for the FAPI 2.0 OP Security Profile, including message signing. WebAuthn assertion validation is covered by a spec-referenced test suite (WebAuthn Level 2), OIDC behavior is validated against the OpenID Foundation conformance suite, and HTTP Message Signatures are tested against the official RFC 9421 test vectors.
 - **Client diagnostics** -- `vouch doctor` performs runtime checks (YubiKey and agent health, server connectivity and clock skew, session validity, SSH/EKS/SSM configuration) to validate the local setup.
 
 ## Review schedule
@@ -364,6 +374,7 @@ This threat model is reviewed quarterly and after any change to a trust boundary
 
 | Date | Change |
 |---|---|
+| 2026-09-03 | Documented the upstream identity provider as the trust root for identity (new trust-boundary note, T-S6, A12). IdP sign-in authenticates enrollment, lost-key recovery, and the browser UI including organization administration; hardware proof gates credential issuance and security-key deletion (RFC 9470 step-up, 60-second window). IdP account compromise is recorded as an accepted residual risk with detective mitigations (audited enrollment/key registration with SIEM export, domain verification, SCIM de-provisioning, session revocation). Accuracy audit alongside: documented the per-user GitHub OAuth refresh token as a stored asset (second standing exception to credential brokering, sealed under document-level encryption), the browser session cookie as a session-token location, mTLS certificate-bound tokens (RFC 8705), and same-origin enforcement on browser UI mutations; recorded the FAPI 2.0 OP certification (including message signing); re-linked the HMAC blind-index mitigation from T-I3 to T-E3. |
 | 2026-09-01 | Hardware key attestation made unconditional (v2026.9.1): every registration must present a certificate chain that validates against pinned Yubico roots, self-attestation is rejected, and the AAGUID is read from the verified certificate instead of client-supplied authenticator data, closing forgery of the `hardware_aaguid` claim consumed by IAM trust policies (`VOUCH_REQUIRE_ATTESTATION_CERT` removed; the behavior it enabled is now always on). Authorization-code replay now revokes only the tokens issued from the replayed code, and user deactivation revokes credentials before recording the deactivation. |
 | 2026-08-16 | Supply chain updated for v2026.8.4: SLSA Build Level 3 — builds and attestations moved into a dedicated reusable workflow, making the builder identity pinnable at verification (`gh attestation verify --signer-workflow`) and out of reach of build steps. Release-signing GitHub Actions OIDC federation switched to immutable subject claims, closing repository name-recycling against the trust policies. |
 | 2026-08-14 | STRIDE methodology pass. Re-categorized the stale-session offboarding threat from Spoofing to Elevation of privilege (T-S3 → T-E4). Reworded T-T2 to abuse of signing access and key configuration (KMS keys cannot be modified) and documented that per-organization issuer keys live sealed in the database, not KMS. Added T-S4 (SCIM token theft), T-S5 (DNS-based domain takeover), and T-T4 (enrollment-record substitution) so every listed asset has at least one linked threat. Extended T-I1 to the client key pair and clarified that DPoP bounds network theft, not full local-user compromise. Added assumptions A10–A11 and updated the mitigation summary. |
