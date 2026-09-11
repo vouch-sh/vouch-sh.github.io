@@ -1,12 +1,84 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: RFC 8693 token exchange restrictions, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.2) - September 11, 2026
+
+- **Token exchange honors the resource allowlist and the subject token's
+  lifetime**: [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token
+  exchange checks the requested `resource` values against the client's
+  allowlist, including on the path that resumes a pending authorization. An
+  exchanged access token never outlives the subject token it came from, and a
+  subject token with no remaining lifetime yields no token at all.
+- **DPoP proofs cannot be replayed inside the clock-skew window**: the server
+  keeps each proof's `jti` for as long as the proof remains valid under the
+  allowed clock skew, so a replayed proof is rejected for its entire life
+  rather than accepted in the window between the retention expiring and the
+  proof going stale. Assertion replay records now expire with the assertion
+  they cover. Protected-resource metadata reports
+  `dpop_bound_access_tokens_required` as `false`, because an
+  [mTLS](https://www.rfc-editor.org/rfc/rfc8705) certificate satisfies the
+  sender-constraint requirement as well as a
+  [DPoP](https://www.rfc-editor.org/rfc/rfc9449) proof does.
+- **Sessions prove hardware possession before they authorize anything**: a
+  session that has not been hardware-verified must complete a key assertion
+  before it authorizes an application or makes an admin change. Signing in
+  through the upstream identity provider establishes a browser session
+  directly. The `auth_time` claim on device-flow and FIDO2 assertion grants
+  records when the hardware key ceremony ran, and every time comparison in a
+  request uses a single arrival timestamp.
+- **Deleting a key, user, or application revokes credentials first**: the
+  server revokes issued credentials before it deletes the hardware key that
+  approved them, revokes an application's client secrets before it sweeps the
+  sessions that used them, and revokes user-issued access tokens along with
+  the rest. Retries re-read the authenticator list and evict the session
+  cache, so a retried deletion cannot leave a credential behind. Deleting a
+  key preserves the device authorizations it already consumed, and a
+  deactivated user cannot delete keys or link a GitHub account.
+- **Audit events are written before the next step can fail**: every committed
+  change records its audit event before the server attempts the next fallible
+  operation, so an enrollment or credential release that fails midway still
+  leaves a record. Audit writes go through one API and are awaited.
+- **Email domains are validated where accounts are created**: enrollment
+  rejects addresses with an empty domain or whitespace in the domain, SCIM
+  rejects a malformed local part in `userName`, and domains asserted by an
+  identity provider parse into a validated domain type. An organization can no
+  longer claim a subdomain that collapses onto another organization's apex
+  domain.
+- **Client authentication fixes**: an
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) update preserves the
+  application's mTLS client identity, device-flow token redemption enforces
+  the mTLS client authentication the application is configured for, IPv6
+  addresses in a certificate SAN are normalized before comparison, and
+  [FAPI](https://openid.net/specs/fapi-2_0-security-profile.html) clients
+  cannot mint client secrets. Failed authentication on the client-credentials
+  and token-exchange grants returns a `WWW-Authenticate` header.
+- **Unusable JWKS keys no longer fail the request**: when a client's JWKS
+  contains a key the server cannot build or a key of the wrong family, the
+  server skips it and keeps searching the remaining keys for one that
+  verifies the assertion or ID token.
+- **Hardware key registration binds to the user who started it**: completing a
+  registration requires the same user the registration state was issued to,
+  and the server rejects an attestation statement whose `x5c` certificate
+  chain contains anything other than byte strings.
+- **Device flow survives concurrent polling**: an authorization that collides
+  with the CLI's poll retries instead of failing, and each retry re-stamps its
+  timestamp.
+- **Protocol and CLI fixes**: SAML exclusive canonicalization emits an empty
+  default-namespace declaration only for unprefixed elements, a failed
+  `request_uri` fetch echoes the request object's `state` back to the
+  application, and SSH certificate serials are canonicalized before the
+  revocation lookup, so a serial submitted in any form matches its
+  certificate.
+- **Faster OAuth grants**: the user record carries its organization's primary
+  domain, removing a database lookup from every grant, and the session cache
+  hands out a shared session instead of a copy.
 
 ## [v2026.9.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.1) - September 1, 2026
 
