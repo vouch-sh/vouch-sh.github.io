@@ -11,11 +11,15 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 ## [v2026.9.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.3) - September 12, 2026
 
 - **DNS-over-HTTPS works again**: v2026.9.2 shipped `hickory-resolver` 0.26.2,
-  which carried a regression in encrypted DNS resolution. The CLI and agent
-  resolve the Vouch server over
-  [DNS-over-HTTPS](https://www.rfc-editor.org/rfc/rfc8484), so the regression
-  affected credential flows on that release. This release pins 0.26.3, where
-  the fix landed. Upgrade from v2026.9.2; earlier releases are unaffected.
+  which carried a DNSSEC validation regression. The CLI and agent always
+  validate DNSSEC when
+  [DNS-over-HTTPS](https://www.rfc-editor.org/rfc/rfc8484) is enabled, and a
+  signed response that fails to validate fails the lookup, so credential
+  flows could fail to resolve the Vouch server. This release pins 0.26.3,
+  where the upstream fix landed. Only v2026.9.2 is affected, and only if you
+  turned DNS-over-HTTPS on with `VOUCH_DOH` or the `network.dns_over_https`
+  config field. The server resolves through system DNS and is unaffected.
+  Upgrade from v2026.9.2.
 - **Foreign tool config files are written where those tools read them**: the
   CLI resolves pip, uv, AWS, and Docker configuration paths by each tool's own
   documented search order instead of building paths from `$HOME`. pip's
