@@ -1,12 +1,68 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: RFC 8693 token exchange restrictions, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: a DNS-over-HTTPS resolver fix, RFC 8693 token exchange restrictions, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.3) - September 12, 2026
+
+- **DNS-over-HTTPS works again**: v2026.9.2 shipped `hickory-resolver` 0.26.2,
+  which carried a regression in encrypted DNS resolution. The CLI and agent
+  resolve the Vouch server over
+  [DNS-over-HTTPS](https://www.rfc-editor.org/rfc/rfc8484), so the regression
+  affected credential flows on that release. This release pins 0.26.3, where
+  the fix landed. Upgrade from v2026.9.2; earlier releases are unaffected.
+- **Foreign tool config files are written where those tools read them**: the
+  CLI resolves pip, uv, AWS, and Docker configuration paths by each tool's own
+  documented search order instead of building paths from `$HOME`. pip's
+  existence-gated macOS chain and its `%APPDATA%\pip\pip.ini` location on
+  Windows are honored, `PIP_CONFIG_FILE` and `UV_CONFIG_FILE` are treated as
+  filenames rather than directories, and `AWS_CONFIG_FILE` and `DOCKER_CONFIG`
+  are respected. Helper binaries install to `$XDG_BIN_HOME` when it is set.
+- **SCIM filters and deactivation fixes**: an attribute name is matched only at
+  the start of a filter expression, so a filter naming one attribute no longer
+  matches another that contains it. Member filter operators match regardless of
+  case. A PATCH that toggles `active` revokes credentials based on the net
+  result of the whole request rather than on each operation, so a request that
+  ends with the user still active no longer revokes their credentials.
+- **Grants and revocation are scoped to what the request named**: the token
+  endpoint enforces the client's registered `grant_types` on the token-exchange
+  and FIDO2 assertion grants, revoking a machine-to-machine token revokes that
+  token instead of every session the client holds, and the revocation handler
+  records the proof `jti` before it revokes. The admin UI path rejects
+  sender-constrained tokens, and
+  [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728) protected-resource metadata
+  no longer advertises the SCIM endpoints.
+- **Client registration and mTLS matching fixes**: a registration response
+  echoes the [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) mTLS metadata
+  the application registered, subject DN comparison ignores spaces after commas
+  so a certificate matches however its issuer formatted the DN, and a JWK
+  marked `use: "enc"` is rejected for
+  [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421) signature verification.
+  Resuming a pending authorization compares `max_age` at full precision.
+- **SAML canonicalization and assertion validation**: exclusive
+  canonicalization emits an empty default-namespace declaration on prefixed
+  elements when `#default` appears in the `InclusiveNamespaces` prefix list, and
+  the server requires `SubjectConfirmationData.NotOnOrAfter` on every bearer
+  confirmation instead of accepting a confirmation with no expiry.
+- **Hardware key counters start at the registered value**: a newly registered
+  key stores the `signCount` from its registration ceremony, so the first
+  assertion is compared against the right starting counter. An enrollment
+  callback that cannot read the user's authenticator list fails closed.
+- **Concurrent admin changes cannot break organization invariants**: org-admin
+  changes serialize on the organization row, toggling a preconfigured policy
+  cannot overwrite a concurrent change, an org-scoped application create or
+  update fails if its owner is deleted mid-request, and removing an additional
+  domain invalidates the affected sessions in the cache. Renaming a hardware
+  key and deleting an application both record audit events.
+- **Token exchange honors the actor's logout**: the
+  `logout_invalidates_exchange` policy check evaluates against the user named by
+  the [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) actor token, so an
+  actor who has logged out cannot exchange a token on another user's behalf.
 
 ## [v2026.9.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.2) - September 11, 2026
 
