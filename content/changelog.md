@@ -1,12 +1,87 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: a DNS-over-HTTPS resolver fix, RFC 8693 token exchange restrictions, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.4) - September 15, 2026
+
+- **The device flow authenticates its client at both endpoints**: `/oauth/device`
+  and the device-code grant run the same client authentication as every other
+  grant ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628) sections 3.1 and
+  3.4). A request without credentials is rejected, and redemption is bound to
+  the client the device code was issued to. `/oauth/revoke` and
+  `/oauth/introspect` now verify the certificate of a client registered for
+  [mTLS](https://www.rfc-editor.org/rfc/rfc8705) authentication, which they had
+  accepted on its `client_id` alone. Enrolling requires the v2026.9.4 CLI or
+  later.
+- **Workload Identity Federation works again for CLI-registered FAPI clients**:
+  `vouch credential openai` and `vouch credential anthropic` send the
+  [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token-exchange grant, but
+  the CLI's Financial-grade API
+  ([FAPI](https://openid.net/specs/fapi-2_0-security-profile.html)) client
+  registration left that grant out. The server rejected those requests with
+  `unauthorized_client`. New registrations declare every grant the client uses.
+  Repair an enrolled client by running `vouch login` or `vouch enroll`.
+- **Registered grant types and response types are enforced**: the
+  authorization-code and device-code grants check the client's registered
+  `grant_types` before the single-use code is consumed
+  ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749) section 5.2), so a client
+  registered for one grant cannot redeem another. The authorization endpoint
+  checks registered `response_types`, including on the
+  [JAR](https://www.rfc-editor.org/rfc/rfc9101) paths. Rejections render through
+  the `response_mode` the request negotiated instead of falling back to a query
+  redirect.
+- **Applications created in the dashboard resolve grants from their type**: a
+  self-service application stores no grant list, which resolved to
+  [RFC 7591](https://www.rfc-editor.org/rfc/rfc7591) section 2's
+  `authorization_code` default. A Native application could not use the device
+  flow, and a Service application could not use client credentials. Grants now
+  follow the application type. An
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) PUT that restates the
+  `response_types` the server itself issued is also accepted again.
+- **A client is held to the authentication method it registered**: a native
+  client issued a per-instance secret
+  ([RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) section 8.4) had its
+  method rewritten to `none` on read, so it could authenticate without the
+  secret. Client type now comes from the registered method. The secret-rotation
+  endpoints use the same rule, so the owner of a native or SPA client that holds
+  a secret can rotate a compromised one.
+- **Subject DN matching accepts multi-valued RDNs**: `tls_client_auth_subject_dn`
+  comparison treats `+` as the multi-valued RDN separator
+  ([RFC 4514](https://www.rfc-editor.org/rfc/rfc4514) section 2.3) and tolerates
+  spaces around `=`. A subject that is one multi-valued RDN parses instead of
+  falling back to exact string comparison. Matching is not loosened: a DN of two
+  or more RDNs still authenticates only in the order
+  [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 2.1.2 requires, and
+  a value that matches only in reverse logs a warning naming `-nameopt rfc2253`.
+- **Every path that removes an admin enforces the last-admin floor**: "at least
+  one active admin per organization" covered demote and deactivate. It did not
+  cover the admin UI's remove-member action, SCIM `DELETE /Users/{id}`, or a
+  SCIM update setting `active=false`. One `UsersWrite` token could remove every
+  admin in sequence, and SCIM `DELETE` left the organization no way back in. All
+  three paths now take the same guard in one transaction, so concurrent removals
+  collide instead of each seeing the other as the surviving admin.
+- **Hardware key counters compare across the full `u32` range**: WebAuthn
+  `signCount` is a `u32` stored in a signed column, and the monotonic maximum
+  compared it as a signed value. A counter stopped advancing at 2^31-1 for the
+  life of the credential, and a key past that point lost its baseline to any
+  lower count, weakening clone detection. The read and the comparison now run in
+  `u32` space.
+- **Expiry checks use the instant the request arrived**: both ID token
+  generators stamped `iat` and `exp` from a later clock read, so an ID token
+  could outlive the access token issued with it. Nine database helpers that
+  compare a stored `expires_at` each stamped their own clock, which could reject
+  a record that was live on arrival. All of them take the arrival instant.
+- **AWS messages name the config file they read**: the CLI derives the AWS
+  config directory from the resolved path instead of assuming `~/.aws`. The four
+  messages that report a profile lookup name that path, so setting
+  `AWS_CONFIG_FILE` no longer sends an operator to a file that does not hold the
+  profile.
 
 ## [v2026.9.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.3) - September 12, 2026
 
