@@ -1,12 +1,111 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: a DNS-over-HTTPS resolver fix, RFC 8693 token exchange restrictions, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.4) - September 15, 2026
+
+- **The device flow authenticates its client at both endpoints**: `/oauth/device`
+  and the device-code grant at `/oauth/token` run the same client
+  authentication as every other grant
+  ([RFC 8628](https://www.rfc-editor.org/rfc/rfc8628) sections 3.1 and 3.4). A
+  request carrying neither credentials nor a `client_id` is rejected, redemption
+  is bound to the client the device code was issued to, and a `private_key_jwt`
+  assertion's `jti` is committed on every authenticated poll. Device-flow tokens
+  carry the enrolling client's `client_id`, so
+  [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421) verification resolves that
+  client's JWKS. The CLI signs a client assertion at both endpoints; enrolling
+  requires the v2026.9.4 CLI or later. `/oauth/revoke` and `/oauth/introspect`
+  now verify the certificate of a client registered for
+  [mTLS](https://www.rfc-editor.org/rfc/rfc8705) client authentication, which
+  they had accepted on its `client_id` alone. Certificate verification moved
+  inside the shared client-authentication path, so no handler can skip it.
+- **Workload Identity Federation works again for CLI-registered FAPI clients**:
+  the CLI registers one
+  [FAPI 2.0](https://openid.net/specs/fapi-2_0-security-profile.html) client
+  whose `grant_types` omitted token exchange, while `vouch credential openai`
+  and `vouch credential anthropic` authenticate as that client and send the
+  [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693) token-exchange grant. Once
+  the server began enforcing the registered grant list, those requests were
+  rejected with `unauthorized_client`. New registrations declare every grant the
+  client uses; repair an already-enrolled client by re-running `vouch login` or
+  `vouch enroll`.
+- **Registered grant types and response types are enforced on every path**: the
+  authorization-code and device-code grants check the client's registered
+  `grant_types` before the single-use code is consumed, so a client registered
+  for one grant cannot redeem another
+  ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749) section 5.2). The
+  authorization endpoint checks registered `response_types`, including on the
+  `request` and `request_uri`
+  [JAR](https://www.rfc-editor.org/rfc/rfc9101) paths. Both checks are carried
+  in a type that the token issuers and the authorize target require, so a path
+  that skips one does not compile. A rejection raised by those checks renders
+  through the `response_mode` the request negotiated, including a mode stored by
+  [PAR](https://www.rfc-editor.org/rfc/rfc9126), instead of falling back to a
+  query redirect.
+- **Applications created in the dashboard resolve their grants from their
+  type**: a self-service application stores no explicit grant list, which
+  resolved to [RFC 7591](https://www.rfc-editor.org/rfc/rfc7591) section 2's
+  `authorization_code` default, so a Native application could not use the device
+  flow and a Service application could not use client credentials. Grants now
+  follow the application type. Separately, an
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) PUT that faithfully
+  restates the `response_types: ["code"]` the server itself issued to a client
+  with no `authorization_code` grant is accepted, rather than locking that
+  client out of every management operation.
+- **A client is held to the authentication method it registered**: a native
+  client issued a per-instance secret
+  ([RFC 8252](https://www.rfc-editor.org/rfc/rfc8252) section 8.4) had its
+  method rewritten to `none` when the registration was read back, so it could
+  authenticate without the secret. Client type is now derived from the
+  registered method everywhere. The self-service secret-rotation endpoints use
+  that same axis, so the owner of a native or SPA client that holds a secret can
+  rotate a compromised one instead of being told the application type does not
+  use secrets.
+- **Subject DN matching accepts multi-valued RDNs**: `tls_client_auth_subject_dn`
+  comparison treats `+` as the multi-valued RDN separator
+  ([RFC 4514](https://www.rfc-editor.org/rfc/rfc4514) section 2.3) and tolerates
+  spaces around `=`, so a subject that is a single multi-valued RDN parses
+  instead of falling back to exact string comparison. Matching is not loosened:
+  a DN of two or more RDNs still authenticates only in the RFC 4514 order that
+  [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 2.1.2 requires, and
+  a registered value that would match only after reversing the RDN order logs a
+  warning naming `-nameopt rfc2253` as the fix.
+- **Every path that removes an admin enforces the last-admin floor**: "at least
+  one active admin per organization" covered demote and deactivate but not the
+  admin UI's remove-member action, SCIM `DELETE /Users/{id}`, or a SCIM `PATCH`
+  or `PUT` setting `active=false`, so a single `UsersWrite` token could remove
+  every admin in sequence. SCIM `DELETE` was the path with no in-app way back
+  in. All three now take the guard demote and deactivate use, with the admin
+  count, the write, and the organization row's version bump in one transaction,
+  so concurrent removals collide on that row instead of each observing the other
+  as the surviving admin. A revocation that committed before the floor refused
+  the rest of the request is still audited.
+- **Hardware key counters compare across the full `u32` range**: WebAuthn
+  `signCount` is a `u32` held bit-identically in a signed column, and the
+  monotonic maximum compared it as a signed value. A counter stopped advancing
+  at 2^31-1 for the rest of the credential's life, and a key already past that
+  point lost its baseline to any lower incoming count, weakening clone
+  detection. The stored-counter read and the comparison both run in `u32` space.
+- **Every expiry check in a request uses the instant the request arrived**: both
+  ID token generators stamped `iat` and `exp` from an ambient clock read later
+  in the request, so an ID token could outlive the access token and session
+  issued alongside it by the processing latency between the two reads. Nine
+  database helpers that decide a request by comparing a stored `expires_at` each
+  stamped their own clock, which could reject a record that was live on arrival
+  but expired during the intervening awaits. All of them take the arrival
+  instant.
+- **AWS messages name the config file they read**: the CLI derives the AWS
+  config directory from the resolved config path rather than assuming `~/.aws`,
+  and the four messages that report a profile lookup (profile already exists, no
+  Vouch profile, ambiguous profile, profile not found) name that resolved path,
+  so an operator who sets `AWS_CONFIG_FILE` is not sent to a file that does not
+  hold the profile the message just described.
 
 ## [v2026.9.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.3) - September 12, 2026
 
