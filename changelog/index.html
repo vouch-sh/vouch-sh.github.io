@@ -1,0 +1,399 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Changelog — Vouch — Hardware-Backed Developer Credentials</title>
+<meta name=description content="Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."><link rel=canonical href=https://vouch.sh/changelog/><link rel=alternate type=text/markdown href=https://vouch.sh/changelog/index.md title="Markdown version for LLMs"><meta name=llm-markdown-url content="https://vouch.sh/changelog/index.md"><meta name=token-count content="8603"><meta property="og:title" content="Changelog — Vouch — Hardware-Backed Developer Credentials"><meta property="og:description" content="Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."><meta property="og:url" content="https://vouch.sh/changelog/"><meta property="og:site_name" content="Vouch"><meta property="og:type" content="article"><meta property="og:image" content="https://vouch.sh/img/og-image.png"><meta property="og:image:alt" content="Vouch — Hardware-Backed Developer Credentials"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Changelog — Vouch — Hardware-Backed Developer Credentials"><meta name=twitter:description content="Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."><meta name=twitter:image content="https://vouch.sh/img/og-image.png"><meta name=twitter:image:alt content="Vouch — Hardware-Backed Developer Credentials"><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"><link rel=icon type=image/svg+xml href=/img/favicon.svg><link rel=icon type=image/png sizes=32x32 href=/img/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/img/favicon-16x16.png><link rel="shortcut icon" href=/img/favicon.ico><link rel=apple-touch-icon sizes=180x180 href=/img/apple-touch-icon.png><link rel=author href=/humans.txt><script type=application/ld+json>{"@context":"https://schema.org","@type":"WebSite","description":"Open-source credential broker that issues short-lived SSH, AWS, GitHub, and Kubernetes credentials after FIDO2 hardware verification. One YubiKey tap, 8 hours of access.","name":"Vouch","url":"https://vouch.sh/"}</script><script type=application/ld+json>{"@context":"https://schema.org","@type":"Organization","logo":"https://vouch.sh/img/og-image.png","name":"Smoke Turner, LLC","sameAs":["https://github.com/vouch-sh/vouch"],"url":"https://smoketurner.com"}</script><link rel=stylesheet href=https://vouch.sh/css/main.min.a8fb088389a98e68bc2a47652b0a3a2d2302dd6b9ac71b35f121eb8997c32bdd.css></head><body><a class=skip-link href=#main-content>Skip to main content</a><header class=nav><div class=nav-inner><a href=/ class=nav-logo><svg viewBox="0 0 32 32" fill="none"><rect x="9" y="14" width="14" height="12" rx="2" stroke="currentcolor" stroke-width="2"/><path d="M12 14V10a4 4 0 118 0v4" stroke="currentcolor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="20" r="1.5" fill="currentcolor"/><line x1="16" y1="21.5" x2="16" y2="23.5" stroke="currentcolor" stroke-width="1.5" stroke-linecap="round"/></svg>
+vouch
+</a><button class=nav-toggle aria-label="Toggle navigation" aria-expanded=false aria-controls=nav-links onclick='var l=document.getElementById("nav-links");l.classList.toggle("open"),this.setAttribute("aria-expanded",l.classList.contains("open")?"true":"false")'><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><nav aria-label=Main><ul class=nav-links id=nav-links><li><a href=/docs/>Docs</a></li><li><a href=/about/>About</a></li><li><a href=/compare/>Compare</a></li><li><a href=/changelog/>Changelog</a></li><li><a href=https://github.com/vouch-sh/vouch target=_blank rel="noopener noreferrer">GitHub<span class=sr-only> (opens in new tab)</span><svg class="github-icon" viewBox="0 0 24 24" fill="currentcolor" aria-hidden="true"><path d="M12 0C5.37.0.0 5.37.0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57.0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925.0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18.0.0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225.0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22.0 1.605-.015 2.895-.015 3.3.0.315.225.69.825.57A12.02 12.02.0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a></li></ul></nav></div></header><main class=content-wrapper id=main-content><div class=single-page><h1>Changelog</h1><p>Highlights from recent Vouch releases. For the complete list of changes in every
+release, including bug fixes, dependency updates, and internal refactoring,
+see the <a href=https://github.com/vouch-sh/vouch/releases target=_blank rel="noopener noreferrer" class=external-link>GitHub releases page<span class=sr-only> (opens in new tab)</span></a>.</p><h2 id=v202694httpsgithubcomvouch-shvouchreleasestagv202694---september-15-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.9.4 target=_blank rel="noopener noreferrer" class=external-link>v2026.9.4<span class=sr-only> (opens in new tab)</span></a> - September 15, 2026</h2><ul><li><strong>The device flow authenticates its client at both endpoints</strong>: <code>/oauth/device</code>
+and the device-code grant run the same client authentication as every other
+grant (<a href=https://www.rfc-editor.org/rfc/rfc8628 target=_blank rel="noopener noreferrer" class=external-link>RFC 8628<span class=sr-only> (opens in new tab)</span></a> sections 3.1 and
+3.4). A request without credentials is rejected, and redemption is bound to
+the client the device code was issued to. <code>/oauth/revoke</code> and
+<code>/oauth/introspect</code> now verify the certificate of a client registered for
+<a href=https://www.rfc-editor.org/rfc/rfc8705 target=_blank rel="noopener noreferrer" class=external-link>mTLS<span class=sr-only> (opens in new tab)</span></a> authentication, which they had
+accepted on its <code>client_id</code> alone. Enrolling requires the v2026.9.4 CLI or
+later.</li><li><strong>Workload Identity Federation works again for CLI-registered FAPI clients</strong>:
+<code>vouch credential openai</code> and <code>vouch credential anthropic</code> send the
+<a href=https://www.rfc-editor.org/rfc/rfc8693 target=_blank rel="noopener noreferrer" class=external-link>RFC 8693<span class=sr-only> (opens in new tab)</span></a> token-exchange grant, but
+the CLI&rsquo;s Financial-grade API
+(<a href=https://openid.net/specs/fapi-2_0-security-profile.html target=_blank rel="noopener noreferrer" class=external-link>FAPI<span class=sr-only> (opens in new tab)</span></a>) client
+registration left that grant out. The server rejected those requests with
+<code>unauthorized_client</code>. New registrations declare every grant the client uses.
+Repair an enrolled client by running <code>vouch login</code> or <code>vouch enroll</code>.</li><li><strong>Registered grant types and response types are enforced</strong>: the
+authorization-code and device-code grants check the client&rsquo;s registered
+<code>grant_types</code> before the single-use code is consumed
+(<a href=https://www.rfc-editor.org/rfc/rfc6749 target=_blank rel="noopener noreferrer" class=external-link>RFC 6749<span class=sr-only> (opens in new tab)</span></a> section 5.2), so a client
+registered for one grant cannot redeem another. The authorization endpoint
+checks registered <code>response_types</code>, including on the
+<a href=https://www.rfc-editor.org/rfc/rfc9101 target=_blank rel="noopener noreferrer" class=external-link>JAR<span class=sr-only> (opens in new tab)</span></a> paths. Rejections render through
+the <code>response_mode</code> the request negotiated instead of falling back to a query
+redirect.</li><li><strong>Applications created in the dashboard resolve grants from their type</strong>: a
+self-service application stores no grant list, which resolved to
+<a href=https://www.rfc-editor.org/rfc/rfc7591 target=_blank rel="noopener noreferrer" class=external-link>RFC 7591<span class=sr-only> (opens in new tab)</span></a> section 2&rsquo;s
+<code>authorization_code</code> default. A Native application could not use the device
+flow, and a Service application could not use client credentials. Grants now
+follow the application type. An
+<a href=https://www.rfc-editor.org/rfc/rfc7592 target=_blank rel="noopener noreferrer" class=external-link>RFC 7592<span class=sr-only> (opens in new tab)</span></a> PUT that restates the
+<code>response_types</code> the server itself issued is also accepted again.</li><li><strong>A client is held to the authentication method it registered</strong>: a native
+client issued a per-instance secret
+(<a href=https://www.rfc-editor.org/rfc/rfc8252 target=_blank rel="noopener noreferrer" class=external-link>RFC 8252<span class=sr-only> (opens in new tab)</span></a> section 8.4) had its
+method rewritten to <code>none</code> on read, so it could authenticate without the
+secret. Client type now comes from the registered method. The secret-rotation
+endpoints use the same rule, so the owner of a native or SPA client that holds
+a secret can rotate a compromised one.</li><li><strong>Subject DN matching accepts multi-valued RDNs</strong>: <code>tls_client_auth_subject_dn</code>
+comparison treats <code>+</code> as the multi-valued RDN separator
+(<a href=https://www.rfc-editor.org/rfc/rfc4514 target=_blank rel="noopener noreferrer" class=external-link>RFC 4514<span class=sr-only> (opens in new tab)</span></a> section 2.3) and tolerates
+spaces around <code>=</code>. A subject that is one multi-valued RDN parses instead of
+falling back to exact string comparison. Matching is not loosened: a DN of two
+or more RDNs still authenticates only in the order
+<a href=https://www.rfc-editor.org/rfc/rfc8705 target=_blank rel="noopener noreferrer" class=external-link>RFC 8705<span class=sr-only> (opens in new tab)</span></a> section 2.1.2 requires, and
+a value that matches only in reverse logs a warning naming <code>-nameopt rfc2253</code>.</li><li><strong>Every path that removes an admin enforces the last-admin floor</strong>: &ldquo;at least
+one active admin per organization&rdquo; covered demote and deactivate. It did not
+cover the admin UI&rsquo;s remove-member action, SCIM <code>DELETE /Users/{id}</code>, or a
+SCIM update setting <code>active=false</code>. One <code>UsersWrite</code> token could remove every
+admin in sequence, and SCIM <code>DELETE</code> left the organization no way back in. All
+three paths now take the same guard in one transaction, so concurrent removals
+collide instead of each seeing the other as the surviving admin.</li><li><strong>Hardware key counters compare across the full <code>u32</code> range</strong>: WebAuthn
+<code>signCount</code> is a <code>u32</code> stored in a signed column, and the monotonic maximum
+compared it as a signed value. A counter stopped advancing at 2^31-1 for the
+life of the credential, and a key past that point lost its baseline to any
+lower count, weakening clone detection. The read and the comparison now run in
+<code>u32</code> space.</li><li><strong>Expiry checks use the instant the request arrived</strong>: both ID token
+generators stamped <code>iat</code> and <code>exp</code> from a later clock read, so an ID token
+could outlive the access token issued with it. Nine database helpers that
+compare a stored <code>expires_at</code> each stamped their own clock, which could reject
+a record that was live on arrival. All of them take the arrival instant.</li><li><strong>AWS messages name the config file they read</strong>: the CLI derives the AWS
+config directory from the resolved path instead of assuming <code>~/.aws</code>. The four
+messages that report a profile lookup name that path, so setting
+<code>AWS_CONFIG_FILE</code> no longer sends an operator to a file that does not hold the
+profile.</li></ul><h2 id=v202693httpsgithubcomvouch-shvouchreleasestagv202693---september-12-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.9.3 target=_blank rel="noopener noreferrer" class=external-link>v2026.9.3<span class=sr-only> (opens in new tab)</span></a> - September 12, 2026</h2><ul><li><strong>DNS-over-HTTPS works again</strong>: v2026.9.2 shipped <code>hickory-resolver</code> 0.26.2,
+which carried a DNSSEC validation regression. The CLI and agent always
+validate DNSSEC when
+<a href=https://www.rfc-editor.org/rfc/rfc8484 target=_blank rel="noopener noreferrer" class=external-link>DNS-over-HTTPS<span class=sr-only> (opens in new tab)</span></a> is enabled, and a
+signed response that fails to validate fails the lookup, so credential
+flows could fail to resolve the Vouch server. This release pins 0.26.3,
+where the upstream fix landed. Only v2026.9.2 is affected, and only if you
+turned DNS-over-HTTPS on with <code>VOUCH_DOH</code> or the <code>network.dns_over_https</code>
+config field. The server resolves through system DNS and is unaffected.
+Upgrade from v2026.9.2.</li><li><strong>Foreign tool config files are written where those tools read them</strong>: the
+CLI resolves pip, uv, AWS, and Docker configuration paths by each tool&rsquo;s own
+documented search order instead of building paths from <code>$HOME</code>. pip&rsquo;s
+existence-gated macOS chain and its <code>%APPDATA%\pip\pip.ini</code> location on
+Windows are honored, <code>PIP_CONFIG_FILE</code> and <code>UV_CONFIG_FILE</code> are treated as
+filenames rather than directories, and <code>AWS_CONFIG_FILE</code> and <code>DOCKER_CONFIG</code>
+are respected. Helper binaries install to <code>$XDG_BIN_HOME</code> when it is set.</li><li><strong>SCIM filters and deactivation fixes</strong>: an attribute name is matched only at
+the start of a filter expression, so a filter naming one attribute no longer
+matches another that contains it. Member filter operators match regardless of
+case. A PATCH that toggles <code>active</code> revokes credentials based on the net
+result of the whole request rather than on each operation, so a request that
+ends with the user still active no longer revokes their credentials.</li><li><strong>Grants and revocation are scoped to what the request named</strong>: the token
+endpoint enforces the client&rsquo;s registered <code>grant_types</code> on the token-exchange
+and FIDO2 assertion grants, revoking a machine-to-machine token revokes that
+token instead of every session the client holds, and the revocation handler
+records the proof <code>jti</code> before it revokes. The admin UI path rejects
+sender-constrained tokens, and
+<a href=https://www.rfc-editor.org/rfc/rfc9728 target=_blank rel="noopener noreferrer" class=external-link>RFC 9728<span class=sr-only> (opens in new tab)</span></a> protected-resource metadata
+no longer advertises the SCIM endpoints.</li><li><strong>Client registration and mTLS matching fixes</strong>: a registration response
+echoes the <a href=https://www.rfc-editor.org/rfc/rfc8705 target=_blank rel="noopener noreferrer" class=external-link>RFC 8705<span class=sr-only> (opens in new tab)</span></a> mTLS metadata
+the application registered, subject DN comparison ignores spaces after commas
+so a certificate matches however its issuer formatted the DN, and a JWK
+marked <code>use: "enc"</code> is rejected for
+<a href=https://www.rfc-editor.org/rfc/rfc9421 target=_blank rel="noopener noreferrer" class=external-link>RFC 9421<span class=sr-only> (opens in new tab)</span></a> signature verification.
+Resuming a pending authorization compares <code>max_age</code> at full precision.</li><li><strong>SAML canonicalization and assertion validation</strong>: exclusive
+canonicalization emits an empty default-namespace declaration on prefixed
+elements when <code>#default</code> appears in the <code>InclusiveNamespaces</code> prefix list, and
+the server requires <code>SubjectConfirmationData.NotOnOrAfter</code> on every bearer
+confirmation instead of accepting a confirmation with no expiry.</li><li><strong>Hardware key counters start at the registered value</strong>: a newly registered
+key stores the <code>signCount</code> from its registration ceremony, so the first
+assertion is compared against the right starting counter. An enrollment
+callback that cannot read the user&rsquo;s authenticator list fails closed.</li><li><strong>Concurrent admin changes cannot break organization invariants</strong>: org-admin
+changes serialize on the organization row, toggling a preconfigured policy
+cannot overwrite a concurrent change, an org-scoped application create or
+update fails if its owner is deleted mid-request, and removing an additional
+domain invalidates the affected sessions in the cache. Renaming a hardware
+key and deleting an application both record audit events.</li><li><strong>Token exchange honors the actor&rsquo;s logout</strong>: the
+<code>logout_invalidates_exchange</code> policy check evaluates against the user named by
+the <a href=https://www.rfc-editor.org/rfc/rfc8693 target=_blank rel="noopener noreferrer" class=external-link>RFC 8693<span class=sr-only> (opens in new tab)</span></a> actor token, so an
+actor who has logged out cannot exchange a token on another user&rsquo;s behalf.</li></ul><h2 id=v202692httpsgithubcomvouch-shvouchreleasestagv202692---september-11-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.9.2 target=_blank rel="noopener noreferrer" class=external-link>v2026.9.2<span class=sr-only> (opens in new tab)</span></a> - September 11, 2026</h2><ul><li><strong>Token exchange honors the resource allowlist and the subject token&rsquo;s
+lifetime</strong>: <a href=https://www.rfc-editor.org/rfc/rfc8693 target=_blank rel="noopener noreferrer" class=external-link>RFC 8693<span class=sr-only> (opens in new tab)</span></a> token
+exchange checks the requested <code>resource</code> values against the client&rsquo;s
+allowlist, including on the path that resumes a pending authorization. An
+exchanged access token never outlives the subject token it came from, and a
+subject token with no remaining lifetime yields no token at all.</li><li><strong>DPoP proofs cannot be replayed inside the clock-skew window</strong>: the server
+keeps each proof&rsquo;s <code>jti</code> for as long as the proof remains valid under the
+allowed clock skew, so a replayed proof is rejected for its entire life
+rather than accepted in the window between the retention expiring and the
+proof going stale. Assertion replay records now expire with the assertion
+they cover. Protected-resource metadata reports
+<code>dpop_bound_access_tokens_required</code> as <code>false</code>, because an
+<a href=https://www.rfc-editor.org/rfc/rfc8705 target=_blank rel="noopener noreferrer" class=external-link>mTLS<span class=sr-only> (opens in new tab)</span></a> certificate satisfies the
+sender-constraint requirement as well as a
+<a href=https://www.rfc-editor.org/rfc/rfc9449 target=_blank rel="noopener noreferrer" class=external-link>DPoP<span class=sr-only> (opens in new tab)</span></a> proof does.</li><li><strong>Sessions prove hardware possession before they authorize anything</strong>: a
+session that has not been hardware-verified must complete a key assertion
+before it authorizes an application or makes an admin change. Signing in
+through the upstream identity provider establishes a browser session
+directly. The <code>auth_time</code> claim on device-flow and FIDO2 assertion grants
+records when the hardware key ceremony ran, and every time comparison in a
+request uses a single arrival timestamp.</li><li><strong>Deleting a key, user, or application revokes credentials first</strong>: the
+server revokes issued credentials before it deletes the hardware key that
+approved them, revokes an application&rsquo;s client secrets before it sweeps the
+sessions that used them, and revokes user-issued access tokens along with
+the rest. Retries re-read the authenticator list and evict the session
+cache, so a retried deletion cannot leave a credential behind. Deleting a
+key preserves the device authorizations it already consumed, and a
+deactivated user cannot delete keys or link a GitHub account.</li><li><strong>Audit events are written before the next step can fail</strong>: every committed
+change records its audit event before the server attempts the next fallible
+operation, so an enrollment or credential release that fails midway still
+leaves a record. Audit writes go through one API and are awaited.</li><li><strong>Email domains are validated where accounts are created</strong>: enrollment
+rejects addresses with an empty domain or whitespace in the domain, SCIM
+rejects a malformed local part in <code>userName</code>, and domains asserted by an
+identity provider parse into a validated domain type. An organization can no
+longer claim a subdomain that collapses onto another organization&rsquo;s apex
+domain.</li><li><strong>Client authentication fixes</strong>: an
+<a href=https://www.rfc-editor.org/rfc/rfc7592 target=_blank rel="noopener noreferrer" class=external-link>RFC 7592<span class=sr-only> (opens in new tab)</span></a> update preserves the
+application&rsquo;s mTLS client identity, device-flow token redemption enforces
+the mTLS client authentication the application is configured for, IPv6
+addresses in a certificate SAN are normalized before comparison, and
+<a href=https://openid.net/specs/fapi-2_0-security-profile.html target=_blank rel="noopener noreferrer" class=external-link>FAPI<span class=sr-only> (opens in new tab)</span></a> clients
+cannot mint client secrets. Failed authentication on the client-credentials
+and token-exchange grants returns a <code>WWW-Authenticate</code> header.</li><li><strong>Unusable JWKS keys no longer fail the request</strong>: when a client&rsquo;s JWKS
+contains a key the server cannot build or a key of the wrong family, the
+server skips it and keeps searching the remaining keys for one that
+verifies the assertion or ID token.</li><li><strong>Hardware key registration binds to the user who started it</strong>: completing a
+registration requires the same user the registration state was issued to,
+and the server rejects an attestation statement whose <code>x5c</code> certificate
+chain contains anything other than byte strings.</li><li><strong>Device flow survives concurrent polling</strong>: an authorization that collides
+with the CLI&rsquo;s poll retries instead of failing, and each retry re-stamps its
+timestamp.</li><li><strong>Protocol and CLI fixes</strong>: SAML exclusive canonicalization emits an empty
+default-namespace declaration only for unprefixed elements, a failed
+<code>request_uri</code> fetch echoes the request object&rsquo;s <code>state</code> back to the
+application, and SSH certificate serials are canonicalized before the
+revocation lookup, so a serial submitted in any form matches its
+certificate.</li><li><strong>Faster OAuth grants</strong>: the user record carries its organization&rsquo;s primary
+domain, removing a database lookup from every grant, and the session cache
+hands out a shared session instead of a copy.</li></ul><h2 id=v202691httpsgithubcomvouch-shvouchreleasestagv202691---september-1-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.9.1 target=_blank rel="noopener noreferrer" class=external-link>v2026.9.1<span class=sr-only> (opens in new tab)</span></a> - September 1, 2026</h2><ul><li><strong>Hardware key registration requires attestation</strong>: <strong>Breaking:</strong>
+registering a hardware key now requires a verified attestation chain (the
+manufacturer&rsquo;s proof that the key is a genuine device). Sign-ins that used
+only the upstream identity provider no longer count as hardware-verified,
+and the re-authentication check before key deletion rejects future
+timestamps.</li><li><strong>AWS setup verifies each role</strong>: <code>vouch setup aws</code> tests that each
+discovered or existing profile can assume its role. When a profile fails,
+the CLI prints the IAM policy change that fixes it and the role&rsquo;s Identity
+Center status.</li><li><strong>Authorization code replay revokes only the affected tokens</strong>: when an
+authorization code is used twice, Vouch revokes the tokens issued from
+that code. The user&rsquo;s other sessions stay active.</li><li><strong>SAML assertions must reference their request</strong>: the server rejects
+assertions without <code>InResponseTo</code> and reads values only from the signed
+portion of the response.</li><li><strong>Registration rejects misconfigured applications</strong>: the server rejects
+an OAuth client with an invalid configuration (a signing key incompatible
+with its algorithm, a private key in a JWKS, an invalid redirect URI) at
+create or update time, before the configuration causes sign-in failures.
+The same rules apply on every registration path.</li><li><strong>Client management API fixes</strong>: failed authentication on the
+<a href=https://www.rfc-editor.org/rfc/rfc7592 target=_blank rel="noopener noreferrer" class=external-link>RFC 7592<span class=sr-only> (opens in new tab)</span></a> client-management
+endpoints returns 401 and revokes the presented token,
+an update replaces the application&rsquo;s metadata as a whole, and a stale
+request carrying an old registration token cannot undo a rotation.</li><li><strong>The agent shuts down on SIGTERM and Ctrl+C</strong>: the agent finishes
+in-flight requests before exiting, and it installs the signal handlers
+before its listeners bind, so it does not miss an early signal.</li><li><strong>Deactivation revokes credentials first</strong>: the server revokes a user&rsquo;s
+credentials before it saves the deactivation, so a failure partway through
+cannot leave a deactivated user with working credentials. Deleting a
+hardware key voids the pending device sign-in approvals it made.</li><li><strong>SSH CA keys must be Ed25519</strong>: the server rejects other key types when
+it loads the key, not later during signing.</li><li><strong>OAuth and request-signing error fixes</strong>: the authorize endpoint returns
+errors in the response mode the application requested, the server reports
+its own faults as server errors instead of client errors, session-age
+checks compare at full precision instead of whole seconds, and
+<a href=https://www.rfc-editor.org/rfc/rfc9421 target=_blank rel="noopener noreferrer" class=external-link>RFC 9421<span class=sr-only> (opens in new tab)</span></a> request-signature
+validation implements the remaining canonicalization algorithms and
+rejects duplicate covered components.</li></ul><h2 id=v202684httpsgithubcomvouch-shvouchreleasestagv202684---august-16-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.8.4 target=_blank rel="noopener noreferrer" class=external-link>v2026.8.4<span class=sr-only> (opens in new tab)</span></a> - August 16, 2026</h2><ul><li><p><strong>SLSA Build Level 3 provenance</strong>: release artifacts are now built and
+attested inside a
+<a href=https://docs.github.com/actions/security-guides/using-artifact-attestations-and-reusable-workflows-to-achieve-slsa-v1-build-level-3 target=_blank rel="noopener noreferrer" class=external-link>dedicated reusable workflow<span class=sr-only> (opens in new tab)</span></a>,
+so the attestation signing identity is out of reach of the build steps
+themselves, the bar <a href=https://slsa.dev/ target=_blank rel="noopener noreferrer" class=external-link>SLSA<span class=sr-only> (opens in new tab)</span></a> sets for Build Level 3. Every archive,
+container image, Helm chart, and SBOM can be verified with the builder
+pinned; the attestation records the reusable workflow as the signer,
+distinct from the release workflow that called it:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-console data-lang=console><span style=display:flex><span>$ gh attestation verify vouch-v2026.8.4-aarch64-apple-darwin.tar.gz <span style=color:#ae81ff>\
+</span></span></span><span style=display:flex><span><span style=color:#ae81ff></span>    --owner vouch-sh \
+</span></span><span style=display:flex><span>    --signer-workflow vouch-sh/vouch/.github/workflows/reusable-build.yml
+</span></span><span style=display:flex><span>Loaded 1 attestation from GitHub API
+</span></span><span style=display:flex><span>✓ Verification succeeded!
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>
+</span></span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010></span>The following 1 attestation matched the policy criteria
+</span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010>
+</span></span></span><span style=display:flex><span><span style=color:#960050;background-color:#1e0010></span>- Attestation #1
+</span></span><span style=display:flex><span>  - Build repo:..... vouch-sh/vouch
+</span></span><span style=display:flex><span>  - Build workflow:. .github/workflows/release.yml@refs/tags/v2026.8.4
+</span></span><span style=display:flex><span>  - Signer repo:.... vouch-sh/vouch
+</span></span><span style=display:flex><span>  - Signer workflow: .github/workflows/reusable-build.yml@refs/tags/v2026.8.4
+</span></span></code></pre></div><p>The GitHub Actions OIDC identity behind release signing also moved to
+<a href=https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/ target=_blank rel="noopener noreferrer" class=external-link>immutable subject claims<span class=sr-only> (opens in new tab)</span></a>,
+so deleting and re-registering a repository name can no longer mint tokens
+that match the release trust policies.</p></li><li><p><strong>AWS role discovery from Identity Center entitlements</strong>: <code>vouch setup aws</code>
+discovery now runs a second pass over
+<a href=https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html target=_blank rel="noopener noreferrer" class=external-link>IAM Identity Center<span class=sr-only> (opens in new tab)</span></a>
+<a href=https://aws.amazon.com/about-aws/whats-new/2026/08/aws-iam-aam/ target=_blank rel="noopener noreferrer" class=external-link>account access manager<span class=sr-only> (opens in new tab)</span></a>
+entitlements, so roles assigned to you or your groups through Identity
+Center are found without hand-configuration. The management role needs new
+read-only IAM permissions for the pass, which runs in the commercial
+partition only. <strong>Breaking:</strong> AWS authorization failures now exit with
+code 5 instead of 4 (signature and clock-skew errors keep exit code 4).</p></li><li><p><strong>Sender-constrained tokens enforced on every grant</strong>: issuing any token
+now requires a sender-constraint witness
+(<a href=https://www.rfc-editor.org/rfc/rfc9449 target=_blank rel="noopener noreferrer" class=external-link>DPoP<span class=sr-only> (opens in new tab)</span></a> proof or
+<a href=https://www.rfc-editor.org/rfc/rfc8705 target=_blank rel="noopener noreferrer" class=external-link>mTLS<span class=sr-only> (opens in new tab)</span></a> certificate),
+DPoP-bound device-flow and client-credentials tokens are correctly labeled
+<code>token_type: DPoP</code>, and resource endpoints and <code>/oauth/register</code> answer
+stale-nonce requests with a <code>DPoP-Nonce</code> challenge instead of an opaque
+failure. Device-flow infrastructure failures now return the retryable
+<code>server_error</code> instead of <code>invalid_grant</code>.</p></li><li><p><strong>SCIM PATCH overhaul</strong>:
+<a href=https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2 target=_blank rel="noopener noreferrer" class=external-link>PATCH<span class=sr-only> (opens in new tab)</span></a> operations
+apply through a shared attribute
+table covering every mutable attribute, group-membership changes apply
+atomically, Entra-style remove-by-value is supported, and concurrent adds
+of the same member resolve to a single membership. Status codes are
+corrected across the board: infrastructure faults during group creation are
+500s, a NUL byte in a member ID is a 400, and deleting an already-removed
+user is a 404.</p></li><li><p><strong>SSH agent socket peer verification</strong>: the agent now verifies the
+connecting process&rsquo;s UID on its SSH agent socket and validates its runtime
+directory before listening, so another local user cannot use the socket.</p></li><li><p><strong>Account lifecycle fixes</strong>: when an org-scoped application&rsquo;s creator is
+deleted, the application transfers to an active organization admin instead
+of being orphaned. Deactivated users are blocked from CLI hardware-key
+registration, and sessions arriving exactly at a <code>max_age</code> boundary are
+accepted.</p></li><li><p><strong>SAML interop fix</strong>: assertions carrying multiple SubjectConfirmation
+elements now sign in when any bearer confirmation validates, instead of
+being rejected outright.</p></li><li><p><strong>security.txt</strong>: the server publishes an
+<a href=https://www.rfc-editor.org/rfc/rfc9116 target=_blank rel="noopener noreferrer" class=external-link>RFC 9116<span class=sr-only> (opens in new tab)</span></a> <code>security.txt</code>, giving
+security researchers a discoverable reporting channel.</p></li></ul><h2 id=v202683httpsgithubcomvouch-shvouchreleasestagv202683---august-10-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.8.3 target=_blank rel="noopener noreferrer" class=external-link>v2026.8.3<span class=sr-only> (opens in new tab)</span></a> - August 10, 2026</h2><ul><li><strong>New policy engine with history-aware policies</strong>: device-posture policies
+now run on <a href=https://github.com/dogwood-policy/dogwood target=_blank rel="noopener noreferrer" class=external-link>Dogwood<span class=sr-only> (opens in new tab)</span></a>, a
+<a href=https://www.cedarpolicy.com/ target=_blank rel="noopener noreferrer" class=external-link>Cedar<span class=sr-only> (opens in new tab)</span></a>-based engine with a temporal
+sublanguage, replacing CEL. Policies can
+reason about recent activity: five new built-ins cover token issuance rate
+limiting, failed-login bursts, and step-up, IP-consistency, and
+logout-invalidation checks on token exchange. Policies are type-checked
+against a schema at save time, so a typo&rsquo;d field is an error instead of a
+silent miss, and every denial emits a new <code>policy_denied</code> audit event.
+Custom policies written in CEL fail closed until re-authored; the policies
+page flags them and the docs include a rewriting guide.</li><li><strong>Guided policy rule builder</strong>: the admin policies page replaces its
+free-text editor with a guided builder: pick a decision point, then compose
+conditions from dropdowns of known device fields, operators, and activity
+windows, with a live preview and continuous validation. Raw policy text
+remains as an escape hatch. Two new built-in policies: MDM enrollment
+required, and a token-exchange rate limit.</li><li><strong>Hardware key possession enforced for enrollment</strong>: <code>vouch enroll</code> for a
+user with a registered key previously released a credential-capable token
+without a WebAuthn ceremony. Enrollment now requires a key assertion,
+tokens record whether their approval verified hardware, and
+credential endpoints refuse tokens without that proof.</li><li><strong>NUL bytes rejected in client-supplied identifiers</strong>: identifiers
+containing a NUL byte (e.g. a SCIM <code>externalId</code>) caused backend-dependent
+500s on PostgreSQL and Aurora DSQL. Every backend now answers with a 400
+naming the offending field.</li><li><strong>FIDO2 token issuance audited</strong>: the FIDO2 assertion grant now records an
+<code>oauth_token_issued</code> audit event with the user, client IP, and grant type,
+matching the other OAuth grants.</li><li><strong>SSH certificate serials printed exactly</strong>: <code>vouch credential ssh</code> rounded
+serials above 2^53 in its output, and a rounded serial submitted for
+revocation silently matches no certificate. Serials now print
+digit-for-digit.</li></ul><h2 id=v202682httpsgithubcomvouch-shvouchreleasestagv202682---august-9-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.8.2 target=_blank rel="noopener noreferrer" class=external-link>v2026.8.2<span class=sr-only> (opens in new tab)</span></a> - August 9, 2026</h2><ul><li><strong>SSO sign-in fixed on PostgreSQL and Aurora DSQL</strong>: the lookup that matches
+an upstream identity to a Vouch account built its database index value in a
+form those backends reject, so OIDC sign-ins (and SAML sign-ins with a
+persistent NameID) failed there. The index value is now a SHA-256 hash,
+which also keeps the raw upstream subject out of the index table. No
+migration is required.</li></ul><h2 id=v202681httpsgithubcomvouch-shvouchreleasestagv202681---august-8-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.8.1 target=_blank rel="noopener noreferrer" class=external-link>v2026.8.1<span class=sr-only> (opens in new tab)</span></a> - August 8, 2026</h2><ul><li><strong>Organization audit events API with OCSF export</strong>: a new org-scoped API
+lets organizations query their own audit events and export them in
+<a href=https://schema.ocsf.io/ target=_blank rel="noopener noreferrer" class=external-link>OCSF<span class=sr-only> (opens in new tab)</span></a> format for SIEM ingestion. Browser sign-in
+events now record the user&rsquo;s email, and the admin audit page loads faster
+with batched user lookups.</li><li><strong>Deactivation enforced everywhere</strong>: deactivated users are now blocked
+consistently across SSO sign-in, device-flow approval, hardware key
+registration, and OAuth token introspection, with every session path
+running through a single active-user check.</li><li><strong>SCIM provisioning hardening</strong>: user provisioning now rejects addresses
+outside the organization&rsquo;s verified domains, checked inside the creation
+transaction to close a race. Concurrent create requests for the same user
+resolve to a single account, and filter matching follows
+<a href=https://www.rfc-editor.org/rfc/rfc7644 target=_blank rel="noopener noreferrer" class=external-link>RFC 7644<span class=sr-only> (opens in new tab)</span></a> case rules.</li><li><strong>No more duplicate users from email casing</strong>: email addresses are
+canonicalized to lowercase across sign-in, SCIM, and audit correlation, so
+the same person arriving with different casing no longer creates duplicate
+accounts. JIT account linking is now keyed on the upstream issuer and
+subject pair.</li><li><strong>AWS partition mismatches caught early</strong>: the CLI validates that the
+configured region&rsquo;s partition matches the role ARN before calling STS (in
+credential minting, SSM setup, and CodeCommit setup), failing with a clear
+error instead of an opaque STS one.</li><li><strong>Git credential helper fixes</strong>: remote URLs with an explicit <code>:443</code> port
+now match the CodeCommit and GitHub helpers, the original host is preserved
+for git&rsquo;s credential cache, and <code>vouch exec</code> and the CodeCommit helper
+propagate the child process&rsquo;s exit code on Windows.</li></ul><h2 id=v202674httpsgithubcomvouch-shvouchreleasestagv202674---july-29-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.7.4 target=_blank rel="noopener noreferrer" class=external-link>v2026.7.4<span class=sr-only> (opens in new tab)</span></a> - July 29, 2026</h2><ul><li><strong>Explicit AWS profile selection</strong>: with multiple Vouch-managed AWS
+profiles, the CLI no longer silently uses whichever appears first in
+<code>~/.aws/config</code>. It resolves <code>--profile</code>, then <code>AWS_PROFILE</code>, then the sole
+managed profile, and otherwise errors with a list of every profile and its
+role ARN. <code>--profile</code> now means an AWS profile on every command; the
+CodeArtifact bundle flag is renamed <code>--domain-profile</code>.</li><li><strong>CodeCommit git helper fixed</strong>: <code>vouch setup codecommit --configure</code>
+previously wrote a credential helper value git could not execute. The helper
+(and the GitHub one) is now built shell-safe, <code>codecommit::&lt;region>://</code>
+URLs parse correctly, and the region resolves from the same profile that
+mints the credentials.</li><li><strong>In-process server bootstrap</strong>: on EC2 the server now reads instance facts
+from IMDS and fetches its configuration from SSM Parameter Store itself at
+startup, replacing the AMI&rsquo;s external bootstrap script and bundled AWS CLI.
+Bootstrapped values apply below CLI flags and environment variables.</li><li><strong>CLI fully translation-ready</strong>: the remaining English-only CLI strings
+(command help text and error messages) moved into the Fluent catalogs.</li><li><strong>CodeArtifact role ARN validation</strong>: an unparseable role ARN in
+CodeArtifact setup now fails with an error naming the ARN, instead of
+silently writing commercial-partition registry URLs into pip, cargo, and
+npm configuration.</li></ul><h2 id=v202673httpsgithubcomvouch-shvouchreleasestagv202673---july-26-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.7.3 target=_blank rel="noopener noreferrer" class=external-link>v2026.7.3<span class=sr-only> (opens in new tab)</span></a> - July 26, 2026</h2><ul><li><strong>Credential and key lifecycle audit events</strong>: AWS credential issuance, SSH
+certificate issuance, <a href=https://www.rfc-editor.org/rfc/rfc8693 target=_blank rel="noopener noreferrer" class=external-link>RFC 8693<span class=sr-only> (opens in new tab)</span></a>
+token exchange, hardware key registration and
+removal, device-flow approvals, and application secret changes now emit
+queryable audit events, each with its own retention class.</li><li><strong>Website sign-ins recorded correctly</strong>: signing in through the website now
+emits a <code>login_success</code> event carrying the client IP, instead of being
+misreported as a CLI device-flow approval.</li><li><strong>Vouch attributable in CloudTrail</strong>: the server tags its AWS SDK requests
+with <code>lib/vouch-server/&lt;version></code> in the user agent, so the S3 and KMS calls
+it makes are identifiable in CloudTrail.</li></ul><h2 id=v202672httpsgithubcomvouch-shvouchreleasestagv202672---july-14-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.7.2 target=_blank rel="noopener noreferrer" class=external-link>v2026.7.2<span class=sr-only> (opens in new tab)</span></a> - July 14, 2026</h2><ul><li><strong>OIDC role pinning for AWS</strong>: each token now carries the target role ARN in
+the <code>https://aws.amazon.com/roles</code> claim, and AWS STS enforces it: a leaked
+token cannot be exchanged for any role other than the one it was minted for.
+Trust policies can make pinning mandatory with the
+<a href=https://awsteele.com/blog/2026/07/13/oidc-tokens-can-restrict-which-aws-roles-they-assume.html target=_blank rel="noopener noreferrer" class=external-link><code>sts:RoleAuthorizedByIdp</code><span class=sr-only> (opens in new tab)</span></a>
+condition key.</li><li><strong>Per-organization OIDC issuers</strong>: each organization gets its own subdomain
+issuer for AWS federation, with per-org signing keys and key rotation.</li><li><strong>Post-quantum TLS</strong>: the CLI and agent now prefer hybrid post-quantum key
+exchange when connecting to the Vouch server.</li><li><strong>IAM Identity Center context in AssumeRole</strong>: the CLI forwards IdC identity
+context into role sessions for
+<a href=https://docs.aws.amazon.com/singlesignon/latest/userguide/trustedidentitypropagation.html target=_blank rel="noopener noreferrer" class=external-link>trusted identity propagation<span class=sr-only> (opens in new tab)</span></a>.</li><li><strong>Access-token audience enforcement</strong>: the server now enforces the token
+audience at every resource endpoint.</li></ul><h2 id=v202671httpsgithubcomvouch-shvouchreleasestagv202671---july-3-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.7.1 target=_blank rel="noopener noreferrer" class=external-link>v2026.7.1<span class=sr-only> (opens in new tab)</span></a> - July 3, 2026</h2><ul><li><strong>AWS setup redesigned around organization anchors</strong>: <code>vouch credential aws</code>
+and <code>vouch setup aws</code> were rebuilt around a single org-level anchor, so
+multi-account access is configured once and roles resolve consistently
+everywhere.</li><li><strong>Interactive AWS setup wizard</strong>: <code>vouch setup aws</code> now walks you through
+account and role configuration step by step instead of requiring flags.</li><li><strong>Device code pre-fill</strong>: <code>vouch login</code> pre-fills the device code in the
+browser, removing the copy-and-type step from the login flow.</li></ul><h2 id=v202663httpsgithubcomvouch-shvouchreleasestagv202663---june-24-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.6.3 target=_blank rel="noopener noreferrer" class=external-link>v2026.6.3<span class=sr-only> (opens in new tab)</span></a> - June 24, 2026</h2><ul><li><strong>Internationalization</strong>: the server UI, CLI, and agent are now fully
+translation-ready, with all user-facing strings extracted into per-binary
+<a href=https://projectfluent.org/ target=_blank rel="noopener noreferrer" class=external-link>Fluent<span class=sr-only> (opens in new tab)</span></a> catalogs and locale negotiated
+automatically. Timestamps in the applications and admin UI render in the
+viewer&rsquo;s locale.</li><li><strong>XDG Base Directory compliance</strong>: the CLI and agent now follow the
+<a href=https://specifications.freedesktop.org/basedir-spec/latest/ target=_blank rel="noopener noreferrer" class=external-link>XDG spec<span class=sr-only> (opens in new tab)</span></a> on
+every platform for config, state, data, and cache files. A legacy
+flat <code>~/.vouch/</code> directory is migrated automatically on first run.</li><li><strong>Mandatory HTTP message signatures</strong>: all <code>/v1/*</code> API requests now require
+<a href=https://www.rfc-editor.org/rfc/rfc9421 target=_blank rel="noopener noreferrer" class=external-link>RFC 9421<span class=sr-only> (opens in new tab)</span></a> HTTP message signatures
+with Content-Digest enforcement, and the server advertises its policy via
+<code>Accept-Signature</code>.</li><li><strong>OpenID Connect RP-Initiated Logout 1.0</strong>: applications can now end a
+Vouch session through the standard
+<a href=https://openid.net/specs/openid-connect-rpinitiated-1_0.html target=_blank rel="noopener noreferrer" class=external-link>RP-initiated logout flow<span class=sr-only> (opens in new tab)</span></a>.</li><li><strong>STIG-aligned kernel hardening</strong>: the server AMI ships with
+<a href=https://public.cyber.mil/stigs/ target=_blank rel="noopener noreferrer" class=external-link>STIG<span class=sr-only> (opens in new tab)</span></a>-aligned kernel settings and a
+published STIG mapping document.</li></ul><h2 id=v202662httpsgithubcomvouch-shvouchreleasestagv202662---june-13-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.6.2 target=_blank rel="noopener noreferrer" class=external-link>v2026.6.2<span class=sr-only> (opens in new tab)</span></a> - June 13, 2026</h2><ul><li><strong>Security evaluation remediation</strong>: a prioritized internal security
+evaluation was completed and all P1 and P2 findings were remediated,
+including an SSRF egress guard for client-controlled JWKS and <code>request_uri</code>
+fetches.</li><li><strong>Server-rendered security-keys page</strong>: key management moved to full
+server-side rendering with form POSTs, reducing the JavaScript surface.</li><li><strong>FIPS crypto-policy in the attestable AMI</strong>: the hardened server image now
+enables the FIPS cryptographic policy.</li></ul><h2 id=v202654httpsgithubcomvouch-shvouchreleasestagv202654---may-30-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.5.4 target=_blank rel="noopener noreferrer" class=external-link>v2026.5.4<span class=sr-only> (opens in new tab)</span></a> - May 30, 2026</h2><ul><li><strong>Workload identity federation for AI APIs</strong>: exchange a Vouch session for
+short-lived Anthropic (Claude) and OpenAI API credentials, so AI tooling
+runs without long-lived API keys on disk.</li></ul><h2 id=v202652httpsgithubcomvouch-shvouchreleasestagv202652---may-17-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.5.2 target=_blank rel="noopener noreferrer" class=external-link>v2026.5.2<span class=sr-only> (opens in new tab)</span></a> - May 17, 2026</h2><ul><li><strong>Multiple upstream IdPs</strong>: a single Vouch server can now federate with
+more than one upstream identity provider.</li><li><strong>Multi-domain organizations</strong>: organizations can span multiple email
+domains.</li><li><strong>Cross-account KMS keys</strong>: the server can use KMS signing keys that live
+in a different AWS account.</li></ul><h2 id=v202651httpsgithubcomvouch-shvouchreleasestagv202651---may-11-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.5.1 target=_blank rel="noopener noreferrer" class=external-link>v2026.5.1<span class=sr-only> (opens in new tab)</span></a> - May 11, 2026</h2><ul><li><strong>DNS-over-HTTPS</strong>: the CLI and agent resolve the Vouch server over
+encrypted DNS, hardening credential flows on untrusted networks.</li></ul><h2 id=v202648httpsgithubcomvouch-shvouchreleasestagv202648---may-1-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.4.8 target=_blank rel="noopener noreferrer" class=external-link>v2026.4.8<span class=sr-only> (opens in new tab)</span></a> - May 1, 2026</h2><ul><li><strong>Windows support matured</strong>: Vouch is published to winget
+(<code>winget install SmokeTurner.Vouch</code>) and Windows binaries are code-signed.</li><li><strong>Clock-skew detection</strong>: the CLI warns when local clock drift would cause
+token validation failures.</li></ul><h2 id=v202646httpsgithubcomvouch-shvouchreleasestagv202646---april-27-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.4.6 target=_blank rel="noopener noreferrer" class=external-link>v2026.4.6<span class=sr-only> (opens in new tab)</span></a> - April 27, 2026</h2><ul><li><strong>SSH certificate caching</strong>: issued SSH certificates are cached for their
+lifetime instead of being re-requested on every connection.</li><li><strong>AI agent attribution</strong>: when an AI agent invokes AWS credential helpers,
+the <code>AI_AGENT</code> environment variable is forwarded into session tags for
+CloudTrail attribution, with a session policy limiting role chaining.</li><li><strong>IAM role paths</strong>: roles with paths (e.g. <code>/engineering/deploy</code>) are fully
+supported.</li></ul><h2 id=v202645httpsgithubcomvouch-shvouchreleasestagv202645---april-21-2026><a href=https://github.com/vouch-sh/vouch/releases/tag/v2026.4.5 target=_blank rel="noopener noreferrer" class=external-link>v2026.4.5<span class=sr-only> (opens in new tab)</span></a> - April 21, 2026</h2><ul><li><strong>AWS multi-account SSO</strong>: automatic discovery of accounts and roles across
+an AWS organization, with role chaining.</li><li><strong><code>vouch aws console</code></strong>: open the AWS web console from the terminal using
+your short-lived credentials.</li><li><strong>RFC 9728 Protected Resource Metadata</strong>: the server publishes
+<a href=https://www.rfc-editor.org/rfc/rfc9728 target=_blank rel="noopener noreferrer" class=external-link>OAuth 2.0 protected resource metadata<span class=sr-only> (opens in new tab)</span></a>
+for standards-based client discovery.</li></ul></div></main><footer class=footer><div class=footer-inner><div class=footer-left><div>&copy; 2026 Smoke Turner, LLC</div><div class=footer-instances>Instances:
+<a href=https://us.vouch.sh>US</a>
+&#183;
+<span class=coming-soon>EU (coming soon)</span>
+&#183;
+<span class=coming-soon>APAC (coming soon)</span></div><div class=footer-badges><a href=https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/ target=_blank rel="noopener noreferrer"><img src=/img/openid-certified.png alt="OpenID Certified" class=certification-badge><span class=sr-only> (opens in new tab)</span></a></div></div><div class=footer-links><a href=/about/>About</a>
+<a href=/docs/security/>Security</a>
+<a href=/privacy/>Privacy</a>
+<a href=/terms/>Terms</a>
+<a href=https://github.com/vouch-sh/vouch target=_blank rel="noopener noreferrer">GitHub<span class=sr-only> (opens in new tab)</span></a>
+<a href=https://vouch-sh.statuspage.io/ target=_blank rel="noopener noreferrer">Status<span class=sr-only> (opens in new tab)</span></a></div></div></footer><div class=sr-only role=status id=copy-status></div><script>var I18N_COPY_CLIPBOARD="Copy to clipboard",I18N_COPIED="Copied!",I18N_COPY_FAILED="Copy failed";function announceCopyStatus(e){var t=document.getElementById("copy-status");t.textContent=e,setTimeout(function(){t.textContent=""},1500)}document.querySelectorAll("pre").forEach(function(e){var t,n=document.createElement("div");n.className="code-wrapper",e.parentNode.insertBefore(n,e),n.appendChild(e),t=document.createElement("button"),t.className="copy-btn",t.setAttribute("aria-label",I18N_COPY_CLIPBOARD),t.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',n.appendChild(t),t.addEventListener("click",function(){var n=e.querySelector("code"),s=(n||e).textContent;navigator.clipboard.writeText(s).then(function(){t.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',announceCopyStatus(I18N_COPIED),setTimeout(function(){t.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'},1500)}).catch(function(){announceCopyStatus(I18N_COPY_FAILED)})})}),document.querySelectorAll(".code-tabs").forEach(function(e){var t=Array.prototype.slice.call(e.querySelectorAll(".code-tabs__btn")),s=e.querySelectorAll(".code-tabs__panel");function n(e){var n=e.getAttribute("data-tab-index");t.forEach(function(e){var t=e.getAttribute("data-tab-index")===n;e.classList.toggle("is-active",t),e.setAttribute("aria-selected",t?"true":"false"),e.setAttribute("tabindex",t?"0":"-1")}),s.forEach(function(e){e.classList.toggle("is-active",e.getAttribute("data-tab-index")===n)})}t.forEach(function(e,s){e.addEventListener("click",function(){n(e)}),e.addEventListener("keydown",function(e){var o;if(e.key==="ArrowRight")o=(s+1)%t.length;else if(e.key==="ArrowLeft")o=(s-1+t.length)%t.length;else if(e.key==="Home")o=0;else if(e.key==="End")o=t.length-1;else return;e.preventDefault(),n(t[o]),t[o].focus()})})})</script></body></html>
