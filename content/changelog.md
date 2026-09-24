@@ -1,12 +1,58 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: mTLS certificate chain validation, SCIM PUT support, device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.9.5](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.5) - September 24, 2026
+
+- **mTLS client authentication validates the certificate**: a
+  `tls_client_auth` client authenticated on a subject DN or SAN match alone, so
+  a self-signed certificate carrying a registered DN authenticated as that
+  client. The server now validates the certificate chain
+  ([RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 2.1). A
+  `self_signed_tls_client_auth` client matches only the leaf of its registered
+  `x5c` chain.
+- **SCIM supports PUT and follows RFC 7644 PATCH and filter rules**: `PUT` on
+  `/Users/{id}` and `/Groups/{id}` replaces the resource. One
+  [RFC 7644](https://www.rfc-editor.org/rfc/rfc7644) parser reads every
+  filter. An unrecognized filter no longer returns every user or group, a
+  compound filter evaluates every clause, and escaped and URN-qualified values
+  match. **Access-affecting:** a PATCH `remove` on `members` with no filter and
+  no value empties the group, a group `PUT` without `members` removes every
+  member, and a user `PUT` without `active` sets the user active.
+- **Client credentials cannot be reused or downgraded**: a `private_key_jwt`
+  assertion's `jti` is spent when it authenticates, so a request rejected
+  later cannot leave the assertion reusable at another endpoint. The FIDO2
+  assertion grant is bound to the client that started the ceremony. A client
+  registered for `private_key_jwt` can no longer mint a shared secret.
+- **FIPS-approved key exchange on Linux**: the server, CLI, and agent offer
+  only FIPS-approved TLS key-exchange groups on Linux. Bare X25519 is no longer
+  offered; `X25519MLKEM768` remains the preferred group.
+- **The agent pairs each session with its own server**: the agent refused a
+  plain-HTTP server URL but still stored the new token beside the previous
+  session's URL, so the CLI could send a development token to production. The
+  agent now stores a session only with its own URL. `VOUCH_ALLOW_INSECURE`
+  set to `false`, `0`, or an empty string no longer enables plain HTTP.
+- **Deactivation covers applications**: a deactivated user cannot register a
+  client, and an organization application whose creator is deactivated
+  transfers to an active organization admin.
+- **GitHub installation linking checks the caller**: linking an installation
+  requires an organization admin whose GitHub account has access to it.
+  Replaying the install callback no longer creates a duplicate installation,
+  and installation webhooks update every matching record.
+- **Writes re-check their preconditions**: a GitHub token refresh cannot
+  restore a revoked token or revert a concurrent re-link, and
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) updates and deletes
+  re-check their premise inside the write. An RFC 7592 `GET` now returns the
+  required `registration_access_token`.
+- **Audit log fixes**: revocations, logouts of expired sessions, and custom
+  policy toggles record the state the server committed. The audit API ignores
+  blank filters.
 
 ## [v2026.9.4](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.4) - September 15, 2026
 
