@@ -1,12 +1,112 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: mTLS certificate chain validation, SCIM PUT support, device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: PROXY protocol support, connection limits, RFC 9421 ECDSA signature encoding, mTLS certificate chain validation, SCIM PUT support, device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.10.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.10.1) - October 2, 2026
+
+- **HTTP message signatures use the RFC 9421 ECDSA encoding**: **Breaking:**
+  [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421) section 3.3.4 defines an
+  `ecdsa-p256-sha256` signature as a 64-octet `r||s` value. The server and CLI
+  signed and verified DER, so a client built on a conforming library received
+  a 401 on every signed `/v1/*` request. Both now use `r||s`. A v2026.10.1
+  server rejects requests from an earlier CLI. Upgrade the server and the CLI
+  together.
+- **The server accepts the PROXY protocol**: a TCP proxy that relays TLS
+  without terminating it (Envoy or Istio passthrough, nginx `stream`, HAProxy
+  `mode tcp`) made every request appear to come from the proxy, so all users
+  shared one rate-limit bucket and audit events recorded the proxy's address.
+  With `VOUCH_PROXY_PROTOCOL=true`, the HTTPS and mTLS listeners require a
+  [PROXY protocol](https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt)
+  v2 header from a peer in `VOUCH_TRUSTED_PROXIES` and use the header's source
+  address for rate limiting and audit. The server refuses to start with the
+  switch on and no trusted proxies configured. Port 80 serves `/health/ready`
+  for probes that cannot send the header.
+- **Every listener limits connections and their duration**: the server closes
+  a connection that does not finish its TLS handshake within 5 seconds or holds
+  no request for 10 seconds. Before this release, one client that never sent a
+  ClientHello on the mTLS port blocked every new mTLS connection.
+  `VOUCH_MAX_CONNECTIONS` (default 10,000) caps open connections in total, and
+  `VOUCH_MAX_CONNECTIONS_PER_IP` (default 64) caps them per client. The request
+  timeout drops from 30 seconds to 10.
+- **Rate limits count an IPv6 /64 as one client**: the request rate limiters
+  keyed each IPv6 address separately, so one host could rotate addresses
+  within its /64 for a new allowance per address. The rate limiters and
+  connection caps count each /64 as one client and prune idle clients every
+  minute. The mTLS listener ignores `X-Forwarded-For`, and
+  `VOUCH_TRUSTED_PROXIES` applies to the HTTPS port only.
+- **Dashboard applications can use `private_key_jwt` without FAPI**: a
+  Standard-profile web or service application can authenticate with a private
+  key instead of a client secret. The server issues no secret and does not
+  sender-constrain its tokens, so the application can forward them to
+  bearer-only APIs. `POST /api/v1/applications` takes the same choice in
+  `token_endpoint_auth_method`.
+- **Tokens are accepted only where they are meant to be used**: the session
+  cookie accepts only a browser session token issued to the deployment itself.
+  An access token issued to an OAuth client or narrowed to a resource reads as
+  signed out. Token exchange keeps a narrowed subject token narrowed and
+  rejects an actor token from a different organization than the subject.
+  `/v1/*` refuses an unbound token under the `DPoP` scheme, and every endpoint
+  refuses a request with more than one `DPoP` header
+  ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449) section 4.3).
+- **Deactivation and key deletion apply on every endpoint**: `/v1/auth/status`,
+  `/v1/keys`, and the applications API accepted a deactivated user's live
+  token. The server now refuses a deactivated account wherever it reads a
+  token. A session whose hardware key was deleted is refused on `/v1/*`,
+  introspection, and token exchange, as it already was at userinfo. Deleting
+  or deactivating a client's owner revokes the client's
+  [RFC 7592](https://www.rfc-editor.org/rfc/rfc7592) registration access token.
+- **The CLI sends a credential only to the server it belongs to**: the CLI
+  sent the stored session token to whatever server `--server` or
+  `VOUCH_SERVER` named. It now refuses unless the stored session belongs to
+  that server. `vouch setup anthropic` and `vouch setup openai` refuse a
+  `--token-endpoint` that is not HTTPS, except plain HTTP to loopback.
+- **The agent ties cached credentials to a live session**: the agent drops
+  every cached credential and SSH certificate when a new session replaces the
+  old one, including the same user signing in to another server. It stops
+  serving them when the session expires, and it serves an SSH certificate only
+  when the certificate names the session's user and server. The agent no
+  longer restores its own session at startup and makes no outbound HTTP
+  requests; the CLI restores the session with a DPoP-bound request.
+- **Policies deny when a rule fails to evaluate**: Cedar skips a policy whose
+  condition errors at runtime, so a custom `forbid` that overflowed on
+  client-supplied device posture allowed the request. An allow that carries an
+  evaluation error is now a deny attributed to the failing policy. Linking a
+  GitHub App installation no longer counts as a GitHub credential in policy
+  history, and the server queries 24-hour history only for decisions a
+  temporal rule covers.
+- **The SSRF guard follows the IANA special-purpose registries**: the guard on
+  client-controlled `jwks_uri` and `request_uri` fetches allowed IPv6 addresses
+  that embed a private IPv4 address, such as the NAT64 address
+  `64:ff9b::a00:1` (10.0.0.1). The guard classifies NAT64, 6to4, Teredo, and
+  IPv4-mapped addresses by the IPv4 address they carry, and refuses every block
+  the IANA registries mark as not globally reachable. Client registration
+  refuses RSA keys outside 2048 to 8192 bits.
+- **Protocol fixes**: the server rejects a signed request whose body was
+  stripped in transit, because it checks `Content-Digest` whenever the signer
+  sent one. A client that presents a Basic header and a body `client_secret`
+  together is rejected ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
+  section 2.3). A pushed authorization request with a Request Object reads its
+  parameters only from that object
+  ([RFC 9101](https://www.rfc-editor.org/rfc/rfc9101) section 6.3). A SAML
+  assertion must name the service provider in every `AudienceRestriction`.
+- **AWS CLI fixes**: `vouch setup aws --discover` dropped an assignment whose
+  profile name collided with another. It now writes a profile for every
+  assignment, adding the account ID and then a hash to the name when needed.
+  `vouch credential rds` reads the region only from a real RDS endpoint
+  suffix. The RDS and EKS credential caches key on region, and the Redshift
+  cache also keys on database and duration.
+- **Audit and configuration fixes**: every audit row written for a request
+  records the client IP and User-Agent. Rows for authorization-code token
+  issuance, RP-initiated logout, and GitHub App linking omitted them. An
+  empty value (`VAR=""` or `""` in the S3 configuration document) loads as
+  unset for every optional setting, so an empty S3 value no longer overrides
+  the environment.
 
 ## [v2026.9.5](https://github.com/vouch-sh/vouch/releases/tag/v2026.9.5) - September 24, 2026
 
