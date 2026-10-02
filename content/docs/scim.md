@@ -35,36 +35,13 @@ Because SCIM is a standardized protocol, Vouch works with any identity provider 
 
 Before your identity provider can communicate with Vouch, you need to generate a bearer token that the IdP will use to authenticate its requests.
 
-First, ensure you are logged in with an account that has **organization administrator** privileges:
+Sign in to `https://{{< instance-url >}}` with an account that has **organization administrator** privileges, open **Admin → API Tokens** (`/admin/scim-tokens`), and create a token. Give it a description, such as "Google Workspace SCIM", and an expiry.
 
-```bash
-vouch login
-```
-
-Then create a SCIM token:
-
-```bash
-curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.local/state/vouch/cookie.txt \
-  -H "Content-Type: application/json" \
-  -d '{"description": "Google Workspace SCIM", "expires_in_days": 365}'
-```
-
-The response includes the plaintext token:
-
-```json
-{
-  "id": "scim_tok_abc123",
-  "description": "Google Workspace SCIM",
-  "token": "vouch_scim_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-  "expires_at": "2027-01-15T00:00:00Z",
-  "created_at": "2026-01-15T12:00:00Z"
-}
-```
+The page shows the plaintext token, prefixed `vouch_scim_`, once.
 
 > **Security note:** Vouch stores only a cryptographic hash of the token. The plaintext value is shown **exactly once** in the creation response. Copy it immediately and store it securely -- you will not be able to retrieve it again. If you lose the token, revoke it and create a new one.
 
-The `expires_in_days` field is **required** and must be an integer between **1** and **365**. Set the expiry to match your token-rotation schedule — for example, 365 days with annual rotation.
+The expiry is **required** and must be between **1** and **365** days. Set the expiry to match your token-rotation schedule — for example, 365 days with annual rotation.
 
 ---
 
@@ -224,39 +201,9 @@ With Vouch and SCIM, de-provisioning is automated, and exposure is bounded by th
 
 ## Managing SCIM Tokens
 
-Organization administrators can list, create, and revoke SCIM tokens through the Vouch API.
+Organization administrators list, create, and revoke SCIM tokens on the **Admin → API Tokens** page (`/admin/scim-tokens`). The list shows each token's description, creation date, and expiry, but never its value. Revoking a token disables it immediately.
 
-### List All SCIM Tokens
-
-Retrieve all active SCIM tokens for your organization:
-
-```bash
-curl -s https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.local/state/vouch/cookie.txt \
-  | jq .
-```
-
-The response includes token metadata (ID, description, creation date, expiration date) but never the plaintext token value.
-
-### Create a New Token
-
-```bash
-curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-  -b ~/.local/state/vouch/cookie.txt \
-  -H "Content-Type: application/json" \
-  -d '{"description": "Okta SCIM Integration", "expires_in_days": 180}'
-```
-
-The response includes the plaintext token. Store it securely -- it will not be shown again.
-
-### Revoke a Token
-
-Revoke a SCIM token by its ID to immediately disable it:
-
-```bash
-curl -X DELETE https://{{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_abc123 \
-  -b ~/.local/state/vouch/cookie.txt
-```
+> The session `vouch login` stores is bound to your device's key (DPoP), so it cannot be sent to the admin API from `curl`; use the admin page.
 
 After revocation, any identity provider using this token will receive `401 Unauthorized` responses and provisioning will stop until a new token is configured.
 
@@ -266,14 +213,7 @@ After revocation, any identity provider using this token will receive `401 Unaut
 
 To rotate a SCIM token without interrupting provisioning, follow this four-step process:
 
-1. **Create a new token** with a descriptive name that indicates it is the replacement:
-
-   ```bash
-   curl -X POST https://{{< instance-url >}}/api/v1/org/scim-tokens \
-     -b ~/.local/state/vouch/cookie.txt \
-     -H "Content-Type: application/json" \
-     -d '{"description": "Google Workspace SCIM (rotated 2026-02)", "expires_in_days": 365}'
-   ```
+1. **Create a new token** on the API Tokens page, with a description that marks it as the replacement, such as "Google Workspace SCIM (rotated 2026-02)".
 
 2. **Update your identity provider** with the new token value. Follow the configuration steps for your IdP described in Step 2 above, replacing the old token with the new one.
 
@@ -285,12 +225,7 @@ To rotate a SCIM token without interrupting provisioning, follow this four-step 
      | jq '.totalResults'
    ```
 
-4. **Revoke the old token** once you have confirmed that the new token is working:
-
-   ```bash
-   curl -X DELETE {{< instance-url >}}/api/v1/org/scim-tokens/scim_tok_OLD_ID \
-     -b ~/.local/state/vouch/cookie.txt
-   ```
+4. **Revoke the old token** on the API Tokens page once you have confirmed that the new token is working.
 
 By creating the new token before revoking the old one, you ensure there is no window during which provisioning is interrupted.
 
