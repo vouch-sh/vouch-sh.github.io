@@ -510,17 +510,13 @@ See [Claude & OpenAI APIs](/docs/ai-api-keys/) for full details.
 
 ### `vouch credential token`
 
-Print the raw session access token to stdout for use with curl or other tools.
+Print the current session's access token to stdout, for inspecting its claims (for example, by decoding the JWT).
 
 ```
 vouch credential token
 ```
 
-Example:
-
-```bash
-curl -H "Authorization: Bearer $(vouch credential token)" https://api.example.com/endpoint
-```
+The token is DPoP-bound to your device's key, so a server refuses it as `Authorization: Bearer`; it is a debugging aid, not a credential for `curl`.
 
 ---
 
