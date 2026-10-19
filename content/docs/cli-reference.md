@@ -233,7 +233,7 @@ See [Docker Registries](/docs/docker/) for full details.
 
 ### `vouch setup cargo`
 
-Configure Cargo to use Vouch as the credential provider for private registries.
+Configure Cargo to use Vouch as the credential provider for a named registry, or for all registries when `--registry` is omitted. AWS CodeArtifact is the only supported Cargo registry; use [`vouch setup codeartifact --tool cargo`](#vouch-setup-codeartifact), which also writes the registry index URL.
 
 ```
 vouch setup cargo [--registry <NAME>] [--configure]
@@ -244,7 +244,7 @@ vouch setup cargo [--registry <NAME>] [--configure]
 | `--registry` | Name of the Cargo registry to configure |
 | `--configure` | Apply the configuration automatically |
 
-See [Cargo Integration](/docs/cargo/) for full details.
+See [Cargo](/docs/cargo/) for full details.
 
 ### `vouch setup codeartifact`
 

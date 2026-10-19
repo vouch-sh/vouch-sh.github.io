@@ -1,64 +1,58 @@
 ---
-title: "Authenticate to Private Cargo Registries"
+title: "Authenticate Cargo to AWS CodeArtifact"
 linkTitle: "Cargo"
-description: "Use Vouch as a Cargo credential provider for private registries — no tokens in .cargo/config.toml."
-weight: 4
-subtitle: "Authenticate to private Cargo registries using Vouch"
+description: "Use Vouch as a Cargo credential provider for AWS CodeArtifact registries — no tokens in .cargo/credentials.toml."
+weight: 5
+subtitle: "Authenticate Cargo to AWS CodeArtifact registries using Vouch"
 params:
-  docsGroup: integrations
+  docsGroup: aws
 ---
 
-Vouch replaces the plaintext token in `~/.cargo/credentials.toml` with tokens derived from your hardware-backed session -- short-lived, never written to disk, and revoked when your session ends. Vouch implements the [Cargo credential provider protocol](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html), so it works with any registry that supports Bearer token authentication.
+Vouch acts as a [Cargo credential provider](https://doc.rust-lang.org/cargo/reference/credential-provider-protocol.html) for [AWS CodeArtifact](/docs/codeartifact/) Cargo registries. Instead of a plaintext token in `~/.cargo/credentials.toml`, Cargo asks Vouch for a token, and Vouch exchanges your hardware-backed session for a short-lived AWS CodeArtifact authorization token through AWS STS. AWS CodeArtifact is the only Cargo registry that Vouch supports.
+
+> **Known issue:** The Cargo credential provider in current Vouch CLI releases fails the Cargo handshake with `failed to deserialize hello`, so Cargo cannot obtain a token from Vouch for any registry. The fix is tracked in [vouch-sh/vouch#1841](https://github.com/vouch-sh/vouch/issues/1841). This page describes the intended setup.
 
 {{< tldr >}}
-- **Prerequisites:** [Getting Started](/docs/getting-started/) → this page.
-- **Admin, once:** confirm your private registry meets the [registry server requirements](#registry-server-requirements) (Bearer token authentication).
-- **Each developer:** `vouch setup cargo --configure`, then `cargo build` and `cargo publish` authenticate automatically.
+- **Prerequisites:** [Getting Started](/docs/getting-started/) → [AWS integration](/docs/aws/) → this page.
+- **Admin, once:** add `codeartifact:GetAuthorizationToken`, `codeartifact:GetRepositoryEndpoint`, `codeartifact:ReadFromRepository`, and `sts:GetServiceBearerToken` to the Vouch IAM role.
+- **Each developer:** `vouch setup codeartifact --tool cargo --repository <REPO>`, then use Cargo with `--registry codeartifact-<REPO>`.
 {{< /tldr >}}
 
 ## Prerequisites
 
-Before configuring the Cargo integration, make sure you have:
+{{< role admin >}}
 
-- **Cargo** installed via [rustup](https://rustup.rs/) (version **1.74** or later, which includes credential provider protocol support)
-- A **private Cargo registry** that supports Bearer token authentication
+Before developers can configure Cargo:
+
+- The **[AWS integration](/docs/aws/)** must be configured (OIDC provider and IAM role)
+- An **AWS CodeArtifact domain and Cargo repository** must exist in your AWS account
+- The IAM role must have `codeartifact:GetAuthorizationToken`, `codeartifact:GetRepositoryEndpoint`, `codeartifact:ReadFromRepository`, and `sts:GetServiceBearerToken` permissions
+
+Each developer needs **Cargo** installed via [rustup](https://rustup.rs/) (version **1.74** or later, which includes credential provider protocol support).
 
 ---
 
-## Step 1 -- Configure Cargo Credential Provider
+## Step 1 -- Configure the Cargo registry
 
 {{< role developer >}}
 
-Run the setup command to install the Vouch credential provider for Cargo:
+Run the AWS CodeArtifact setup command with `--tool cargo`:
 
-```
-vouch setup cargo
-```
-
-This prints the Cargo configuration that will be added. To apply it automatically:
-
-```
-vouch setup cargo --configure
+```bash
+vouch setup codeartifact --tool cargo --repository my-repo [--domain my-domain] [--domain-owner 123456789012] [--region us-east-1] [--domain-profile my-profile]
 ```
 
-To configure a specific named registry:
+The flags are the same as for every other package manager; see [AWS CodeArtifact](/docs/codeartifact/#step-1--configure-the-vouch-cli) for the full table, including domain profiles and `--profile`.
 
-```
-vouch setup cargo --registry my-private-registry --configure
-```
-
-The command adds the following to your `~/.cargo/config.toml`:
+The command adds a registry named `codeartifact-<repository>` to `~/.cargo/config.toml`:
 
 ```toml
-[registry]
-global-credential-providers = ["vouch"]
-
-[registries.my-private-registry]
-index = "sparse+https://cargo.example.com/index/"
-credential-provider = ["vouch"]
+[registries.codeartifact-my-repo]
+index = "sparse+https://my-domain-123456789012.d.codeartifact.us-east-1.amazonaws.com/cargo/my-repo/"
+credential-provider = ["/path/to/vouch", "credential", "cargo", "--"]
 ```
 
-The `global-credential-providers` setting registers Vouch as the default credential provider for all registries. You can also configure it per-registry using the `credential-provider` key under a specific `[registries.*]` section.
+Vouch is configured only for this registry. Other registries, including crates.io, keep their existing credential providers.
 
 ---
 
@@ -68,67 +62,31 @@ The `global-credential-providers` setting registers Vouch as the default credent
 
 {{< session-note >}}
 
-With the credential provider configured and an active session, Cargo commands work without any extra flags or manual token management:
+With the registry configured and an active session, Cargo commands work without `cargo login` or token environment variables:
 
 ```bash
-# Build a project that depends on private crates
-cargo build
+# Publish a crate to the AWS CodeArtifact registry
+cargo publish --registry codeartifact-my-repo
 
-# Publish a crate to your private registry
-cargo publish --registry my-private-registry
-
-# Add a dependency from a private registry
-cargo add my-crate --registry my-private-registry
-
-# Update dependencies including private ones
-cargo update
+# Add a dependency from the AWS CodeArtifact registry
+cargo add my-crate --registry codeartifact-my-repo
 ```
 
-Vouch handles authentication transparently. You do not need to run `cargo login` or set any environment variables.
-
----
-
-## Private Registry Configuration
-
-To use a private Cargo registry with Vouch, you need to define the registry in your Cargo configuration. Add the following to your project's `.cargo/config.toml` or your global `~/.cargo/config.toml`:
-
-```toml
-[registries.my-private-registry]
-index = "sparse+https://cargo.example.com/index/"
-credential-provider = ["vouch"]
-```
-
-If your `Cargo.toml` references dependencies from the private registry:
+To depend on crates from the registry, reference it in `Cargo.toml`:
 
 ```toml
 [dependencies]
-my-crate = { version = "1.0", registry = "my-private-registry" }
+my-crate = { version = "1.0", registry = "codeartifact-my-repo" }
 ```
-
-Cargo will automatically call the Vouch credential provider when it needs to fetch or publish crates from this registry.
-
-### Registry server requirements
-
-{{< role admin >}}
-
-The private registry must support:
-
-- **Sparse index protocol** (recommended) or Git index protocol
-- **Bearer token authentication** via the `Authorization` HTTP header
-- The token format issued by Vouch (a signed JWT)
-
-Consult your registry server's documentation to confirm Bearer token support.
 
 ---
 
 ## How it works
 
-When Cargo needs to authenticate to a private registry, it delegates to the Vouch credential provider:
-
-1. **Cargo requests a token** -- Cargo calls the Vouch credential provider binary when it needs to authenticate to a configured private registry.
-2. **Vouch exchanges your session** -- The credential provider contacts the Vouch server and exchanges your active hardware-backed session for a registry-scoped Bearer token.
-3. **Token derived from your session** -- The token (a signed JWT) is scoped to the specific registry, expires when your session ends, and is never written to disk.
-4. **Cargo authenticates** -- The Bearer token is sent to the registry as part of the HTTP request, and the operation proceeds.
+1. **Cargo requests a token** -- Cargo calls the Vouch credential provider when it needs to authenticate to the `codeartifact-<repository>` registry.
+2. **OIDC to STS** -- Vouch exchanges your active hardware-backed session for temporary AWS STS credentials via `AssumeRoleWithWebIdentity`.
+3. **STS to AWS CodeArtifact** -- Vouch calls `codeartifact:GetAuthorizationToken` with the STS credentials to obtain an AWS CodeArtifact authorization token.
+4. **Cargo authenticates** -- Vouch returns the token to Cargo along with its expiry. Cargo sends it to AWS CodeArtifact in the `Authorization` header. The token is never written to disk.
 
 ---
 
@@ -137,27 +95,23 @@ When Cargo needs to authenticate to a private registry, it delegates to the Vouc
 ### Not authenticated
 
 ```
-error: failed to get token for registry `my-private-registry`
-caused by: not logged in to registry `my-private-registry`
+error: failed to get token for registry `codeartifact-my-repo`
 ```
 
 - Verify you have an active Vouch session: `vouch login`
 - Check that the Vouch agent is running: `vouch status`
-- Confirm the credential provider is configured for the registry: inspect `~/.cargo/config.toml` and verify the `credential-provider` key is set to `["vouch"]`.
+- Confirm the registry is configured: inspect `~/.cargo/config.toml` and verify the `[registries.codeartifact-my-repo]` section has a `credential-provider` entry pointing to Vouch.
+- Confirm the IAM role has the permissions listed under [Prerequisites](#prerequisites).
 
 ### Cargo not using Vouch
 
 If Cargo prompts you for a token or uses a different credential provider:
 
-1. Check your Cargo configuration for conflicting credential provider settings:
-   ```
-   cargo config get registry.global-credential-providers
-   ```
-2. Ensure no `CARGO_REGISTRY_TOKEN` or `CARGO_REGISTRIES_*_TOKEN` environment variables are set, as these override credential providers:
+1. Ensure no `CARGO_REGISTRY_TOKEN` or `CARGO_REGISTRIES_*_TOKEN` environment variables are set, as these override credential providers:
    ```bash
    env | grep CARGO_REGISTR
    ```
-3. Re-run `vouch setup cargo --configure` to ensure the configuration is correct.
+2. Re-run `vouch setup codeartifact --tool cargo --repository <REPO>` to ensure the configuration is correct.
 
 ### Unsupported protocol version
 
@@ -177,26 +131,4 @@ If your version is older than 1.74, update via rustup:
 rustup update stable
 ```
 
-### Token not cached
-
-If Vouch appears to request a new token for every Cargo operation (causing delays):
-
-- This is expected behavior. Vouch derives tokens from your active session on each request rather than caching them to disk. The overhead is under 100ms.
-- If latency is a concern, ensure the Vouch agent is running (`vouch status`), as it keeps your session in memory for fast token derivation.
-
-### Multiple credential providers
-
-If you have multiple credential providers configured and they conflict:
-
-1. Check the provider order in `~/.cargo/config.toml`:
-   ```toml
-   [registry]
-   global-credential-providers = ["vouch", "cargo:token"]
-   ```
-   Cargo tries providers in order. Place `vouch` first to ensure it is used before any fallback providers.
-
-2. To use Vouch for only specific registries, remove it from `global-credential-providers` and set it per-registry instead:
-   ```toml
-   [registries.my-private-registry]
-   credential-provider = ["vouch"]
-   ```
+For AWS-side errors (access denied, wrong region, cross-account domains), see [AWS CodeArtifact troubleshooting](/docs/codeartifact/#troubleshooting).

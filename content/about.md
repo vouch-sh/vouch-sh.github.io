@@ -40,7 +40,7 @@ Vouch provides native credential helpers for:
 - **[GitHub](/docs/github/)** -- Short-lived repository access tokens
 - **[Amazon EKS](/docs/eks/)** -- Kubernetes authentication via IAM
 - **[Docker](/docs/docker/)** -- Container registry authentication (ECR, GHCR)
-- **[Cargo](/docs/cargo/)** -- Private Cargo registry authentication
+- **[Cargo](/docs/cargo/)** -- Cargo authentication to AWS CodeArtifact registries
 - **[AWS CodeArtifact](/docs/codeartifact/)** -- Package repository authentication
 - **[AWS CodeCommit](/docs/codecommit/)** -- Git repository authentication
 - **[AWS Systems Manager Session Manager](/docs/ssm/)** -- Secure shell access through AWS Systems Manager
