@@ -61,7 +61,7 @@ integrations:
     - url: "/docs/cargo/"
       icon: "📦"
       name: "Cargo"
-      body: "Private registry authentication"
+      body: "Credential provider for AWS CodeArtifact registries"
     - url: "/docs/codeartifact/"
       icon: "📚"
       name: "AWS CodeArtifact"
