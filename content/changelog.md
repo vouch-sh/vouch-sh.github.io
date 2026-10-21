@@ -1,12 +1,119 @@
 ---
 title: "Changelog"
-description: "Major features in recent Vouch releases: PROXY protocol support, connection limits, RFC 9421 ECDSA signature encoding, mTLS certificate chain validation, SCIM PUT support, device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
+description: "Major features in recent Vouch releases: organization checks on account linking, a working Cargo credential provider, PROXY protocol support, connection limits, RFC 9421 ECDSA signature encoding, mTLS certificate chain validation, SCIM PUT support, device-flow client authentication, enforcement of registered grant and response types, a DNS-over-HTTPS resolver fix, mandatory attestation for hardware key registration, SLSA Build Level 3 provenance, a Cedar-based policy engine, and an audit events API with OCSF export."
 layout: "single"
 ---
 
 Highlights from recent Vouch releases. For the complete list of changes in every
 release, including bug fixes, dependency updates, and internal refactoring,
 see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
+
+## [v2026.10.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.10.3) - October 21, 2026
+
+- **Account linking requires the same organization**: the server bound a
+  sign-in to any existing account with a matching verified email and no
+  binding for that issuer. It bound a Google consumer account created with a
+  corporate address, and a sign-in through a second identity provider in a
+  different organization, to a SCIM-provisioned or enrolled account. The
+  server now binds a sign-in only when the sign-in resolves to the account's
+  organization. For every other sign-in, the server shows the "Account
+  Linking Blocked" page and records an `identity_bind_refused` audit event.
+- **The server accepts upstream ID tokens addressed only to Vouch**: the
+  server rejects an upstream ID token when its `aud` is missing or lists any
+  value other than the configured client ID
+  ([OpenID Connect Core](https://openid.net/specs/openid-connect-core-1_0.html)
+  section 3.1.3.7). The server rejects sign-ins from an identity provider
+  that adds extra audience values to its ID tokens.
+- **The server refuses AWS tokens that STS would reject**: the source
+  identity and the `vouch:Email` session tag carry the user's email, and STS
+  rejects an apostrophe in either. The server issued a token to a user such
+  as `o'malley@example.com`, and STS then rejected every AWS credential flow
+  that used it. `GET /v1/credentials/aws/token` now returns HTTP 422
+  `aws_identity_unsupported` and names the value. The server applies the
+  same check to the `vouch:Agent` tag, which comes from the DPoP proof's
+  `source` claim. The CLI checks the role session name against the AWS
+  character set before it calls STS.
+- **Token responses report the granted scope**: **Breaking:** the server
+  returns `invalid_scope` when a requested `scope` grants nothing
+  ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749) section 3.3). Client
+  credentials grants no scopes, so the server refuses every
+  client-credentials request that carries `scope`. The server also refuses
+  `scope` on a token exchange for an ID token. The device grant response
+  now includes `scope`, and the client-credentials response omits `scope`
+  instead of sending `null`.
+- **Every grant honors `resource` and `authorization_details`**: the client
+  credentials, device code, and FIDO2 assertion grants ignored `resource`.
+  These grants now set the access token audience from `resource` after the
+  server checks it against the client's `resource_uris`
+  ([RFC 8707](https://www.rfc-editor.org/rfc/rfc8707)). Client credentials
+  and device code refuse `authorization_details` with
+  `invalid_authorization_details`. The server accepts only the
+  `device_posture` type ([RFC 9396](https://www.rfc-editor.org/rfc/rfc9396)
+  section 5) and advertises it in discovery. Token exchange checks an
+  audience inherited from a narrowed subject token against the client's
+  `resource_uris`.
+- **The server issues a distinct authorization code for every request**:
+  two identical authorization requests in the same second received the same
+  code. The server treated the second redemption as a replay and revoked the
+  first flow's tokens. The server now adds a unique `jti` to each code.
+- **The server reads fractional JWT time claims**:
+  [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) section 2 permits a
+  non-integer NumericDate. The server rejected every sign-in from an
+  identity provider that wrote `exp` as a fraction, and rejected fractional
+  time claims in DPoP proofs, Request Objects, and JWT-bearer assertions. The
+  server now reads every time claim as a NumericDate.
+- **Request Object errors use the specified codes**: the server returns
+  `invalid_request_object` instead of `invalid_client` for a Request Object
+  signed with an unsupported algorithm. The server returns
+  `invalid_request` when a Request Object omits `response_type` or
+  `redirect_uri`, or when its `client_id` or `response_type` disagrees with
+  the request ([RFC 9101](https://www.rfc-editor.org/rfc/rfc9101) section
+  6.3). When the query `scope` differs from the Request Object's, the server
+  uses the Request Object's value instead of failing the request. The server
+  removes characters that RFC 6749 section 5.2 forbids from error
+  descriptions.
+- **The Cargo credential provider works with Cargo**: **Breaking:** Cargo
+  failed to run the provider. Cargo now runs it as `vouch --cargo-plugin`,
+  and the provider answers only for CodeArtifact registries. The provider
+  returns `url-not-supported` to every other registry, so Cargo tries its
+  next provider and never receives the Vouch session token. This release
+  removes `vouch setup cargo`; run `vouch setup codeartifact --tool cargo`
+  instead. The Cargo, pip, and npm helpers accept only HTTPS CodeArtifact
+  URLs on an AWS CodeArtifact host.
+- **SCIM and cleanup fixes**: a SCIM `displayName eq` filter matches
+  non-ASCII names regardless of case. A group stored before this release
+  matches after its next update. The expired-document sweep no longer
+  deletes a record that a request renewed after the sweep selected it, such
+  as a pushed authorization request extended during a deferred sign-in.
+
+## [v2026.10.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.10.2) - October 4, 2026
+
+- **The CLI no longer writes `cookie.txt`**: `vouch login` stores a
+  DPoP-bound access token, and the server refuses that token in a cookie or
+  under the `Bearer` scheme. This release removes `cookie.txt`.
+  `vouch credential token` prints the token for inspecting its claims only.
+  Create SCIM and admin API tokens on the admin UI's **API Tokens** page.
+- **The server checks `exp` and `nbf` at the request's arrival time**: the
+  server checks `exp` and `nbf` on every JWT it accepts against the time the
+  request arrived. It now checks `nbf` on access tokens, state tokens, and
+  upstream ID tokens. It rejects a Request Object or JWT-bearer assertion
+  that arrives at exactly `exp` plus the allowed clock skew.
+- **Userinfo checks the mTLS binding on every request**: `/oauth/userinfo`
+  skipped the [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) certificate
+  check when the access token expired during the request. The server now
+  checks the binding against the token it decoded at the start of the
+  request.
+- **The server answers a deactivated DPoP account with a DPoP challenge**:
+  the server returned a `Bearer` challenge to a deactivated or deleted
+  account that presented a DPoP-bound token. It now returns a DPoP challenge
+  ([RFC 9449](https://www.rfc-editor.org/rfc/rfc9449)).
+- **The server accepts an uppercase `HTTPS://` `request_uri`**: registration
+  and `/oauth/authorize` accept the scheme in any case and match the URI to a
+  registered `https://` entry.
+- **The server AMI sends the boot journal to CloudWatch**: the CloudWatch
+  agent collects the journal from the start of the current boot and sends
+  each line as plain text, including kernel messages and a
+  `vouch-server.service` that fails before the agent starts.
 
 ## [v2026.10.1](https://github.com/vouch-sh/vouch/releases/tag/v2026.10.1) - October 2, 2026
 
