@@ -95,7 +95,7 @@ The first person to enroll from your Google Workspace domain becomes the organiz
 
 ## Step 3 -- Deploy AWS federation
 
-Follow the AWS guide to [register the OIDC provider](/docs/aws/#step-1----register-the-vouch-oidc-provider) and [deploy a role](/docs/aws/#step-2----deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
+Follow the AWS guide to [register the OIDC provider](/docs/aws/#step-1--register-the-vouch-oidc-provider) and [deploy a role](/docs/aws/#step-2--deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
 
 When the role exists, copy its ARN -- you'll need it in Step 4.
 

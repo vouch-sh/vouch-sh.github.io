@@ -1,6 +1,6 @@
 # Vouch — Hardware-Backed Developer Credentials
 
-[![Hugo](https://img.shields.io/badge/Hugo-0.142.0-ff4088?logo=hugo)](https://gohugo.io/)
+[![Hugo](https://img.shields.io/badge/Hugo-latest-ff4088?logo=hugo)](https://gohugo.io/)
 [![Deploy](https://github.com/vouch-sh/vouch-sh.github.io/actions/workflows/hugo.yml/badge.svg)](https://github.com/vouch-sh/vouch-sh.github.io/actions/workflows/hugo.yml)
 [![OpenID Certified](https://img.shields.io/badge/OpenID-Certified-green)](https://openid.net/certification/certified-fapi-2-0-op-security-profile-final-message-signing-final/)
 
@@ -18,7 +18,7 @@ This repository contains the Hugo source for the [vouch.sh](https://vouch.sh) pr
 
 ## Development
 
-**Prerequisites:** [Hugo](https://gohugo.io/installation/) v0.142.0 extended
+**Prerequisites:** [Hugo](https://gohugo.io/installation/) latest extended release
 
 Start a local dev server with live reload:
 

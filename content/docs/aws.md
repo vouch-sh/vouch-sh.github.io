@@ -14,7 +14,7 @@ Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an 
 
 {{< tldr >}}
 - **Prerequisite:** [Getting Started](/docs/getting-started/) (CLI installed, YubiKey enrolled).
-- **Admin, once:** [register the OIDC provider](#step-1----register-the-vouch-oidc-provider) and [deploy a role](#step-2----deploy-a-role); share the role ARN.
+- **Admin, once:** [register the OIDC provider](#step-1--register-the-vouch-oidc-provider) and [deploy a role](#step-2--deploy-a-role); share the role ARN.
 - **Each developer:** `vouch setup aws --role <ROLE_ARN>`, then verify with `aws sts get-caller-identity --profile vouch`.
 - Rolling this out to a whole team? Follow the [Team Rollout playbook](/docs/rollout/).
 {{< /tldr >}}

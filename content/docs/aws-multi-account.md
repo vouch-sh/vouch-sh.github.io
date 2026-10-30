@@ -16,8 +16,8 @@ Multi-account AWS layouts have two models, both anchored in the **management acc
 Deploying separate OIDC providers in every account is not recommended: it multiplies maintenance, and one management account plus per-account access covers the same use cases with less surface area.
 
 {{< tldr >}}
-- **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1----register-the-vouch-oidc-provider) in your management account.
-- **Admin, once:** deploy the [hub role](#step-1----deploy-the-hub-role) there, then a [spoke role per member account](#step-2----deploy-spoke-roles-in-member-accounts) via StackSets or Terraform.
+- **Prerequisite:** the [OIDC provider is registered](/docs/aws/#step-1--register-the-vouch-oidc-provider) in your management account.
+- **Admin, once:** deploy the [hub role](#step-1--deploy-the-hub-role) there, then a [spoke role per member account](#step-2--deploy-spoke-roles-in-member-accounts) via StackSets or Terraform.
 - **Each developer:** `vouch setup aws --management-role <HUB_ARN> --role <SPOKE_ARN> --profile vouch-<env>` -- one profile per account.
 - On Identity Center? Skip the spokes and [register Vouch as a trusted token issuer](#aws-iam-identity-center) instead.
 {{< /tldr >}}
