@@ -2,7 +2,7 @@
 title: "Getting Started with Vouch"
 linkTitle: "Getting Started"
 description: "Install the Vouch CLI, enroll your YubiKey, and replace static secrets with hardware-backed credentials."
-weight: 0
+weight: 1
 subtitle: "Install the CLI, enroll a YubiKey, and start your first session"
 sitemap:
   priority: 0.9

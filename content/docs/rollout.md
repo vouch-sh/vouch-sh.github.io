@@ -2,7 +2,7 @@
 title: "Roll Out Vouch to Your Team"
 linkTitle: "Team Rollout"
 description: "Give a growing team access to AWS, EKS, CodeCommit, CodeArtifact, and more through a single OIDC provider and IAM role."
-weight: 1
+weight: 3
 subtitle: "One-time admin setup, one enrollment command per developer"
 sitemap:
   priority: 0.9
