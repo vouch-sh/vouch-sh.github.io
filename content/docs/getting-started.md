@@ -162,25 +162,6 @@ aws sts get-caller-identity --profile vouch
 git ls-remote https://github.com/example/private-repo.git
 ```
 
-Vouch provides credentials on demand to each tool through the integrations configured by your organization.
-
-### What the session enables
-
-One `vouch login` session provides credentials to each configured integration:
-
-| Command | Service |
-|---|---|
-| `ssh` | Servers (certificate auth) |
-| `git push` | GitHub |
-| `aws s3 ls` | AWS CLI |
-| `cdk deploy` | Infrastructure as Code |
-| `terraform apply` | Infrastructure as Code |
-| `docker push` | ECR / GHCR |
-| `helm push` | OCI Charts |
-| `kubectl` | EKS |
-
-These tools read your AWS config, SSH config, Git credential helper, or Docker config -- no additional wrapper commands are needed after setup.
-
 <div class="checkpoint">
 <p><strong>You are done with first use when...</strong></p>
 <ul>
@@ -195,27 +176,3 @@ These tools read your AWS config, SSH config, Git credential helper, or Docker c
 ## Next
 
 Set up the integrations your team uses: [AWS](/docs/aws/), [SSH](/docs/ssh/), or [GitHub](/docs/github/).
-
----
-
-## What happens when you login
-
-When you run `vouch login`, the following takes place behind the scenes:
-
-1. **FIDO2 assertion** -- The CLI asks your YubiKey to sign a challenge from the Vouch server. This proves possession of the enrolled key and requires both your PIN and a physical touch.
-2. **Identity verification** -- The server validates the signed assertion against the public key stored during enrollment.
-3. **Credential issuance** -- On success, the server issues a session token and an **SSH certificate** signed by the Vouch CA, valid for 8 hours.
-4. **On-demand credentials** -- AWS, Git, Docker, Cargo, and other credentials are obtained on-demand by their respective credential helpers when you use those tools. Each helper exchanges your active session for a short-lived, service-specific credential.
-5. **Local caching** -- The CLI stores the session and SSH certificate in memory (via the Vouch agent) so subsequent commands can use them without additional YubiKey interaction.
-
-Because every credential is short-lived and bound to a hardware key, there are no long-lived secrets on disk that can be stolen or leaked.
-
----
-
-## Related guides
-
-- [AWS Integration](/docs/aws/) -- Federate into AWS with OIDC for temporary STS credentials.
-- [SSH Certificates](/docs/ssh/) -- Connect to servers using short-lived SSH certificates.
-- [GitHub Integration](/docs/github/) -- Access private repositories with short-lived tokens.
-- [Security Model](/docs/security/) -- How Vouch protects credentials at every layer.
-- [FAQ](/docs/faq/) -- Common questions about supported hardware, session behavior, and platform support.
