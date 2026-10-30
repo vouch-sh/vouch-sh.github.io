@@ -11,13 +11,13 @@ params:
   docsGroup: featured
 ---
 
-A new AWS account does not need IAM users. IAM users come with long-lived access keys that never expire and can be committed to Git, leaked in logs, or compromised by malware. Rotation is a manual process, and offboarding requires finding and deleting every key the user created. AWS supports OIDC federation as an alternative: authentication happens through the identity system your team already uses.
+A new AWS account does not need IAM users or long-lived access keys. AWS's [new sign-up](https://docs.aws.amazon.com/accounts/latest/reference/sign-up-for-aws.html) creates accounts without them: project members sign in with an AWS Builder ID and get admin access to the project.
 
-If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, databases, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
+Vouch federates your **Google Workspace** domain into AWS instead. Access follows the email domain, every sign-in requires a hardware key, and one `vouch login` also covers SSH, GitHub, Docker registries, and databases.
 
 > **Already have AWS accounts?** Follow [Team Rollout](/docs/rollout/).
 
-[Compare Vouch with IAM user access keys, `aws login`, and IAM Identity Center](/docs/aws/#compare-aws-access-options).
+[Compare Vouch with IAM user access keys, `aws login`, IAM Identity Center, and AWS projects](/docs/aws/#compare-aws-access-options).
 
 ---
 
@@ -100,6 +100,8 @@ The first person to enroll from your Google Workspace domain becomes the organiz
 Follow the AWS guide to [register the OIDC provider](/docs/aws/#step-1--register-the-vouch-oidc-provider) and [deploy a role](/docs/aws/#step-2--deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
 
 When the role exists, copy its ARN -- you'll need it in Step 4.
+
+**Account created with the new AWS sign-up?** AWS's [managed policies for project accounts](https://docs.aws.amazon.com/accounts/latest/reference/scps-and-rcps-for-projects.html) allow IAM OIDC providers and roles outside the `/managed/` path, so you can deploy the Vouch role in a project account.
 
 ---
 
