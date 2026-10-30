@@ -17,6 +17,8 @@ If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One 
 
 > **Already have AWS accounts?** Follow [Team Rollout](/docs/rollout/).
 
+[Compare Vouch with IAM user access keys, `aws login`, and IAM Identity Center](/docs/aws/#compare-aws-access-options).
+
 ---
 
 ## Step 1 -- Get YubiKeys for the team
@@ -166,20 +168,3 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 - **Multiple AWS accounts:** See [Multi-Account AWS Strategy](/docs/aws-multi-account/) for chaining into dev/staging/prod accounts through a single hub.
 - **CI/CD gates:** Add [human approval gates](/docs/cicd/) to production deployments.
 - **Compliance requirements:** See [Security](/docs/security/) and the [Threat Model](/docs/threat-model/) for details on how Vouch protects credentials.
-
----
-
-## Compare AWS access options
-
-| | IAM user access keys | [`aws login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) | [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) | Vouch |
-|---|---|---|---|---|
-| **AWS prerequisites** | IAM user per person | Root, IAM user, or IAM federation; AWS CLI 2.32.0+ | AWS Organizations management account | OIDC provider + IAM role |
-| **Sign-in** | None (static key) | Browser, console credentials | Browser, IdP or Identity Center directory | FIDO2 key (PIN + touch) |
-| **Credential lifetime** | No expiry | Refreshed up to 12 hours | Account session 1 hour default, 12 hours max | AWS: 1 hour; session: 8 hours |
-| **Stored on disk** | `~/.aws/credentials` | `~/.aws/login/cache` (credentials + refresh token) | `~/.aws/sso/cache` (token) | Vouch session token; no AWS credentials |
-| **Covers** | AWS | AWS | AWS accounts, SSO applications | AWS, SSH, GitHub, Docker, CodeCommit, CodeArtifact, databases |
-| **Offboarding** | Delete each key | Disable the IAM user or IdP account | Deactivate in IdP (SCIM) | Deactivate in IdP (SCIM) or admin dashboard |
-
-[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) is a personal profile for AWS developer tools. It does not grant access to resources in an AWS account.
-
-Vouch can also [federate into IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center).
