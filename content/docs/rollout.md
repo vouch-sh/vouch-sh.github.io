@@ -10,7 +10,7 @@ params:
   docsGroup: featured
 ---
 
-This page rolls Vouch out to a team with existing AWS accounts. New AWS account? Follow [Startups](/docs/startups/).
+This page rolls Vouch out to a team with standard AWS accounts. No AWS account yet, or an AWS projects account? Follow [Startups](/docs/startups/).
 
 {{< tldr >}}
 1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [Day 0](#day-0--the-foundation).

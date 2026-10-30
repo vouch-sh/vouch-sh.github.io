@@ -17,7 +17,7 @@ Vouch replaces static developer secrets (SSH keys, AWS access keys, GitHub PATs)
 - A **YubiKey 5 series** (or any compatible FIDO2 security key)
 - A **Vouch server instance**, such as https://{{< instance-url >}}
 
-> **Setting up Vouch for your company?** New AWS account: follow [Startups](/docs/startups/). Existing AWS accounts: follow [Team Rollout](/docs/rollout/). Developers: continue below.
+> **Setting up Vouch for your company?** No AWS account yet, or an AWS projects account: follow [Startups](/docs/startups/). Standard AWS accounts: follow [Team Rollout](/docs/rollout/). Joining a team that already uses Vouch: continue below.
 
 ---
 
@@ -123,7 +123,19 @@ You can manage your enrolled security keys at any time from the Vouch dashboard:
 
 ---
 
-## Step 3 -- Daily login
+## Step 3 -- Connect your tools
+
+Run the setup commands your admin sent you. For AWS:
+
+```
+vouch setup aws --role <ROLE_ARN>
+```
+
+Use the exact command your admin sent; it may include `--region`. SSH needs no setup. Each integration guide lists its one setup command.
+
+---
+
+## Step 4 -- Daily login
 
 Each workday begins with a single `vouch login`. This authenticates you with your YubiKey and provisions short-lived credentials that last for 8 hours.
 
@@ -147,9 +159,9 @@ That is it. After login, every integration -- SSH, AWS, Git -- uses the session 
 
 ---
 
-## Step 4 -- Use your first credential
+## Step 5 -- Use your first credential
 
-Run the command for the integration your admin configured:
+Run a command for a tool you connected in Step 3:
 
 ```
 # SSH authenticates with your Vouch certificate
