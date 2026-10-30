@@ -15,19 +15,7 @@ A new AWS account does not need IAM users. IAM users come with long-lived access
 
 If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, databases, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
 
-> **Already have AWS accounts and a growing team?** This page is for day-one setups. For rolling Vouch out across an existing organization -- service enablement checklists, onboarding blocks, offboarding -- use the [Team Rollout playbook](/docs/rollout/). Comparisons with [IAM Identity Center and Builder ID](#why-not-iam-identity-center) are at the end of this page.
-
----
-
-## What you get
-
-After following this guide, your team will have:
-
-- **No IAM users** -- Every developer authenticates with their Google Workspace account + YubiKey.
-- **No access keys** -- AWS credentials are temporary (1 hour) and never written to disk.
-- **No credential files** -- No `~/.aws/credentials`, no SSH keys to distribute, no GitHub PATs.
-- **Instant offboarding** -- When someone's Google Workspace account is deactivated, their AWS access ends immediately.
-- **Full audit trail** -- Every AWS API call in CloudTrail shows which developer made it.
+> **Already have AWS accounts?** Follow [Team Rollout](/docs/rollout/).
 
 ---
 
@@ -39,36 +27,75 @@ Order [YubiKey 5 series](https://www.yubico.com/products/yubikey-5-overview/) ke
 
 ## Step 2 -- Enroll the team
 
-The first person to log into Vouch from your Google Workspace domain becomes the organization owner.
+Each person installs the CLI:
 
-**Owner enrollment:**
+{{< tabs >}}
+{{< tab "macOS" >}}
+Install with Homebrew:
+
+```
+brew install vouch-sh/tap/vouch
+```
+
+After installing, start the Vouch background service:
+
+```
+brew services start vouch
+```
+{{< /tab >}}
+{{< tab "Debian / Ubuntu" >}}
+```bash
+# Import GPG key
+curl -fsSL https://packages.vouch.sh/gpg/vouch.asc \
+  | gpg --dearmor \
+  | sudo tee /usr/share/keyrings/vouch-archive-keyring.gpg > /dev/null
+
+# Add repository
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/vouch-archive-keyring.gpg] https://packages.vouch.sh/apt stable main" \
+  | sudo tee /etc/apt/sources.list.d/vouch.list > /dev/null
+
+# Install
+sudo apt-get update && sudo apt-get install -y vouch
+```
+{{< /tab >}}
+{{< tab "Fedora / RHEL" >}}
+```bash
+sudo tee /etc/yum.repos.d/vouch.repo << 'EOF'
+[vouch]
+name=Vouch
+baseurl=https://packages.vouch.sh/rpm/$basearch/
+gpgcheck=1
+gpgkey=https://packages.vouch.sh/gpg/vouch.asc
+enabled=1
+EOF
+
+sudo dnf install -y vouch
+```
+{{< /tab >}}
+{{< tab "Windows" >}}
+Install with [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
+
+```
+winget install SmokeTurner.Vouch
+```
+
+> **Note:** Windows support is limited. The SSH agent and SSH integration are not available on Windows. Only basic authentication and credential exchange commands are supported: `enroll`, `login`, `credential aws`, and `credential github`.
+{{< /tab >}}
+{{< /tabs >}}
+
+Then enrolls with the same server:
 
 ```bash
-# Install the CLI
-brew install vouch-sh/tap/vouch
-brew services start vouch
-
-# Enroll (first person becomes the org owner)
 vouch enroll --server https://{{< instance-url >}}
 ```
 
-**Team member enrollment:**
-
-Each team member installs the CLI and enrolls with the same server:
-
-```bash
-brew install vouch-sh/tap/vouch
-brew services start vouch
-vouch enroll --server https://{{< instance-url >}}
-```
-
-As long as they authenticate with the same Google Workspace domain, they join the same organization. No invite codes or admin approval needed for initial enrollment. (Enrolling an additional key later asks for a tap from a key that is already registered.)
+The first person to enroll from your Google Workspace domain becomes the organization owner. Everyone else on the same domain joins that organization. Initial enrollment needs no invite code or admin approval. (Enrolling an additional key later asks for a tap from a key that is already registered.)
 
 ---
 
 ## Step 3 -- Deploy AWS federation
 
-Follow the [AWS integration guide](/docs/aws/) to register the OIDC provider and deploy a role with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
+Follow the AWS guide to [register the OIDC provider](/docs/aws/#step-1----register-the-vouch-oidc-provider) and [deploy a role](/docs/aws/#step-2----deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
 
 When the role exists, copy its ARN -- you'll need it in Step 4.
 
@@ -82,7 +109,7 @@ Each developer runs one command to configure their AWS profile:
 vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
 ```
 
-Replace the account ID with your own (printed in the CloudFormation stack outputs).
+Use the role ARN from Step 3.
 
 ---
 
@@ -126,7 +153,7 @@ Each integration is configured with one command. After setup, all integrations s
 
 ## What happens when someone leaves
 
-Deactivate their Google Workspace account and their Vouch-issued access ends. There are no access keys, `authorized_keys` entries, or PATs to find and revoke. The exact sequence, expiry timeline, and the optional AWS-side deny statement are in [When someone leaves](/docs/rollout/#when-someone-leaves) on the rollout playbook.
+Deactivate their Google Workspace account. Without [SCIM](/docs/scim/), also select **Deactivate** and **Revoke credentials** in the [admin dashboard](/docs/admin/). With SCIM, the IdP deactivation revokes their Vouch sessions automatically. Cached AWS credentials expire within 1 hour. There are no access keys, `authorized_keys` entries, or PATs to revoke. Expiry details: [When someone leaves](/docs/rollout/#when-someone-leaves).
 
 ---
 
