@@ -11,13 +11,11 @@ params:
   docsGroup: featured
 ---
 
-A new AWS account does not need IAM users. IAM users come with long-lived access keys that never expire and can be committed to Git, leaked in logs, or compromised by malware. Rotation is a manual process, and offboarding requires finding and deleting every key the user created. AWS supports OIDC federation as an alternative: authentication happens through the identity system your team already uses.
+This guide sets up a new AWS account, or an existing AWS projects account, and connects it to your **Google Workspace** domain with Vouch. Nobody on the team gets an IAM user or access key. Access follows the email domain, every sign-in requires a hardware key, and one `vouch login` also covers SSH, GitHub, Docker registries, and databases.
 
-If your team uses **Google Workspace**, Vouch bridges it directly into AWS. One `vouch login` gives every developer short-lived credentials for AWS, SSH, GitHub, Docker registries, databases, and more -- all tied to their Google Workspace identity, all backed by a hardware key.
+> **Already have standard AWS accounts?** Follow [Team Rollout](/docs/rollout/).
 
-> **Already have AWS accounts?** Follow [Team Rollout](/docs/rollout/).
-
-[Compare Vouch with IAM user access keys, `aws login`, and IAM Identity Center](/docs/aws/#compare-aws-access-options).
+[Compare Vouch with IAM user access keys, `aws login`, IAM Identity Center, and AWS projects](/docs/aws/#compare-aws-access-options).
 
 ---
 
@@ -27,7 +25,28 @@ Order [YubiKey 5 series](https://www.yubico.com/products/yubikey-5-overview/) ke
 
 ---
 
-## Step 2 -- Enroll the team
+## Step 2 -- Create the AWS account
+
+Already have an AWS projects account? Note its Region in [AWS Settings](https://settings.aws.com), don't invite team members to it, and skip to Step 3.
+
+Otherwise, AWS offers two sign-ups. Pick one.
+
+**AWS projects** ([new sign-up](https://docs.aws.amazon.com/accounts/latest/reference/sign-in-new.html)). AWS manages the account structure. The account runs in one project Region plus global services.
+
+1. Go to [aws.amazon.com](https://aws.amazon.com/) and choose **Create account**.
+2. Choose email, enter your company email address, verify it, and set a password. This creates your AWS Builder ID, which owns the account. (AWS is rolling this sign-up out gradually. If you see the standard sign-up instead, follow the standard account steps below.)
+3. Note the project Region in [AWS Settings](https://settings.aws.com). Developers need it in Step 5.
+
+**Standard account** ([advanced sign-up](https://docs.aws.amazon.com/accounts/latest/reference/sign-up-for-aws.html)). You control the account and AWS Organizations from day one.
+
+1. Sign up with your company email address. This creates the root user.
+2. Turn on MFA for the root user. Use the root user only for Step 4.
+
+Either way, don't give team members AWS sign-ins: don't invite them to the project or create IAM users. Vouch gives them access through the IAM role in Step 4, with the permissions you choose.
+
+---
+
+## Step 3 -- Enroll the team
 
 Each person installs the CLI:
 
@@ -95,27 +114,29 @@ The first person to enroll from your Google Workspace domain becomes the organiz
 
 ---
 
-## Step 3 -- Deploy AWS federation
+## Step 4 -- Deploy AWS federation
 
-Follow the AWS guide to [register the OIDC provider](/docs/aws/#step-1--register-the-vouch-oidc-provider) and [deploy a role](/docs/aws/#step-2--deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. For permissions, **start with `ReadOnlyAccess`** and broaden to exactly what your team needs -- don't default to `PowerUserAccess`. You can tighten access further later (see [Tips for restricting access](/docs/aws/#tips-for-restricting-access) for single-user restrictions, ABAC session tags, and similar patterns).
+Sign in to the account from Step 2 and open [AWS CloudShell](https://console.aws.amazon.com/cloudshell/); it is already signed in. In that account:
 
-When the role exists, copy its ARN -- you'll need it in Step 4.
+1. [Register the Vouch OIDC provider](/docs/aws/#step-1--register-the-vouch-oidc-provider).
+2. [Deploy a role](/docs/aws/#step-2--deploy-a-role) with a `*@yourcompany.com` email-domain trust condition. Start with `ReadOnlyAccess` and add only what your team needs. [Tips for restricting access](/docs/aws/#tips-for-restricting-access) covers single-user restrictions and ABAC session tags.
+3. Copy the role ARN. Developers need it in Step 5.
 
 ---
 
-## Step 4 -- Configure each developer's CLI
+## Step 5 -- Configure each developer's CLI
 
 Each developer runs one command to configure their AWS profile:
 
 ```bash
-vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper
+vouch setup aws --role arn:aws:iam::123456789012:role/VouchDeveloper --region <PROJECT_REGION>
 ```
 
-Use the role ARN from Step 3.
+Use the role ARN from Step 4. In an AWS projects account, set `--region` to the project Region from Step 2; project accounts deny requests to other Regions, except for global services. In a standard account, `--region` is optional.
 
 ---
 
-## Step 5 -- Log in and verify
+## Step 6 -- Log in and verify
 
 ```bash
 vouch login
@@ -136,7 +157,7 @@ From here, `aws s3 ls --profile vouch`, `cdk deploy`, `terraform apply`, and any
 
 ---
 
-## Step 6 -- Add more integrations
+## Step 7 -- Add more integrations
 
 With the same `vouch login` session, configure the rest of your toolchain:
 

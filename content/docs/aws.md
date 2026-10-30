@@ -549,17 +549,17 @@ When using [role chaining](/docs/aws-multi-account/#architecture) with an AI age
 
 `aws sso login` is the CLI command for IAM Identity Center.
 
-| | IAM user access keys | [`aws login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) | [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) | Vouch |
-|---|---|---|---|---|
-| **AWS prerequisites** | IAM user per person | Root, IAM user, or IAM federation; AWS CLI 2.32.0+ | AWS Organizations management account | OIDC provider + IAM role |
-| **Sign-in** | None (static key) | Browser, console credentials | Browser, IdP or Identity Center directory | FIDO2 key (PIN + touch) |
-| **Credential lifetime** | No expiry | Refreshed up to 12 hours | Account session 1 hour default, 12 hours max | AWS: 1 hour; session: 8 hours |
-| **Stored on disk** | `~/.aws/credentials` | `~/.aws/login/cache` (credentials + refresh token) | `~/.aws/sso/cache` (token) | Vouch session token; no AWS credentials |
-| **Covers** | AWS | AWS | AWS accounts, SSO applications | AWS, SSH, GitHub, Docker, CodeCommit, CodeArtifact, databases |
-| **Identity in CloudTrail** | IAM user | IAM user or role session | Role session per Identity Center user | Role session named with the user's email |
-| **Offboarding** | Delete each key | Disable the IAM user or IdP account | Deactivate in IdP (SCIM) | Deactivate in IdP (SCIM) or admin dashboard |
+| | IAM user access keys | [`aws login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) | [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) | [AWS projects](https://docs.aws.amazon.com/accounts/latest/reference/sign-up-for-aws.html) | Vouch |
+|---|---|---|---|---|---|
+| **AWS prerequisites** | IAM user per person | Root, IAM user, or IAM federation; AWS CLI 2.32.0+ | AWS Organizations management account | Account from the new AWS sign-up | OIDC provider + IAM role |
+| **Sign-in** | None (static key) | Browser, console credentials | Browser, IdP or Identity Center directory | Browser, AWS Builder ID (Google, GitHub, Apple, Amazon, or email) | FIDO2 key (PIN + touch) |
+| **Credential lifetime** | No expiry | Refreshed up to 12 hours | Account session 1 hour default, 12 hours max | Refreshed up to 12 hours (`aws login`) | AWS: 1 hour; session: 8 hours |
+| **Stored on disk** | `~/.aws/credentials` | `~/.aws/login/cache` (credentials + refresh token) | `~/.aws/sso/cache` (token) | `~/.aws/login/cache` (credentials + refresh token) | Vouch session token; no AWS credentials |
+| **Covers** | AWS | AWS | AWS accounts, SSO applications | AWS (project Region + global services) | AWS, SSH, GitHub, Docker, CodeCommit, CodeArtifact, databases |
+| **Identity in CloudTrail** | IAM user | IAM user or role session | Role session per Identity Center user | `onBehalfOf` with the member's Builder ID user ID | Role session named with the user's email |
+| **Offboarding** | Delete each key | Disable the IAM user or IdP account | Deactivate in IdP (SCIM) | Project owner removes the member in AWS Settings | Deactivate in IdP (SCIM) or admin dashboard |
 
-[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) is a personal profile for AWS developer tools. It does not grant access to resources in an AWS account.
+[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) is a personal profile. It signs in to AWS developer tools and, for accounts created with the new AWS sign-up, to projects. Project members have admin access to every service in the project.
 
 Vouch can also [federate into IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center).
 

@@ -32,6 +32,6 @@ Vouch replaces the static secrets your team manages today — AWS access keys, S
   <div class="journey-card">
     <h3>For DevOps and platform teams</h3>
     <p>Roll Vouch out to a growing team — AWS, EKS, CodeCommit, CodeArtifact, and more.</p>
-    <p><a href="/docs/rollout/">Use the rollout playbook</a> · <a href="/docs/startups/">Starting from scratch?</a></p>
+    <p><a href="/docs/rollout/">Use the rollout playbook</a> · <a href="/docs/startups/">No AWS account yet, or using AWS projects?</a></p>
   </div>
 </div>
