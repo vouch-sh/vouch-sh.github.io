@@ -169,22 +169,17 @@ As your team grows, switch to the [Team Rollout playbook](/docs/rollout/) -- it 
 
 ---
 
-## Why not IAM Identity Center?
+## Compare AWS access options
 
-[AWS IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) (formerly AWS SSO) is AWS's own solution for federated access. It is designed for organizations managing permission sets across multiple AWS accounts. The differences for a small team:
+| | IAM user access keys | [`aws login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) | [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) | Vouch |
+|---|---|---|---|---|
+| **AWS prerequisites** | IAM user per person | Root, IAM user, or IAM federation; AWS CLI 2.32.0+ | AWS Organizations management account | OIDC provider + IAM role |
+| **Sign-in** | None (static key) | Browser, console credentials | Browser, IdP or Identity Center directory | FIDO2 key (PIN + touch) |
+| **Credential lifetime** | No expiry | Refreshed up to 12 hours | Account session 1 hour default, 12 hours max | AWS: 1 hour; session: 8 hours |
+| **Stored on disk** | `~/.aws/credentials` | `~/.aws/login/cache` (credentials + refresh token) | `~/.aws/sso/cache` (token) | Vouch session token; no AWS credentials |
+| **Covers** | AWS | AWS | AWS accounts, SSO applications | AWS, SSH, GitHub, Docker, CodeCommit, CodeArtifact, databases |
+| **Offboarding** | Delete each key | Disable the IAM user or IdP account | Deactivate in IdP (SCIM) | Deactivate in IdP (SCIM) or admin dashboard |
 
-| Consideration | IAM Identity Center | Vouch |
-|---|---|---|
-| **Setup complexity** | Requires an AWS Organizations management account, an Identity Center instance, permission sets, and user/group sync | Deploy one CloudFormation template and run `vouch setup aws` |
-| **Scope** | AWS only | AWS + SSH + GitHub + Docker + CodeCommit + CodeArtifact + databases + more |
-| **Authentication** | Browser-based SSO (MFA depends on IdP config) | FIDO2 hardware key (phishing-resistant by design) |
-| **Typical team size** | 20+ people across multiple accounts | 2--50 people |
-| **Credential type** | Session credentials via `aws sso login` | Session credentials via `vouch login` |
+[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) is a personal profile for AWS developer tools. It does not grant access to resources in an AWS account.
 
-For 20+ people with per-account permission sets across multiple AWS accounts, use IAM Identity Center (Vouch can [federate into it](/docs/aws-multi-account/#aws-iam-identity-center)). For a small team, Vouch requires less setup: one CloudFormation template and one command per developer.
-
-## Why not AWS Builder ID?
-
-[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) provides individual developer identity for AWS services. The key difference: Builder ID is **individual** identity, not **organizational** identity. It does not know about your Google Workspace domain, your team structure, or your offboarding process. You cannot restrict AWS access to "people who work at my company" using Builder ID alone.
-
-Vouch federates your organization's identity (Google Workspace domain) into AWS, so access is tied to employment by design.
+Vouch can also [federate into IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center).
