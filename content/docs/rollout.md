@@ -10,10 +10,10 @@ params:
   docsGroup: featured
 ---
 
-This page covers rolling Vouch out to a team: AWS, Kubernetes, and the package and repo services around them, with no static keys distributed at any point. Each step links to a deep-dive guide for details.
+This page rolls Vouch out to a team with existing AWS accounts. New AWS account? Follow [Startups](/docs/startups/).
 
 {{< tldr >}}
-1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [30 minutes](#day-0----the-foundation).
+1. **Once (admin):** register the OIDC provider, deploy one IAM role, note its ARN — [Day 0](#day-0--the-foundation).
 2. **Per service (admin):** add the service's IAM actions to that role — [checklist below](#enable-services).
 3. **Per developer:** they run `vouch enroll`, then `vouch setup aws --role <ARN>` — [send them this](#onboard-developers).
 4. **Ongoing:** offboarding is your IdP plus at most [one deny statement](#when-someone-leaves).
@@ -23,23 +23,36 @@ This page covers rolling Vouch out to a team: AWS, Kubernetes, and the package a
 
 {{< role admin >}}
 
-Everything below hangs off one OIDC provider and one IAM role. The decisions in this section determine everything that follows.
+Everything below uses one OIDC provider and one IAM role.
 
-1. **Enroll yourself.** Install the CLI and enroll your YubiKey -- [Getting Started](/docs/getting-started/) (5 minutes). The first person to enroll from your Google Workspace domain becomes the organization owner.
+1. **Enroll yourself.** The first person to enroll from your Google Workspace domain becomes the organization owner.
 
-2. **Register the Vouch OIDC provider** in AWS -- one CLI command or one Terraform/CloudFormation resource. Exactly one per organization, in your management account if you have an AWS Organization. [AWS guide, Step 1](/docs/aws/#step-1----register-the-vouch-oidc-provider).
+   ```bash
+   brew install vouch-sh/tap/vouch
+   brew services start vouch
+   vouch enroll --server https://{{< instance-url >}}
+   ```
+
+2. **Register the Vouch OIDC provider** in AWS -- one CLI command or one Terraform/CloudFormation resource. Exactly one per organization, in your management account if you have an AWS Organization. [AWS guide, Step 1](/docs/aws/#step-1--register-the-vouch-oidc-provider).
 
 3. **Pick your account layout.** This decides what roles you deploy:
 
    | Your AWS layout | What to deploy | Guide |
    |---|---|---|
-   | Single account | One `VouchDeveloper` role | [AWS guide](/docs/aws/#step-2----deploy-a-role) |
+   | Single account | One `VouchDeveloper` role | [AWS guide](/docs/aws/#step-2--deploy-a-role) |
    | Multiple accounts (Organizations) | A hub role in the management account, a spoke role per account (StackSets or a Terraform module) | [Multi-account](/docs/aws-multi-account/) |
    | IAM Identity Center already in place | Register Vouch as a trusted token issuer | [Identity Center](/docs/aws-multi-account/#aws-iam-identity-center) |
 
 4. **Deploy the role(s)** with the standard trust policy scoped to `*@yourdomain.com`. Start the permissions policy at `ReadOnlyAccess` and broaden deliberately. **Write down the role ARN** -- it is the only thing developers need from you.
 
-5. **Plan user lifecycle.** Under ~15 people, manual member management in the [admin dashboard](/docs/admin/) is fine. At 15+, connect [SCIM](/docs/scim/) so your IdP creates and deactivates Vouch users automatically.
+5. **Connect your CLI** to the role:
+
+   ```bash
+   vouch setup aws --role <ROLE_ARN>
+   vouch login
+   ```
+
+6. **Plan user lifecycle.** Under ~15 people, manual member management in the [admin dashboard](/docs/admin/) is fine. At 15+, connect [SCIM](/docs/scim/) so your IdP creates and deactivates Vouch users automatically.
 
 <div class="checkpoint">
 <p><strong>Foundation is done when...</strong></p>
@@ -81,7 +94,7 @@ Sequence tip: ship **AWS first** (everything else chains off it), then EKS and C
 Developers never touch IAM. Paste the block below into Slack or your onboarding wiki and fill in the two placeholders; each person completes setup on their own.
 
 ````markdown
-**Set up Vouch (one time, ~5 min, YubiKey required)**
+**Set up Vouch (one time, YubiKey required)**
 
 1. Install the CLI and background agent:
 
@@ -121,7 +134,7 @@ Vouch installs alongside existing credentials -- the `vouch` AWS profile, SSH ce
 1. **Pilot on yourself plus one volunteer** for a week, with static credentials still in place.
 2. **Migrate one integration at a time**, AWS first. The [migration guide](/docs/migration/) has the recommended order, per-integration checklists, and a rollback plan for each integration.
 3. **Onboard the team** with the block above once the pilot is clean.
-4. **Revoke static credentials last** -- deactivate old AWS access keys, remove stale `authorized_keys` entries and PATs only after everyone has run on Vouch for a week. Commands in [migration, Phase 3](/docs/migration/#phase-3----revoke-old-credentials).
+4. **Revoke static credentials last** -- deactivate old AWS access keys, remove stale `authorized_keys` entries and PATs only after everyone has run on Vouch for a week. Commands in [migration, Phase 3](/docs/migration/#phase-3--revoke-old-credentials).
 
 CI/CD pipelines are a separate track: they have no YubiKeys and should use their platform's own OIDC federation or instance roles, not Vouch. See [CI/CD considerations](/docs/migration/#cicd-considerations) -- Vouch's [CI/CD integration](/docs/cicd/) adds *human approval gates* on top, it does not replace machine credentials.
 
@@ -147,12 +160,3 @@ What expires on its own:
 
 There are no access keys, `authorized_keys` entries, or PATs to revoke. Full failure-mode detail (including **break-glass access** if the Vouch server is ever unreachable) is in [Availability](/docs/availability/).
 
----
-
-## Related guides
-
-- [AWS Integration](/docs/aws/) -- the OIDC provider and role this whole page builds on.
-- [Multi-Account AWS](/docs/aws-multi-account/) -- hub/spoke roles, StackSets, SCP guardrails.
-- [SCIM Provisioning](/docs/scim/) -- automatic user lifecycle from your IdP.
-- [Migration Guide](/docs/migration/) -- integration-by-integration checklists and rollback.
-- [Availability and Failure Modes](/docs/availability/) -- offline behavior and break-glass planning.

@@ -14,7 +14,7 @@ Vouch eliminates static AWS access keys. You configure AWS to trust Vouch as an 
 
 {{< tldr >}}
 - **Prerequisite:** [Getting Started](/docs/getting-started/) (CLI installed, YubiKey enrolled).
-- **Admin, once:** [register the OIDC provider](#step-1----register-the-vouch-oidc-provider) and [deploy a role](#step-2----deploy-a-role); share the role ARN.
+- **Admin, once:** [register the OIDC provider](#step-1--register-the-vouch-oidc-provider) and [deploy a role](#step-2--deploy-a-role); share the role ARN.
 - **Each developer:** `vouch setup aws --role <ROLE_ARN>`, then verify with `aws sts get-caller-identity --profile vouch`.
 - Rolling this out to a whole team? Follow the [Team Rollout playbook](/docs/rollout/).
 {{< /tldr >}}
@@ -545,20 +545,23 @@ When using [role chaining](/docs/aws-multi-account/#architecture) with an AI age
 
 ---
 
-## How Vouch compares to `aws login` and `aws sso login`
+## Compare AWS access options
 
-AWS's built-in [`aws login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-local-development) and [`aws sso login`](https://docs.aws.amazon.com/signin/latest/userguide/command-line-sign-in.html#command-line-sign-in-sso) cover AWS only. `vouch login` covers AWS *and* SSH, GitHub, Docker, Cargo, CodeCommit, CodeArtifact, and databases -- from one phishing-resistant hardware-key session where every credential traces back to a physical key.
+`aws sso login` is the CLI command for IAM Identity Center.
 
-| | `aws login` | `aws sso login` | `vouch login` |
-|---|---|---|---|
-| **Authentication** | Browser + console credentials | Browser + Identity Center | YubiKey tap (FIDO2) |
-| **Phishing-resistant** | Depends on IdP | Depends on IdP | Yes (hardware-bound) |
-| **AWS credentials** | Yes (up to 12h) | Yes | Yes (up to 1h) |
-| **SSH, GitHub, Docker, etc.** | No | No | Yes |
-| **Identity in CloudTrail** | IAM user or role | SSO user | Hardware-verified user |
-| **Requires AWS-managed service** | No | IAM Identity Center | No |
+| | IAM user access keys | [`aws login`](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html) | [IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) | Vouch |
+|---|---|---|---|---|
+| **AWS prerequisites** | IAM user per person | Root, IAM user, or IAM federation; AWS CLI 2.32.0+ | AWS Organizations management account | OIDC provider + IAM role |
+| **Sign-in** | None (static key) | Browser, console credentials | Browser, IdP or Identity Center directory | FIDO2 key (PIN + touch) |
+| **Credential lifetime** | No expiry | Refreshed up to 12 hours | Account session 1 hour default, 12 hours max | AWS: 1 hour; session: 8 hours |
+| **Stored on disk** | `~/.aws/credentials` | `~/.aws/login/cache` (credentials + refresh token) | `~/.aws/sso/cache` (token) | Vouch session token; no AWS credentials |
+| **Covers** | AWS | AWS | AWS accounts, SSO applications | AWS, SSH, GitHub, Docker, CodeCommit, CodeArtifact, databases |
+| **Identity in CloudTrail** | IAM user | IAM user or role session | Role session per Identity Center user | Role session named with the user's email |
+| **Offboarding** | Delete each key | Disable the IAM user or IdP account | Deactivate in IdP (SCIM) | Deactivate in IdP (SCIM) or admin dashboard |
 
-If you already use IAM Identity Center, `aws sso login` covers AWS access. Vouch adds SSH, GitHub, Docker, and the other integrations on the same authentication event.
+[AWS Builder ID](https://docs.aws.amazon.com/signin/latest/userguide/sign-in-aws_builder_id.html) is a personal profile for AWS developer tools. It does not grant access to resources in an AWS account.
+
+Vouch can also [federate into IAM Identity Center](/docs/aws-multi-account/#aws-iam-identity-center).
 
 ---
 

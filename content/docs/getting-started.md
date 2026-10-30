@@ -17,7 +17,7 @@ Vouch replaces static developer secrets (SSH keys, AWS access keys, GitHub PATs)
 - A **YubiKey 5 series** (or any compatible FIDO2 security key)
 - A **Vouch server instance**, such as https://{{< instance-url >}}
 
-> **Organization ownership:** The first person to log into Vouch from a Google Workspace domain automatically becomes the organization owner. The owner can configure integrations, manage team members, and connect services like GitHub and AWS for the rest of the team.
+> **Setting up Vouch for your company?** New AWS account: follow [Startups](/docs/startups/). Existing AWS accounts: follow [Team Rollout](/docs/rollout/). Developers: continue below.
 
 ---
 
@@ -149,7 +149,7 @@ That is it. After login, every integration -- SSH, AWS, Git -- uses the session 
 
 ## Step 4 -- Use your first credential
 
-With an active session, your tools work without extra wrappers. Try the integration your administrator has already configured:
+Run the command for the integration your admin configured:
 
 ```
 # SSH authenticates with your Vouch certificate
@@ -162,25 +162,6 @@ aws sts get-caller-identity --profile vouch
 git ls-remote https://github.com/example/private-repo.git
 ```
 
-Vouch provides credentials on demand to each tool through the integrations configured by your organization.
-
-### What the session enables
-
-One `vouch login` session provides credentials to each configured integration:
-
-| Command | Service |
-|---|---|
-| `ssh` | Servers (certificate auth) |
-| `git push` | GitHub |
-| `aws s3 ls` | AWS CLI |
-| `cdk deploy` | Infrastructure as Code |
-| `terraform apply` | Infrastructure as Code |
-| `docker push` | ECR / GHCR |
-| `helm push` | OCI Charts |
-| `kubectl` | EKS |
-
-These tools read your AWS config, SSH config, Git credential helper, or Docker config -- no additional wrapper commands are needed after setup.
-
 <div class="checkpoint">
 <p><strong>You are done with first use when...</strong></p>
 <ul>
@@ -192,61 +173,6 @@ These tools read your AWS config, SSH config, Git credential helper, or Docker c
 
 ---
 
-## Step 5 -- Choose your next integration
+## Next
 
-Before a tool can use Vouch, your organization needs to configure the matching integration. Choose the guide that matches the credential you want to replace next.
-
-<div class="journey-grid">
-  <div class="journey-card">
-    <h3>Cloud and infrastructure</h3>
-    <p>Start here for AWS, servers, Kubernetes, databases, and infrastructure tooling.</p>
-    <p><a href="/docs/aws/">AWS</a> · <a href="/docs/ssh/">SSH</a> · <a href="/docs/eks/">EKS</a> · <a href="/docs/kubernetes/">Kubernetes</a> · <a href="/docs/databases/">Databases</a> · <a href="/docs/iac/">IaC</a></p>
-  </div>
-  <div class="journey-card">
-    <h3>Code and packages</h3>
-    <p>Use Vouch for source control, containers, package repositories, and AWS developer services.</p>
-    <p><a href="/docs/github/">GitHub</a> · <a href="/docs/docker/">Docker</a> · <a href="/docs/codeartifact/">CodeArtifact</a> · <a href="/docs/codecommit/">CodeCommit</a> · <a href="/docs/cargo/">Cargo</a></p>
-  </div>
-  <div class="journey-card">
-    <h3>Organization rollout</h3>
-    <p>Roll Vouch out to your team, onboard users, and connect identity lifecycle controls.</p>
-    <p><a href="/docs/rollout/">Team rollout</a> · <a href="/docs/startups/">Startup setup</a> · <a href="/docs/admin/">Admin dashboard</a> · <a href="/docs/scim/">SCIM</a> · <a href="/docs/migration/">Migration</a></p>
-  </div>
-  <div class="journey-card">
-    <h3>Security review</h3>
-    <p>Evaluate the architecture, credential lifecycle, threat model, and failure modes.</p>
-    <p><a href="/docs/security/">Security</a> · <a href="/docs/architecture/">Architecture</a> · <a href="/docs/threat-model/">Threat model</a> · <a href="/docs/availability/">Availability</a></p>
-  </div>
-</div>
-
----
-
-## Step 6 -- Onboard your team
-
-Once Vouch works for you, onboarding the team requires no admin action. Each person installs the CLI and enrolls with the same server. Anyone authenticating through your Google Workspace domain automatically joins your organization -- no invite codes, no admin approval.
-
-The **[Team Rollout playbook](/docs/rollout/)** is the guide for this phase. It has a copy-pasteable onboarding block for Slack, a per-service enablement checklist (AWS, EKS, CodeCommit, CodeArtifact, and more), when to adopt [SCIM](/docs/scim/) (15+ people), and offboarding.
-
----
-
-## What happens when you login
-
-When you run `vouch login`, the following takes place behind the scenes:
-
-1. **FIDO2 assertion** -- The CLI asks your YubiKey to sign a challenge from the Vouch server. This proves possession of the enrolled key and requires both your PIN and a physical touch.
-2. **Identity verification** -- The server validates the signed assertion against the public key stored during enrollment.
-3. **Credential issuance** -- On success, the server issues a session token and an **SSH certificate** signed by the Vouch CA, valid for 8 hours.
-4. **On-demand credentials** -- AWS, Git, Docker, Cargo, and other credentials are obtained on-demand by their respective credential helpers when you use those tools. Each helper exchanges your active session for a short-lived, service-specific credential.
-5. **Local caching** -- The CLI stores the session and SSH certificate in memory (via the Vouch agent) so subsequent commands can use them without additional YubiKey interaction.
-
-Because every credential is short-lived and bound to a hardware key, there are no long-lived secrets on disk that can be stolen or leaked.
-
----
-
-## Related guides
-
-- [AWS Integration](/docs/aws/) -- Federate into AWS with OIDC for temporary STS credentials.
-- [SSH Certificates](/docs/ssh/) -- Connect to servers using short-lived SSH certificates.
-- [GitHub Integration](/docs/github/) -- Access private repositories with short-lived tokens.
-- [Security Model](/docs/security/) -- How Vouch protects credentials at every layer.
-- [FAQ](/docs/faq/) -- Common questions about supported hardware, session behavior, and platform support.
+Set up the integrations your team uses: [AWS](/docs/aws/), [SSH](/docs/ssh/), or [GitHub](/docs/github/).

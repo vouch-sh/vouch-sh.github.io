@@ -8,7 +8,7 @@ This is the **vouch.sh** product site — a Hugo-based static site hosted via Gi
 
 ## Architecture
 
-- **Static site generator**: Hugo (v0.142.0 extended)
+- **Static site generator**: Hugo (latest release, extended)
 - **Templating**: Hugo's Go templates in `layouts/`
 - **Content**: Markdown files in `content/` with YAML front matter
 - **Styling**: Hand-written CSS in `assets/css/main.css` (processed by Hugo Pipes)
@@ -128,7 +128,7 @@ prefixes).
 
 ## Deployment
 
-Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/hugo.yml`) which builds with Hugo v0.142.0 (pinned in the workflow) and force-pushes the built output to the `gh-pages` branch. The `static/CNAME` file maps the custom domain `vouch.sh`.
+Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/hugo.yml`) which builds with the latest Hugo release (resolved at build time) and force-pushes the built output to the `gh-pages` branch. The `static/CNAME` file maps the custom domain `vouch.sh`.
 
 ## Stream Timeout Prevention
 
