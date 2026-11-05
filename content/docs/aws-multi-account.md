@@ -450,6 +450,26 @@ resource "aws_ssoadmin_application_access_scope" "vouch" {
   scope           = "sso:account:access"
 }
 
+# Optional: account access manager. Let the application list and assume the
+# IAM roles a user is entitled to. The target is the AWS-managed "AWS account
+# access" application that IAM creates when you enable account access manager.
+variable "account_access_application_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the Identity Center application with provider account-access"
+}
+
+resource "aws_ssoadmin_application_access_scope" "vouch_account_access" {
+  for_each = var.account_access_application_arn == null ? toset([]) : toset([
+    "account_access:assume",
+    "account_access:read_only",
+  ])
+
+  application_arn    = aws_ssoadmin_application.vouch.arn
+  scope              = each.key
+  authorized_targets = [var.account_access_application_arn]
+}
+
 output "vouch_application_arn" {
   value = aws_ssoadmin_application.vouch.arn
 }
@@ -495,6 +515,38 @@ Prefer the console? In the [IAM Identity Center console](https://console.aws.ama
 
 > **Note:** The `sso:account:access` scope grants the application access to every account and permission set assigned to the authenticated user; you cannot scope it to a subset. Access is still bounded by each user's own Identity Center assignments.
 
+#### Account access manager (optional)
+
+If you use [account access manager](https://aws.amazon.com/blogs/security/introducing-aws-account-access-manager-iam-role-flexibility-with-centralized-workforce-access/) to entitle users to existing IAM roles, give the Vouch application two more access scopes. Both are authorized for the AWS-managed **AWS account access** application:
+
+| Scope | Allows |
+|---|---|
+| `account_access:assume` | Get temporary credentials for a role the user is entitled to |
+| `account_access:read_only` | List the accounts and roles the user is entitled to |
+
+Leave `account_access:favorite` off. It only manages favorites in the account access portal.
+
+In the console, open **Applications** -> **Vouch** -> **Trusted applications**, edit **AWS account access**, and select `account_access:assume` and `account_access:read_only`. Alternatively, set `account_access_application_arn` in the Terraform above, or use the AWS CLI:
+
+```bash
+APP_ARN=$(terraform output -raw vouch_application_arn)
+INSTANCE_ARN=$(aws sso-admin list-instances --query 'Instances[0].InstanceArn' --output text)
+AAM_APP_ARN=$(aws sso-admin list-applications --instance-arn "$INSTANCE_ARN" \
+  --query "Applications[?ApplicationProviderArn=='arn:aws:sso::aws:applicationProvider/account-access'].ApplicationArn" \
+  --output text)
+
+for scope in account_access:assume account_access:read_only; do
+  aws sso-admin put-application-access-scope \
+    --application-arn "$APP_ARN" \
+    --scope "$scope" \
+    --authorized-targets "$AAM_APP_ARN"
+done
+```
+
+Each entitled role needs only the account access manager statement in its trust policy (the `account-access.amazonaws.com` service principal shown in the AWS post). Credentials are issued by account access manager, so CloudTrail shows the `AssumeRole` call made by `account-access.amazonaws.com`, with the user's email as the session name and their Identity Center identity attached.
+
+> **AI agents cannot use entitled roles.** Account access manager credentials cannot be constrained with a session policy, so Vouch refuses to issue them to a detected AI coding agent, as it does for permission sets.
+
 ### IdC Step 3 -- Discover accounts and permission sets
 
 {{< role developer >}}
@@ -530,6 +582,7 @@ Re-run `vouch setup aws --discover` at any time to pick up newly assigned accoun
 <ul>
   <li>The management role is named as the principal in the customer managed application's resource policy (<em>application credentials</em>), allowing it to call <code>sso-oauth:CreateTokenWithIAM</code>.</li>
   <li>The trusted token issuer's <strong>Issuer URL</strong> and the application's <strong>Aud claim</strong> are both <code>https://{{< instance-url >}}</code>.</li>
+  <li>If you use account access manager, the application's <strong>AWS account access</strong> trusted application has <code>account_access:assume</code> and <code>account_access:read_only</code> selected.</li>
   <li><code>vouch setup aws --discover</code> writes a profile per assignment, and <code>aws sts get-caller-identity</code> against one returns the expected account.</li>
 </ul>
 </div>
