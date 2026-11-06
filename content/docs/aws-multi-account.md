@@ -543,9 +543,9 @@ for scope in account_access:assume account_access:read_only; do
 done
 ```
 
-Each entitled role needs only the account access manager statement in its trust policy (the `account-access.amazonaws.com` service principal shown in the AWS post). Credentials are issued by account access manager, so CloudTrail shows the `AssumeRole` call made by `account-access.amazonaws.com`, with the user's email as the session name and their Identity Center identity attached.
+Once the scopes are enabled, `vouch setup aws --discover` saves the account access manager tenant, and Vouch gets credentials for entitled roles from account access manager first. Profiles keep the usual `--role` form. Each entitled role then needs only the account access manager statement in its trust policy (the `account-access.amazonaws.com` service principal shown in the AWS post). CloudTrail shows the `AssumeRole` call made by `account-access.amazonaws.com`, with the user's email as the session name and their Identity Center identity attached. If account access manager cannot issue credentials for a role, Vouch falls back to [role chaining](#step-1--deploy-the-hub-role), which works only if the role also trusts the Vouch management role.
 
-> **AI agents cannot use entitled roles.** Account access manager credentials cannot be constrained with a session policy, so Vouch refuses to issue them to a detected AI coding agent, as it does for permission sets.
+> **AI agents always use role chaining.** Account access manager credentials cannot be constrained with a session policy, so Vouch never requests them for a detected AI coding agent. The agent gets read-only credentials through role chaining instead, so an entitled role that agents need must also trust the Vouch management role. A role with only the account access manager statement is not available to agents.
 
 ### IdC Step 3 -- Discover accounts and permission sets
 
