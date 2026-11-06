@@ -10,8 +10,8 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 
 ## [v2026.11.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.11.2) - November 6, 2026
 
-The v2026.11.1 release build failed, so v2026.11.1 was tagged but never
-published. v2026.11.2 is the first release that contains these changes.
+The v2026.11.1 release build failed, so this project published no v2026.11.1
+release. v2026.11.2 is the first release that contains these changes.
 
 - **The CLI gets credentials for roles entitled through account access
   manager**: when the Vouch IAM Identity Center application has the
@@ -27,8 +27,8 @@ published. v2026.11.2 is the first release that contains these changes.
   no session policy to restrict the agent's credentials. Account access
   manager is available in the commercial partition only.
 - **Commands use the management role a profile records**: with several AWS
-  organizations configured, the CLI can resolve a member-account role to its
-  management role only through `--via`. `vouch setup aws` records `--via` in
+  organizations configured, the CLI needs `--via` to resolve a member-account
+  role to its management role. `vouch setup aws` records `--via` in
   each profile, but most commands ignored it. Every command that reads its role
   from a profile now passes the recorded `--via`. `vouch credential eks`,
   `rds`, and `redshift --role`, `vouch exec`, `vouch env`, and
@@ -40,8 +40,8 @@ published. v2026.11.2 is the first release that contains these changes.
   changes. The CLI now writes to the file at the end of the link. This
   applies to every file a setup command edits, including `~/.ssh/config`,
   `~/.aws/config`, and the Docker, npm, pip, uv, and Cargo configuration. On
-  Unix, a rewritten file keeps its owner and mode, and a new file is created
-  with mode 0600.
+  Unix, a rewritten file keeps its owner and mode, and the CLI creates a new
+  file with mode 0600.
 - **Setup refuses to replace a config file it cannot parse**:
   `vouch setup codeartifact --tool cargo` and `vouch setup aws` replaced a
   malformed or unreadable Cargo or AWS config file with one that held only the
@@ -53,18 +53,18 @@ published. v2026.11.2 is the first release that contains these changes.
   reads only `config`, so `vouch setup codeartifact --tool cargo` and
   `vouch status` now use `config`. `vouch setup codeartifact --tool uv`
   removes `default = true` from every other index and marks it
-  `explicit = true`, because uv uses the first default index it finds and
-  ignored CodeArtifact.
+  `explicit = true`. uv uses only the first default index it finds, so it
+  never used the CodeArtifact index.
 - **Credential helpers write logs to stderr**: the CLI wrote log messages to
   stdout, ahead of the credential that pip, uv, and Docker read from
   `vouch credential` output. Log messages now go to stderr.
 - **The server refuses an expired device code before the key ceremony**: a
   device code that had expired, but that the server had not yet swept, passed
   the check before the WebAuthn ceremony. The user touched their hardware key,
-  the browser reported success, and the server recorded an approval that the
-  waiting CLI could never redeem. The server now refuses an expired device
+  the browser reported success, the server recorded an approval, and the
+  waiting CLI timed out. The server now refuses an expired device
   code before the ceremony starts.
-- **DPoP proofs can name the mTLS endpoint alias**: discovery advertises
+- **The server accepts DPoP proofs that name the mTLS endpoint alias**: discovery advertises
   [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 5
   `mtls_endpoint_aliases` on the mTLS port. `/oauth/userinfo` and `/v1/*`
   rejected a DPoP proof whose `htu` named the alias. Both now accept the alias,
