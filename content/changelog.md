@@ -10,81 +10,18 @@ see the [GitHub releases page](https://github.com/vouch-sh/vouch/releases).
 
 ## [v2026.11.2](https://github.com/vouch-sh/vouch/releases/tag/v2026.11.2) - November 6, 2026
 
-The v2026.11.1 release build failed, so this project published no v2026.11.1
-release. v2026.11.2 is the first release that contains these changes.
+The v2026.11.1 release build failed, so this project published no v2026.11.1 release. v2026.11.2 is the first release that contains these changes.
 
-- **The CLI gets credentials for roles entitled through account access
-  manager**: when the Vouch IAM Identity Center application has the
-  `account_access:assume` and `account_access:read_only` scopes, the CLI gets
-  credentials for an entitled role from
-  [account access manager](/docs/aws-multi-account/#account-access-manager-optional)
-  before it tries the role chain. `vouch setup aws --discover` lists the
-  entitled roles, tests each one before it writes the profile, and prints the
-  trust policy statement a role needs when the test fails. Profiles keep the
-  `--role <arn> --via <management-role>` form. When account access manager
-  cannot issue credentials, the CLI falls back to the role chain. A detected
-  AI agent always uses the role chain, because account access manager accepts
-  no session policy to restrict the agent's credentials. Account access
-  manager is available in the commercial partition only.
-- **Commands use the management role a profile records**: with several AWS
-  organizations configured, the CLI needs `--via` to resolve a member-account
-  role to its management role. `vouch setup aws` records `--via` in
-  each profile, but most commands ignored it. Every command that reads its role
-  from a profile now passes the recorded `--via`. `vouch credential eks`,
-  `rds`, and `redshift --role`, `vouch exec`, `vouch env`, and
-  `vouch aws console --role` use the `--via` of the profile that targets the
-  role. An explicit `--via` flag still takes precedence.
-- **Setup commands write through symlinked config files**: the CLI replaced a
-  symlinked config file, such as one that stow, chezmoi, or home-manager
-  manages, with a regular file, so the linked source stopped receiving
-  changes. The CLI now writes to the file at the end of the link. This
-  applies to every file a setup command edits, including `~/.ssh/config`,
-  `~/.aws/config`, and the Docker, npm, pip, uv, and Cargo configuration. On
-  Unix, a rewritten file keeps its owner and mode, and the CLI creates a new
-  file with mode 0600.
-- **Setup refuses to replace a config file it cannot parse**:
-  `vouch setup codeartifact --tool cargo` and `vouch setup aws` replaced a
-  malformed or unreadable Cargo or AWS config file with one that held only the
-  new entry, which deleted other registries, tokens, and profiles. Both
-  commands now report the error and leave the file unchanged.
-- **CodeArtifact setup fixes**: the Cargo, pip, and npm helpers accept
-  CodeArtifact dualstack (IPv6) repository URLs on `on.aws`. When
-  `$CARGO_HOME` holds both the legacy `config` file and `config.toml`, Cargo
-  reads only `config`, so `vouch setup codeartifact --tool cargo` and
-  `vouch status` now use `config`. `vouch setup codeartifact --tool uv`
-  removes `default = true` from every other index and marks it
-  `explicit = true`. uv uses only the first default index it finds, so it
-  never used the CodeArtifact index.
-- **Credential helpers write logs to stderr**: the CLI wrote log messages to
-  stdout, ahead of the credential that pip, uv, and Docker read from
-  `vouch credential` output. Log messages now go to stderr.
-- **The server refuses an expired device code before the key ceremony**: a
-  device code that had expired, but that the server had not yet swept, passed
-  the check before the WebAuthn ceremony. The user touched their hardware key,
-  the browser reported success, the server recorded an approval, and the
-  waiting CLI timed out. The server now refuses an expired device
-  code before the ceremony starts.
-- **The server accepts DPoP proofs that name the mTLS endpoint alias**: discovery advertises
-  [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 5
-  `mtls_endpoint_aliases` on the mTLS port. `/oauth/userinfo` and `/v1/*`
-  rejected a DPoP proof whose `htu` named the alias. Both now accept the alias,
-  as the token endpoint already did.
-- **OAuth error fixes**: `/oauth/userinfo` returns `server_error` when it
-  cannot read the client record, instead of returning unsigned claims to a
-  client registered for signed responses. `POST /oauth/register` and
-  `PUT /oauth/register/{client_id}` check the access token before the body,
-  and reject a malformed body with
-  [RFC 7591](https://www.rfc-editor.org/rfc/rfc7591) section 3.2.2
-  `invalid_client_metadata` instead of a plain-text 400 or 422. A token
-  exchange for an ID token refuses `authorization_details` with
-  `invalid_authorization_details`.
-- **Other fixes**: `vouch aws console` signs in to the AWS European Sovereign
-  Cloud through its regional sign-in host; the previous host did not resolve.
-  On Aurora DSQL, the losing request in a concurrent first enrollment for the
-  same domain retries instead of failing. `vouch init`, `vouch completions`,
-  `vouch posture`, and `vouch diag` no longer fail when the configured server
-  URL is malformed. `vouch setup docker` accepts `--configure` and `--profile`
-  after the registry names.
+- **The CLI gets credentials for roles entitled through account access manager**: when the Vouch IAM Identity Center application has the `account_access:assume` and `account_access:read_only` scopes, the CLI gets credentials for an entitled role from [account access manager](/docs/aws-multi-account/#account-access-manager-optional) before it tries the role chain. `vouch setup aws --discover` lists the entitled roles, tests each one before it writes the profile, and prints the trust policy statement a role needs when the test fails. Profiles keep the `--role <arn> --via <management-role>` form. When account access manager cannot issue credentials, the CLI falls back to the role chain. A detected AI agent always uses the role chain, because account access manager accepts no session policy to restrict the agent's credentials. Account access manager is available in the commercial partition only.
+- **Commands use the management role a profile records**: with several AWS organizations configured, the CLI needs `--via` to resolve a member-account role to its management role. `vouch setup aws` records `--via` in each profile, but most commands ignored it. Every command that reads its role from a profile now passes the recorded `--via`. `vouch credential eks`, `rds`, and `redshift --role`, `vouch exec`, `vouch env`, and `vouch aws console --role` use the `--via` of the profile that targets the role. An explicit `--via` flag still takes precedence.
+- **Setup commands write through symlinked config files**: the CLI replaced a symlinked config file, such as one that stow, chezmoi, or home-manager manages, with a regular file, so the linked source stopped receiving changes. The CLI now writes to the file at the end of the link. This applies to every file a setup command edits, including `~/.ssh/config`, `~/.aws/config`, and the Docker, npm, pip, uv, and Cargo configuration. On Unix, a rewritten file keeps its owner and mode, and the CLI creates a new file with mode 0600.
+- **Setup refuses to replace a config file it cannot parse**: `vouch setup codeartifact --tool cargo` and `vouch setup aws` replaced a malformed or unreadable Cargo or AWS config file with one that held only the new entry, which deleted other registries, tokens, and profiles. Both commands now report the error and leave the file unchanged.
+- **CodeArtifact setup fixes**: the Cargo, pip, and npm helpers accept CodeArtifact dualstack (IPv6) repository URLs on `on.aws`. When `$CARGO_HOME` holds both the legacy `config` file and `config.toml`, Cargo reads only `config`, so `vouch setup codeartifact --tool cargo` and `vouch status` now use `config`. `vouch setup codeartifact --tool uv` removes `default = true` from every other index and marks it `explicit = true`. uv uses only the first default index it finds, so it never used the CodeArtifact index.
+- **Credential helpers write logs to stderr**: the CLI wrote log messages to stdout, ahead of the credential that pip, uv, and Docker read from `vouch credential` output. Log messages now go to stderr.
+- **The server refuses an expired device code before the key ceremony**: a device code that had expired, but that the server had not yet swept, passed the check before the WebAuthn ceremony. The user touched their hardware key, the browser reported success, the server recorded an approval, and the waiting CLI timed out. The server now refuses an expired device code before the ceremony starts.
+- **The server accepts DPoP proofs that name the mTLS endpoint alias**: discovery advertises [RFC 8705](https://www.rfc-editor.org/rfc/rfc8705) section 5 `mtls_endpoint_aliases` on the mTLS port. `/oauth/userinfo` and `/v1/*` rejected a DPoP proof whose `htu` named the alias. Both now accept the alias, as the token endpoint already did.
+- **OAuth error fixes**: `/oauth/userinfo` returns `server_error` when it cannot read the client record, instead of returning unsigned claims to a client registered for signed responses. `POST /oauth/register` and `PUT /oauth/register/{client_id}` check the access token before the body, and reject a malformed body with [RFC 7591](https://www.rfc-editor.org/rfc/rfc7591) section 3.2.2 `invalid_client_metadata` instead of a plain-text 400 or 422. A token exchange for an ID token refuses `authorization_details` with `invalid_authorization_details`.
+- **Other fixes**: `vouch aws console` signs in to the AWS European Sovereign Cloud through its regional sign-in host; the previous host did not resolve. On Aurora DSQL, the losing request in a concurrent first enrollment for the same domain retries instead of failing. `vouch init`, `vouch completions`, `vouch posture`, and `vouch diag` no longer fail when the configured server URL is malformed. `vouch setup docker` accepts `--configure` and `--profile` after the registry names.
 
 ## [v2026.10.3](https://github.com/vouch-sh/vouch/releases/tag/v2026.10.3) - October 21, 2026
 
