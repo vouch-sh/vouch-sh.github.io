@@ -1,0 +1,11 @@
+/* TEAM */
+Company: Smoke Turner, LLC
+Site: https://vouch.sh
+GitHub: https://github.com/vouch-sh/vouch
+
+/* SITE */
+Last update: 2026/02/15
+Language: English
+Standards: HTML5, CSS3
+Software: Hugo
+Hosting: GitHub Pages
